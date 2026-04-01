@@ -41,6 +41,8 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
   const [vibeTags, setVibeTags] = useState([]);
   const [allVibeTags, setAllVibeTags] = useState([]);
   const [showVibeAll, setShowVibeAll] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
+  const DESC_LIMIT = 150;
 
   useEffect(() => {
     api.get(`/vibes/venue/${event.venue.id}?session_id=${sessionId}`).then(r => setVibeTags(r.data)).catch(() => {});
@@ -94,7 +96,19 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
           <div className="modal-date">📅 {dateStr} às {timeStr}</div>
 
           {event.description && (
-            <div className="modal-desc">{event.description}</div>
+            <div className="modal-desc">
+              {!descExpanded && event.description.length > DESC_LIMIT
+                ? <>{event.description.slice(0, DESC_LIMIT)}…</>
+                : event.description}
+              {event.description.length > DESC_LIMIT && (
+                <button
+                  className="desc-expand-btn"
+                  onClick={() => setDescExpanded(v => !v)}
+                >
+                  {descExpanded ? ' Ver menos' : ' Ver mais'}
+                </button>
+              )}
+            </div>
           )}
 
           {/* Para você curtir */}
