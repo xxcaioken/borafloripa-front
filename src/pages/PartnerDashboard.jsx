@@ -242,6 +242,8 @@ export default function PartnerDashboard({ onAuthOpen }) {
   }
 
   const analyticsMap = Object.fromEntries(analytics.map(a => [a.event_id, a]));
+  const totalViews = analytics.reduce((s, a) => s + (a.view_count || 0), 0);
+  const totalBoras = analytics.reduce((s, a) => s + (a.bora_count || 0), 0);
   const initials = user.name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
 
   return (
@@ -257,15 +259,25 @@ export default function PartnerDashboard({ onAuthOpen }) {
       <div className="stats-row">
         <div className="stat-card">
           <div className="stat-value">{stats?.total_events ?? 0}</div>
-          <div className="stat-label">Eventos publicados</div>
+          <div className="stat-label">Eventos</div>
         </div>
         <div className="stat-card">
           <div className="stat-value">{stats?.featured_events ?? 0}</div>
-          <div className="stat-label">Em destaque</div>
+          <div className="stat-label">Destaques</div>
         </div>
         <div className="stat-card">
           <div className="stat-value">{venues.length}</div>
-          <div className="stat-label">Locais vinculados</div>
+          <div className="stat-label">Locais</div>
+        </div>
+      </div>
+      <div className="stats-row stats-row-mt">
+        <div className="stat-card stat-card-accent">
+          <div className="stat-value">👁 {totalViews}</div>
+          <div className="stat-label">Visualizações</div>
+        </div>
+        <div className="stat-card stat-card-secondary">
+          <div className="stat-value">🚀 {totalBoras}</div>
+          <div className="stat-label">Boras confirmados</div>
         </div>
       </div>
 
