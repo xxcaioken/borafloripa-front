@@ -1848,6 +1848,17 @@ body::before {
   gap: 8px;
 }
 .map-search { margin-bottom: 0 !important; }
+.map-locate-btn {
+  background: var(--surface2);
+  border: 1.5px solid var(--border2);
+  border-radius: var(--radius-xs);
+  font-size: 18px;
+  padding: 0 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+.map-locate-btn:hover { border-color: var(--accent); }
 .map-filter-row {
   display: flex;
   gap: 7px;
