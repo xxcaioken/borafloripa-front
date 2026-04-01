@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 
 const COVERS = [
   'linear-gradient(135deg, #0d1f14 0%, #1a2e1a 100%)',
@@ -53,7 +53,7 @@ function AccessBadges({ venue }) {
   );
 }
 
-export default function EventCard({ event, onClick, boraCount = 0, boraReacted = false, onBora, isSaved = false, onSave, hero = false }) {
+const EventCard = memo(function EventCard({ event, onClick, boraCount = 0, boraReacted = false, onBora, isSaved = false, onSave, hero = false }) {
   const isTemp = event.is_temporary;
   const coverBg = isTemp
     ? 'linear-gradient(135deg, #0a2a0f 0%, #142a0a 100%)'
@@ -168,4 +168,6 @@ export default function EventCard({ event, onClick, boraCount = 0, boraReacted =
       </div>
     </div>
   );
-}
+});
+
+export default EventCard;
