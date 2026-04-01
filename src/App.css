@@ -2009,7 +2009,20 @@ body::before {
   transition: background 0.2s;
 }
 .btn-danger:hover { background: rgba(192,57,43,0.1); }
-.pev-actions { display: flex; gap: 8px; align-items: center; }
+.pev-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.pev-feature-btn {
+  background: none;
+  border: 1.5px solid var(--border2);
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 18px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  line-height: 1;
+}
+.pev-feature-btn.active { color: #ffd600; border-color: rgba(255,214,0,0.4); }
+.pev-feature-btn:hover { color: #ffd600; border-color: rgba(255,214,0,0.4); }
 
 /* ── Claim venue modal ── */
 .claim-modal-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
