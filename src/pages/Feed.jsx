@@ -78,6 +78,7 @@ export default function Feed() {
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [todayEvents, setTodayEvents] = useState([]);
+  const [trendingEvents, setTrendingEvents] = useState([]);
   const [retryKey, setRetryKey] = useState(0);
 
   const eventIds = useMemo(() => events.map(e => e.id), [events]);
@@ -104,6 +105,7 @@ export default function Feed() {
     api.get('/events/new-venues').then(r => setNewVenues(r.data)).catch(() => {});
     api.get('/events/feed', { params: { today: true, limit: 10 } })
       .then(r => setTodayEvents(r.data)).catch(() => {});
+    api.get('/events/trending').then(r => setTrendingEvents(r.data)).catch(() => {});
   }, []);
 
   function buildParams(currentOffset) {
@@ -246,6 +248,29 @@ export default function Feed() {
                 </button>
               );
             })}
+          </div>
+        </>
+      )}
+
+      {/* Em Alta */}
+      {trendingEvents.length > 0 && !hasFilter && (
+        <>
+          <div className="section-header">
+            <div className="section-title">🔥 Em Alta agora</div>
+            <span className="section-link">{trendingEvents.length} rolês</span>
+          </div>
+          <div className="today-scroll">
+            {trendingEvents.map(event => (
+              <button
+                key={event.id}
+                className="today-chip today-chip-hot"
+                onClick={() => setSelected(event)}
+                aria-label={`${event.title} em ${event.venue.name}`}
+              >
+                <span className="today-chip-name">{event.title}</span>
+                <span className="today-chip-venue">{event.venue.name}</span>
+              </button>
+            ))}
           </div>
         </>
       )}
