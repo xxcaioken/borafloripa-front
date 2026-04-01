@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useEffect, useState, useCallback } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -169,6 +170,7 @@ function ClaimVenueModal({ onClaim, onClose }) {
 }
 
 export default function PartnerDashboard({ onAuthOpen }) {
+  usePageTitle('Área do Parceiro');
   const { user } = useAuth();
   const [stats, setStats] = useState(null);
   const [events, setEvents] = useState([]);

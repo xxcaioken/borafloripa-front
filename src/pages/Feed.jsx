@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
 import EventCard from '../components/EventCard';
@@ -58,6 +59,7 @@ function SkeletonCard() {
 const PAGE_SIZE = 20;
 
 export default function Feed() {
+  usePageTitle(null);
   const { user } = useAuth();
   const { savedIds, toggle: toggleSaved } = useSaved(!!user);
   const [events, setEvents] = useState([]);

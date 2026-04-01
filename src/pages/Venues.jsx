@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -6,6 +7,7 @@ import { useFollowVenue } from '../hooks/useFollowVenue';
 const CAT_EMOJI = { bar: '🍺', balada: '💃', cultura: '🎭', rua: '🌆' };
 
 export default function Venues() {
+  usePageTitle('Locais');
   const { user } = useAuth();
   const { followedIds, toggle: toggleFollow } = useFollowVenue(!!user);
   const [venues, setVenues]   = useState([]);
