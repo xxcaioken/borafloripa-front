@@ -80,6 +80,7 @@ export default function Feed() {
   const [todayEvents, setTodayEvents] = useState([]);
   const [trendingEvents, setTrendingEvents] = useState([]);
   const [retryKey, setRetryKey] = useState(0);
+  const [sortBy, setSortBy] = useState(null); // null | 'date' | 'popular'
 
   const eventIds = useMemo(() => events.map(e => e.id), [events]);
   const { counts: boraCounts, toggle: toggleBora } = useBora(eventIds);
@@ -115,6 +116,7 @@ export default function Feed() {
     if (openNow) params.open_now = true;
     if (accessible) params.accessible = true;
     if (query) params.q = query;
+    if (sortBy) params.sort = sortBy;
     return params;
   }
 
@@ -138,7 +140,7 @@ export default function Feed() {
         .finally(() => setLoading(false));
     }, query ? 300 : 0);
     return () => clearTimeout(t);
-  }, [activeCategory, activeTag, openNow, accessible, query, retryKey]);
+  }, [activeCategory, activeTag, openNow, accessible, query, sortBy, retryKey]);
 
   function loadMore() {
     const nextOffset = offset + PAGE_SIZE;
@@ -313,9 +315,11 @@ export default function Feed() {
         <div className="section-title">
           {hasPrefs && !hasFilter ? '⭐ Para você' : query ? `"${query}"` : activeCategory ? CATEGORIES.find(c => c.id === activeCategory)?.label : 'Em destaque'}
         </div>
-        {!loading && !error && (
-          <span className="section-link">{events.length}{hasMore ? '+' : ''} rolês</span>
-        )}
+        <div className="sort-chips">
+          <button className={`sort-chip${!sortBy ? ' active' : ''}`} onClick={() => setSortBy(null)}>★</button>
+          <button className={`sort-chip${sortBy === 'date' ? ' active' : ''}`} onClick={() => setSortBy('date')}>📅</button>
+          <button className={`sort-chip${sortBy === 'popular' ? ' active' : ''}`} onClick={() => setSortBy('popular')}>🔥</button>
+        </div>
       </div>
 
       {loading ? (
