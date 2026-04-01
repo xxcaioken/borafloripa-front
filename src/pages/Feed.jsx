@@ -55,6 +55,8 @@ function SkeletonCard() {
   );
 }
 
+const PAGE_SIZE = 20;
+
 export default function Feed() {
   const { user } = useAuth();
   const { savedIds, toggle: toggleSaved } = useSaved(!!user);
@@ -67,9 +69,12 @@ export default function Feed() {
   const [accessible, setAccessible] = useState(false);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(false);
   const [selected, setSelected] = useState(null);
   const [showTagFilter, setShowTagFilter] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(false);
 
   const eventIds = useMemo(() => events.map(e => e.id), [events]);
   const { counts: boraCounts, toggle: toggleBora } = useBora(eventIds);
@@ -95,29 +100,50 @@ export default function Feed() {
     api.get('/events/new-venues').then(r => setNewVenues(r.data)).catch(() => {});
   }, []);
 
-  useEffect(() => {
-    setLoading(true);
-    setError(false);
-    const params = new URLSearchParams({ city: 'Florianópolis' });
+  function buildParams(currentOffset) {
+    const params = new URLSearchParams({ city: 'Florianópolis', limit: PAGE_SIZE, offset: currentOffset });
     if (activeCategory) params.set('category', activeCategory);
     if (activeTag) params.set('tag', activeTag);
     if (openNow) params.set('open_now', 'true');
     if (accessible) params.set('accessible', 'true');
     if (query) params.set('q', query);
+    return params;
+  }
+
+  // Reset and refetch when filters change
+  useEffect(() => {
+    setLoading(true);
+    setError(false);
+    setOffset(0);
+    setHasMore(false);
     const t = setTimeout(() => {
-      api.get(`/events/feed?${params}`)
+      api.get(`/events/feed?${buildParams(0)}`)
         .then(r => {
           let data = r.data;
           if (hasPrefs && !activeCategory && !activeTag && !query) {
             data = [...data].sort((a, b) => scoreEvent(b, prefMusic, prefVibes) - scoreEvent(a, prefMusic, prefVibes));
           }
           setEvents(data);
+          setHasMore(data.length === PAGE_SIZE);
         })
         .catch(() => { setError(true); setEvents([]); })
         .finally(() => setLoading(false));
     }, query ? 300 : 0);
     return () => clearTimeout(t);
   }, [activeCategory, activeTag, openNow, accessible, query]);
+
+  function loadMore() {
+    const nextOffset = offset + PAGE_SIZE;
+    setLoadingMore(true);
+    api.get(`/events/feed?${buildParams(nextOffset)}`)
+      .then(r => {
+        setEvents(prev => [...prev, ...r.data]);
+        setOffset(nextOffset);
+        setHasMore(r.data.length === PAGE_SIZE);
+      })
+      .catch(() => {})
+      .finally(() => setLoadingMore(false));
+  }
 
   const hasFilter = activeCategory || activeTag || openNow || accessible || query;
 
@@ -230,7 +256,7 @@ export default function Feed() {
           {hasPrefs && !hasFilter ? '⭐ Para você' : query ? `"${query}"` : activeCategory ? CATEGORIES.find(c => c.id === activeCategory)?.label : 'Em destaque'}
         </div>
         {!loading && !error && (
-          <span className="section-link">{events.length} rolês</span>
+          <span className="section-link">{events.length}{hasMore ? '+' : ''} rolês</span>
         )}
       </div>
 
@@ -269,6 +295,18 @@ export default function Feed() {
             />
           ))}
         </div>
+        {hasMore && (
+          <div className="load-more-wrap">
+            <button
+              className="btn-load-more"
+              onClick={loadMore}
+              disabled={loadingMore}
+              aria-label="Carregar mais eventos"
+            >
+              {loadingMore ? 'Carregando...' : 'Carregar mais'}
+            </button>
+          </div>
+        )}
       )}
 
       {selected && (
