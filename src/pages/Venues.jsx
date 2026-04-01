@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
+import { useFollowVenue } from '../hooks/useFollowVenue';
 
 const CAT_EMOJI = { bar: '🍺', balada: '💃', cultura: '🎭', rua: '🌆' };
 
 export default function Venues() {
+  const { user } = useAuth();
+  const { followedIds, toggle: toggleFollow } = useFollowVenue(!!user);
   const [venues, setVenues]   = useState([]);
   const [query, setQuery]     = useState('');
   const [loading, setLoading] = useState(true);
@@ -46,7 +50,12 @@ export default function Venues() {
       ) : (
         <div className="venue-list">
           {venues.map(venue => (
-            <VenueRow key={venue.id} venue={venue} />
+            <VenueRow
+              key={venue.id}
+              venue={venue}
+              isFollowed={followedIds.has(venue.id)}
+              onFollow={user ? () => toggleFollow(venue.id) : null}
+            />
           ))}
         </div>
       )}
@@ -54,7 +63,7 @@ export default function Venues() {
   );
 }
 
-function VenueRow({ venue }) {
+function VenueRow({ venue, isFollowed, onFollow }) {
   const ig = venue.instagram;
   const hasContact = ig || venue.whatsapp;
 
@@ -77,16 +86,28 @@ function VenueRow({ venue }) {
           {!hasContact && <span className="venue-row-empty">Sem contato cadastrado</span>}
         </div>
       </div>
-      {ig && (
-        <a
-          className="venue-row-action"
-          href={`https://instagram.com/${ig.replace('@', '')}`}
-          target="_blank"
-          rel="noreferrer"
-        >
-          Ver IG
-        </a>
-      )}
+      <div className="venue-row-actions">
+        {onFollow && (
+          <button
+            className={`venue-follow-btn${isFollowed ? ' following' : ''}`}
+            onClick={onFollow}
+            aria-label={isFollowed ? `Deixar de seguir ${venue.name}` : `Seguir ${venue.name}`}
+            aria-pressed={isFollowed}
+          >
+            {isFollowed ? '✓ Seguindo' : '+ Seguir'}
+          </button>
+        )}
+        {ig && (
+          <a
+            className="venue-row-action"
+            href={`https://instagram.com/${ig.replace('@', '')}`}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Ver IG
+          </a>
+        )}
+      </div>
     </div>
   );
 }
