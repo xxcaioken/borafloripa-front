@@ -1432,8 +1432,14 @@ body::before {
   text-align: center;
   padding: 60px 20px;
   color: var(--muted);
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  margin: 8px 0;
 }
-.empty-state p { font-size: 15px; font-weight: 500; }
+.empty-state p { font-size: 15px; font-weight: 500; margin: 0 0 4px; }
+.empty-hint { font-size: 12px !important; color: var(--border2) !important; font-weight: 400 !important; }
+.empty-sm { padding: 32px 20px; }
 
 /* ══════════════════════════════════════
    AUTH SHEET
