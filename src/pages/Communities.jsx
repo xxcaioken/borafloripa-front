@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -11,6 +12,7 @@ const TAG_EMOJI = {
 };
 
 export default function Communities({ onAuthOpen }) {
+  usePageTitle('Comunidades');
   const { user } = useAuth();
   const toast = useToast();
   const [communities, setCommunities] = useState([]);

@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useEffect, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
@@ -136,6 +137,7 @@ function VenuePopup({ venue, onCheckin }) {
 }
 
 export default function MapView() {
+  usePageTitle('Mapa');
   const [venues, setVenues]   = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(false);

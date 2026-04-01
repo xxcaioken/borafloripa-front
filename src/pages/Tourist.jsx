@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useState } from 'react';
 import { api } from '../services/api';
 import EventCard from '../components/EventCard';
@@ -31,6 +32,7 @@ const PERIODS = [
 ];
 
 export default function Tourist() {
+  usePageTitle('Modo Turista');
   const today = new Date().toISOString().slice(0, 10);
   const [dateFrom, setDateFrom] = useState(today);
   const [dateTo, setDateTo] = useState(today);

@@ -1,3 +1,4 @@
+import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
@@ -18,6 +19,7 @@ const VIBE_LABELS = {
 };
 
 export default function Profile() {
+  usePageTitle('Meu Perfil');
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [saved, setSaved] = useState([]);
