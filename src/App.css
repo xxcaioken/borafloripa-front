@@ -1330,6 +1330,17 @@ body::before {
 .pev-title { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
 .pev-meta { font-size: 12px; color: var(--muted); }
 .pev-vibe { font-size: 12px; color: var(--accent3); margin-top: 2px; font-weight: 600; }
+.pev-vibe-select {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent3);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 3px 6px;
+  cursor: pointer;
+  margin-top: 2px;
+}
 .pev-analytics { display: flex; gap: 12px; margin-top: 4px; font-size: 12px; color: var(--text2); }
 .badge-featured-sm {
   background: rgba(0,230,118,0.12);

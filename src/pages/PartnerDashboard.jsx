@@ -358,7 +358,22 @@ export default function PartnerDashboard({ onAuthOpen }) {
               <div className="pev-meta">
                 {event.venue.name} · {new Date(event.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
               </div>
-              <div className="pev-vibe">{event.vibe_status}</div>
+              <select
+                className="pev-vibe-select"
+                value={event.vibe_status}
+                onChange={async e => {
+                  const newVibe = e.target.value;
+                  try {
+                    await api.patch(`/partners/events/${event.id}/vibe`, { vibe_status: newVibe });
+                    setEvents(prev => prev.map(ev => ev.id === event.id ? { ...ev, vibe_status: newVibe } : ev));
+                  } catch {}
+                }}
+                aria-label="Vibe do evento"
+              >
+                {['Normal', 'Animado', 'Lotado', 'Quente 🔥'].map(v => (
+                  <option key={v} value={v}>{v}</option>
+                ))}
+              </select>
               {analyticsMap[event.id] && (
                 <div className="pev-analytics">
                   <span>👁 {analyticsMap[event.id].view_count}</span>
