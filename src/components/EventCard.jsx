@@ -87,7 +87,9 @@ const EventCard = memo(function EventCard({ event, onClick, boraCount = 0, boraR
     <div
       className={`event-card${event.is_featured ? ' featured' : ''}${isTemp ? ' temporary' : ''}${hero ? ' hero' : ''}`}
       onClick={onClick}
-      role="article"
+      onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onClick?.()}
+      role="button"
+      tabIndex={0}
       aria-label={`${event.title} em ${event.venue.name}`}
       style={{ '--cat-accent': accentColor }}
     >
