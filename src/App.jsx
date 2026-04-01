@@ -1,5 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
+import { usePageTitle } from './hooks/usePageTitle';
 import ErrorBoundary from './components/ErrorBoundary';
 
 // Critical path — loaded eagerly
@@ -157,6 +158,7 @@ function EventPage() {
   const navigate = useNavigate();
   const [event, setEvent] = useState(null);
   const [notFound, setNotFound] = useState(false);
+  usePageTitle(event ? `${event.title} — ${event.venue.name}` : null);
 
   useEffect(() => {
     const sessionId = localStorage.getItem('bf_session_id') || '';
