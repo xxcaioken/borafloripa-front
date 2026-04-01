@@ -2527,3 +2527,14 @@ body::before {
   text-overflow: ellipsis;
   width: 100%;
 }
+.today-chip-hot {
+  border-color: rgba(255, 109, 0, 0.4);
+  background: rgba(255, 109, 0, 0.08);
+}
+.today-chip-hot:hover {
+  border-color: rgba(255, 109, 0, 0.7);
+  background: rgba(255, 109, 0, 0.15);
+}
+.today-chip-hot .today-chip-name {
+  color: #ffab40;
+}
