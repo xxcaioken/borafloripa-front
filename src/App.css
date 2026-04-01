@@ -1650,6 +1650,13 @@ body::before {
 .venue-row-phone { font-size: 11px; color: var(--muted); }
 .venue-row-empty { font-size: 11px; color: var(--border2); font-style: italic; }
 
+.venue-row-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
 .venue-row-action {
   font-size: 11px;
   font-weight: 700;
@@ -1660,7 +1667,27 @@ body::before {
   padding: 4px 10px;
   text-decoration: none;
   white-space: nowrap;
-  flex-shrink: 0;
+}
+.venue-follow-btn {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.venue-follow-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.venue-follow-btn.following {
+  background: var(--accent-dim);
+  border-color: rgba(0,230,118,0.3);
+  color: var(--accent);
 }
 
 /* ── Skeleton loaders ── */
