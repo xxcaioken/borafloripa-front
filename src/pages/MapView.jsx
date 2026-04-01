@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { api } from '../services/api';
+import { useSessionId } from '../hooks/useSessionId';
+import { useToast } from '../context/ToastContext';
 import 'leaflet/dist/leaflet.css';
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -141,6 +143,8 @@ export default function MapView() {
   const [selected, setSelected] = useState(null);
   const [flyTarget, setFlyTarget] = useState(null);
   const [search, setSearch]   = useState('');
+  const sessionId = useSessionId();
+  const toast = useToast();
 
   const load = useCallback(() => {
     setLoading(true);
@@ -155,11 +159,16 @@ export default function MapView() {
 
   async function handleCheckin(venue) {
     try {
-      await api.post('/checkins', { venue_id: venue.id });
+      const { data } = await api.post('/checkins', { venue_id: venue.id, session_id: sessionId });
       setVenues(prev => prev.map(v =>
-        v.id === venue.id ? { ...v, checkin_count: v.checkin_count + 1 } : v
+        v.id === venue.id ? { ...v, checkin_count: data.checkin_count } : v
       ));
-    } catch {}
+      toast?.show(`Check-in em ${venue.name}! 📍`, 'success');
+    } catch (err) {
+      if (err.response?.status === 429) {
+        toast?.show('Você já fez check-in recentemente aqui', 'info');
+      }
+    }
   }
 
   const visible = venues.filter(v => {
