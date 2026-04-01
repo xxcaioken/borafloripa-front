@@ -1,25 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../services/api';
+import { useSessionId } from './useSessionId';
 
-// ID anônimo persistido no browser — nunca muda
-function getSessionId() {
-  let id = localStorage.getItem('bf_session_id');
-  if (!id) {
-    id = Math.random().toString(36).slice(2) + Date.now().toString(36);
-    localStorage.setItem('bf_session_id', id);
-  }
-  return id;
-}
-
-/**
- * useBora(eventIds)
- * Retorna { counts, toggle }
- * counts: { [eventId]: { count: number, reacted: boolean } }
- * toggle(eventId): clica o botão Bora para aquele evento
- */
 export function useBora(eventIds) {
   const [counts, setCounts] = useState({});
-  const sessionId = getSessionId();
+  const sessionId = useSessionId();
 
   useEffect(() => {
     if (!eventIds || eventIds.length === 0) return;

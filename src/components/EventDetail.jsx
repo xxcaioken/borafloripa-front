@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
+import { useSessionId } from '../hooks/useSessionId';
 
 const COVERS = [
   'linear-gradient(135deg, #1a0a2e 0%, #2e0a1a 100%)',
@@ -33,12 +34,7 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
   const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   const hours = parseHours(event.venue.hours);
   const today = getTodayKey();
-
-  const sessionId = (() => {
-    let id = localStorage.getItem('bf_session_id');
-    if (!id) { id = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('bf_session_id', id); }
-    return id;
-  })();
+  const sessionId = useSessionId();
 
   const [vibeTags, setVibeTags] = useState([]);
   const [allVibeTags, setAllVibeTags] = useState([]);
