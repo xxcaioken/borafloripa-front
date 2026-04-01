@@ -159,7 +159,8 @@ function EventPage() {
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
-    api.get(`/events/${id}`)
+    const sessionId = localStorage.getItem('bf_session_id') || '';
+    api.get(`/events/${id}`, { params: sessionId ? { session_id: sessionId } : {} })
       .then(r => setEvent(r.data))
       .catch(() => setNotFound(true));
   }, [id]);
