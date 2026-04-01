@@ -78,7 +78,7 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
 
         <div className="modal-cover" style={event.cover_url ? {} : { background: gradient }}>
           {event.cover_url && (
-            <img className="modal-cover-img" src={event.cover_url} alt={event.title} />
+            <img className="modal-cover-img" src={event.cover_url} alt={event.title} loading="lazy" />
           )}
           <div className="modal-cover-gradient" />
         </div>
