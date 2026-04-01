@@ -11,9 +11,8 @@ export default function Venues() {
   useEffect(() => {
     setLoading(true);
     const t = setTimeout(() => {
-      const params = new URLSearchParams({ city: 'Florianópolis' });
-      if (query) params.set('q', query);
-      api.get(`/events/venues?${params}`)
+      const params = query ? { q: query } : {};
+      api.get('/events/venues', { params })
         .then(r => setVenues(r.data))
         .catch(() => setVenues([]))
         .finally(() => setLoading(false));
