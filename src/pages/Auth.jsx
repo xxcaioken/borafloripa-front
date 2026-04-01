@@ -9,6 +9,7 @@ export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVib
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPass, setShowPass] = useState(false);
   const { login } = useAuth();
 
   async function handleSubmit(e) {
@@ -70,14 +71,24 @@ export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVib
             </div>
             <div className="auth-field">
               <label>Senha</label>
-              <input
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                minLength={6}
-              />
+              <div className="auth-password-wrap">
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  className="auth-pass-toggle"
+                  onClick={() => setShowPass(v => !v)}
+                  aria-label={showPass ? 'Ocultar senha' : 'Mostrar senha'}
+                >
+                  {showPass ? '🙈' : '👁'}
+                </button>
+              </div>
             </div>
 
             {error && <div className="auth-error">{error}</div>}
