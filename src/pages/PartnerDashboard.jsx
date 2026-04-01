@@ -237,6 +237,13 @@ export default function PartnerDashboard({ onAuthOpen }) {
     load();
   }
 
+  async function handleToggleFeature(eventId) {
+    try {
+      const { data } = await api.patch(`/partners/events/${eventId}/feature`);
+      setEvents(prev => prev.map(e => e.id === eventId ? { ...e, is_featured: data.is_featured } : e));
+    } catch {}
+  }
+
   async function handleClaim(venue) {
     await api.post(`/partners/claim-venue/${venue.id}`);
     setShowClaim(false);
@@ -360,7 +367,13 @@ export default function PartnerDashboard({ onAuthOpen }) {
               )}
             </div>
             <div className="pev-actions">
-              {event.is_featured && <span className="badge-featured-sm">Destaque</span>}
+              <button
+                className={`pev-feature-btn${event.is_featured ? ' active' : ''}`}
+                onClick={() => handleToggleFeature(event.id)}
+                title={event.is_featured ? 'Remover destaque' : 'Destacar evento'}
+              >
+                {event.is_featured ? '★' : '☆'}
+              </button>
               <button className="btn-secondary btn-secondary-xs"
                 onClick={() => { setEditEvent(event); setShowForm(false); }}>
                 Editar
