@@ -76,6 +76,7 @@ export default function Feed() {
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [todayEvents, setTodayEvents] = useState([]);
+  const [retryKey, setRetryKey] = useState(0);
 
   const eventIds = useMemo(() => events.map(e => e.id), [events]);
   const { counts: boraCounts, toggle: toggleBora } = useBora(eventIds);
@@ -133,7 +134,7 @@ export default function Feed() {
         .finally(() => setLoading(false));
     }, query ? 300 : 0);
     return () => clearTimeout(t);
-  }, [activeCategory, activeTag, openNow, accessible, query]);
+  }, [activeCategory, activeTag, openNow, accessible, query, retryKey]);
 
   function loadMore() {
     const nextOffset = offset + PAGE_SIZE;
@@ -300,7 +301,7 @@ export default function Feed() {
         <div className="feed-error">
           <div className="feed-error-icon">😵</div>
           <p>Não conseguimos carregar os rolês</p>
-          <button className="btn-retry" onClick={() => setActiveCategory(activeCategory)}>
+          <button className="btn-retry" onClick={() => setRetryKey(k => k + 1)}>
             Tentar novamente
           </button>
         </div>
