@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { useSessionId } from '../hooks/useSessionId';
+import { useToast } from '../context/ToastContext';
 
 const COVERS = [
   'linear-gradient(135deg, #1a0a2e 0%, #2e0a1a 100%)',
@@ -35,6 +36,7 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
   const hours = parseHours(event.venue.hours);
   const today = getTodayKey();
   const sessionId = useSessionId();
+  const toast = useToast();
 
   const [vibeTags, setVibeTags] = useState([]);
   const [allVibeTags, setAllVibeTags] = useState([]);
@@ -65,7 +67,7 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
     if (navigator.share) {
       navigator.share({ title: event.title, text: `${event.title} — ${event.venue.name}`, url });
     } else {
-      navigator.clipboard.writeText(url).then(() => alert('Link copiado!'));
+      navigator.clipboard.writeText(url).then(() => toast?.show('Link copiado! 📋', 'success'));
     }
   }
 

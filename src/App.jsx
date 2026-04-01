@@ -13,6 +13,7 @@ import Communities from './pages/Communities';
 import NotFound from './pages/NotFound';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import { api } from './services/api';
 import './App.css';
 
@@ -218,9 +219,11 @@ function AppInner() {
 export default function App() {
   return (
     <AuthProvider>
-      <ErrorBoundary>
-        <AppInner />
-      </ErrorBoundary>
+      <ToastProvider>
+        <ErrorBoundary>
+          <AppInner />
+        </ErrorBoundary>
+      </ToastProvider>
     </AuthProvider>
   );
 }
