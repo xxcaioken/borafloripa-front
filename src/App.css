@@ -74,6 +74,13 @@ body {
 }
 .topbar-city:hover { border-color: var(--accent); }
 
+/* ── App layout (desktop: sidebar + content) ── */
+.app-layout {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
 /* ── Main content ── */
 .main-content {
   flex: 1;
@@ -81,6 +88,116 @@ body {
   max-width: 480px;
   margin: 0 auto;
   width: 100%;
+  min-width: 0;
+}
+
+/* ── Sidebar (desktop only) ── */
+.sidebar {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .topbar { display: none; }
+
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    padding: 24px 12px 20px;
+    gap: 4px;
+  }
+
+  .sidebar-brand {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.8px;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    padding: 0 8px 20px;
+    cursor: pointer;
+  }
+
+  .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+  }
+
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-xs);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text2);
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s, color 0.15s;
+    width: 100%;
+  }
+  .sidebar-item:hover { background: var(--surface2); color: var(--text); }
+  .sidebar-item.active {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid rgba(0,230,118,0.15);
+  }
+  .sidebar-item-icon { font-size: 18px; }
+
+  .sidebar-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: var(--radius-xs);
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 600;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .sidebar-user:hover { border-color: var(--accent); }
+  .sidebar-user-name { flex: 1; text-align: left; }
+  .sidebar-user-out { font-size: 11px; color: var(--muted); }
+  .sidebar-login { width: 100%; justify-content: center; }
+  .sidebar-city {
+    font-size: 11px;
+    color: var(--muted);
+    padding: 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .main-content {
+    padding: 28px 32px;
+    max-width: 720px;
+    margin: 0;
+  }
+
+  .bottom-nav { display: none; }
 }
 
 /* ── Bottom Nav ── */
@@ -1487,6 +1604,68 @@ body {
 }
 
 /* ── Misc ── */
+/* ── Topbar actions ── */
+.topbar-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.topbar-user {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  padding: 5px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.topbar-user:hover { border-color: var(--accent); }
+
+/* ── Error Boundary ── */
+.error-boundary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60svh;
+  gap: 16px;
+  text-align: center;
+  padding: 40px 20px;
+}
+.error-boundary-icon { font-size: 48px; }
+.error-boundary h2 { font-size: 22px; font-weight: 800; }
+.error-boundary p { color: var(--text2); font-size: 14px; }
+
+/* ── 404 Page ── */
+.not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60svh;
+  gap: 16px;
+  text-align: center;
+  padding: 40px 20px;
+}
+.not-found-code {
+  font-size: 80px;
+  font-weight: 900;
+  letter-spacing: -4px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+.not-found h2 { font-size: 22px; font-weight: 800; }
+.not-found p { color: var(--text2); font-size: 14px; }
+
+/* ── Tag pill ── */
 .tag-pill {
   font-size: 11px;
   padding: 3px 9px;
