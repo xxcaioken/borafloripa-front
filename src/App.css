@@ -302,7 +302,22 @@ body::before {
   border: none;
 }
 .bnav-item .bnav-icon { font-size: 21px; line-height: 1; transition: transform 0.2s; }
-.bnav-item.active { color: var(--accent); }
+.bnav-item.active {
+  color: var(--accent);
+  position: relative;
+}
+.bnav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 2px;
+  background: var(--accent);
+  border-radius: 0 0 2px 2px;
+  box-shadow: 0 0 8px rgba(0,230,118,0.7);
+}
 .bnav-item.active .bnav-icon {
   filter: drop-shadow(0 0 8px rgba(0,230,118,0.6));
   transform: scale(1.1);
