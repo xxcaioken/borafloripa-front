@@ -1,5 +1,7 @@
 import React, { memo } from 'react';
 
+const CAT_ACCENT = { bar: '#00e676', balada: '#e040fb', cultura: '#ff6d00', rua: '#00bcd4', temporario: '#ffea00' };
+
 const COVERS = [
   'linear-gradient(135deg, #0d1f14 0%, #1a2e1a 100%)',
   'linear-gradient(135deg, #0a1520 0%, #0f2030 100%)',
@@ -58,6 +60,7 @@ const EventCard = memo(function EventCard({ event, onClick, boraCount = 0, boraR
   const coverBg = isTemp
     ? 'linear-gradient(135deg, #0a2a0f 0%, #142a0a 100%)'
     : COVERS[event.id % COVERS.length];
+  const accentColor = isTemp ? CAT_ACCENT.temporario : (CAT_ACCENT[event.category] || CAT_ACCENT.bar);
   const date = new Date(event.date);
   const dateStr = date.toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' });
   const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
@@ -81,6 +84,7 @@ const EventCard = memo(function EventCard({ event, onClick, boraCount = 0, boraR
       onClick={onClick}
       role="article"
       aria-label={`${event.title} em ${event.venue.name}`}
+      style={{ '--cat-accent': accentColor }}
     >
       {/* Cover */}
       <div

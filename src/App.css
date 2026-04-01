@@ -531,6 +531,7 @@ body::before {
 .event-card {
   background: var(--surface);
   border: 1.5px solid var(--border2);
+  border-left: 3px solid var(--cat-accent, var(--border2));
   border-radius: var(--radius);
   overflow: hidden;
   cursor: pointer;
