@@ -143,6 +143,7 @@ function Layout({ children, onAuthOpen }) {
         </main>
       </div>
       <BottomNav />
+      <BackToTopBtn />
     </>
   );
 }
@@ -151,6 +152,23 @@ function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
   return null;
+}
+
+function BackToTopBtn() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    function onScroll() { setVisible(window.scrollY > 400); }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+  if (!visible) return null;
+  return (
+    <button
+      className="back-to-top"
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      aria-label="Voltar ao topo"
+    >↑</button>
+  );
 }
 
 function EventPage() {
