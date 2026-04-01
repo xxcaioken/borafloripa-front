@@ -240,6 +240,36 @@ body::before {
   .bottom-nav { display: none; }
 }
 
+/* ── Back to Top Button ── */
+.back-to-top {
+  position: fixed;
+  bottom: calc(var(--bottom-nav-h) + 16px);
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1.5px solid rgba(0,230,118,0.3);
+  color: var(--accent);
+  font-size: 18px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 199;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  transition: border-color 0.15s, transform 0.15s, background 0.15s;
+}
+.back-to-top:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  transform: translateY(-2px);
+}
+@media (min-width: 900px) {
+  .back-to-top { bottom: 24px; }
+}
+
 /* ── Bottom Nav ── */
 .bottom-nav {
   position: fixed;
