@@ -334,8 +334,24 @@ export default function Feed() {
         </div>
       ) : events.length === 0 ? (
         <div className="empty-state">
-          <p>Nenhum rolê encontrado 😕</p>
-          {accessible && <p className="empty-hint">Nenhum local acessível com esse filtro</p>}
+          <div className="empty-state-icon">
+            {query ? '🔍' : accessible ? '♿' : activeCategory ? CATEGORIES.find(c => c.id === activeCategory)?.emoji || '🎉' : '😕'}
+          </div>
+          <p>{query ? `Nenhum resultado para "${query}"` : 'Nenhum rolê encontrado'}</p>
+          {accessible && <p className="empty-hint">Tenta remover o filtro de acessibilidade</p>}
+          {(activeCategory || activeTag || accessible || openNow) && (
+            <button
+              className="btn-retry"
+              onClick={() => {
+                setActiveCategory(null);
+                setActiveTag(null);
+                setAccessible(false);
+                setOpenNow(false);
+              }}
+            >
+              Limpar filtros
+            </button>
+          )}
         </div>
       ) : (
         <div className="events-list">
