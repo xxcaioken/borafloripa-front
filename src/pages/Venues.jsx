@@ -62,7 +62,7 @@ function VenueRow({ venue }) {
     <div className="venue-row">
       <div className="venue-row-icon">
         {venue.logo_url
-          ? <img src={venue.logo_url} alt={venue.name} className="venue-row-img" />
+          ? <img src={venue.logo_url} alt={venue.name} className="venue-row-img" loading="lazy" />
           : <span>{CAT_EMOJI[venue.category] || '🍸'}</span>
         }
       </div>
