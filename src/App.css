@@ -1919,6 +1919,30 @@ body {
   font-weight: 700;
 }
 
+/* ── Final inline-style cleanup ── */
+.curtir-badges-flush { margin-bottom: 0 !important; }
+.venue-info-row-mb { margin-bottom: 16px; }
+.modal-section-title-mt { margin-top: 20px; }
+.search-bar-mb { margin-bottom: 20px; }
+.btn-skip {
+  text-align: center;
+  border: none;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 8px;
+}
+.btn-skip:hover { color: var(--text2); }
+
+/* ── Tourist page ── */
+.tourist-header { margin-bottom: 4px; }
+.tourist-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+.tourist-periods { margin-bottom: 16px; }
+.tourist-results-header { margin-top: 20px; }
+.btn-block { width: 100%; justify-content: center; }
+.loading-page { padding: 40px; }
+
 /* ── Misc ── */
 /* ── Card top right cluster ── */
 .card-top-right {

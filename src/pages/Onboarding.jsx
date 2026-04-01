@@ -86,13 +86,7 @@ export default function Onboarding({ onComplete }) {
         <button className="btn-primary" onClick={next}>
           {step === 0 ? 'Próxima →' : 'Entrar no app 🎉'}
         </button>
-        <button
-          className="btn-secondary"
-          style={{ textAlign: 'center', border: 'none', background: 'none', color: 'var(--muted)' }}
-          onClick={onComplete}
-        >
-          Pular
-        </button>
+        <button className="btn-skip" onClick={onComplete}>Pular</button>
       </div>
     </div>
   );

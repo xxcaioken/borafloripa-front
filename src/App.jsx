@@ -140,7 +140,7 @@ function EventPage() {
   }, [id]);
 
   if (notFound) return <NotFound />;
-  if (!event) return <div className="loading" style={{ padding: 40 }}>Carregando...</div>;
+  if (!event) return <div className="loading loading-page">Carregando...</div>;
 
   return (
     <EventDetail

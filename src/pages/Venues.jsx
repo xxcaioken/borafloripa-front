@@ -23,7 +23,7 @@ export default function Venues() {
 
   return (
     <div>
-      <div className="search-bar" style={{ marginBottom: 20 }}>
+      <div className="search-bar search-bar-mb">
         <div className="search-input-wrap">
           <span className="search-icon">🔍</span>
           <input

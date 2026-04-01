@@ -103,7 +103,7 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
           {event.tags.length > 0 && (
             <>
               <div className="modal-section-title">Para você curtir</div>
-              <div className="curtir-badges" style={{ marginBottom: 0 }}>
+              <div className="curtir-badges curtir-badges-flush">
                 {event.tags.map(tag => (
                   <div key={tag.id} className="curtir-badge">
                     <div className="cb-icon">{TAG_ICONS[tag.name] || '🎭'}</div>
@@ -144,7 +144,7 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
 
           {/* Preço */}
           {event.price_info && (
-            <div className="venue-info-row" style={{ marginBottom: 16 }}>
+            <div className="venue-info-row venue-info-row-mb">
               <div className="venue-info-icon">💰</div>
               <div className="venue-info-text">
                 <strong>Entrada</strong>
@@ -187,7 +187,7 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
           {/* Horários */}
           {hours && (
             <>
-              <div className="modal-section-title" style={{ marginTop: 20 }}>Horários</div>
+              <div className="modal-section-title modal-section-title-mt">Horários</div>
               <div className="hours-grid">
                 {Object.entries(hours).map(([day, time]) => (
                   <div key={day} className="hour-row">

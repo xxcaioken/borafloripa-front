@@ -18,6 +18,7 @@ export default function Tourist() {
   const [period, setPeriod] = useState(null);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
   const [searched, setSearched] = useState(false);
   const [selected, setSelected] = useState(null);
 
@@ -27,12 +28,14 @@ export default function Tourist() {
   async function search() {
     setLoading(true);
     setSearched(true);
+    setError(false);
     const params = new URLSearchParams({ date_from: dateFrom, date_to: dateTo });
     if (period) params.set('period', period);
     try {
       const r = await api.get(`/events/tourist?${params}`);
       setEvents(r.data);
     } catch {
+      setError(true);
       setEvents([]);
     } finally {
       setLoading(false);
@@ -41,12 +44,10 @@ export default function Tourist() {
 
   return (
     <div>
-      <div className="section-header" style={{ marginBottom: 4 }}>
+      <div className="section-header tourist-header">
         <div className="section-title">✈️ Modo Turista</div>
       </div>
-      <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>
-        Monte seu roteiro de rolês por período e datas.
-      </p>
+      <p className="tourist-subtitle">Monte seu roteiro de rolês por período e datas.</p>
 
       <div className="tourist-form">
         <div className="form-row">
@@ -60,36 +61,45 @@ export default function Tourist() {
           </div>
         </div>
 
-        <div className="category-tabs" style={{ marginBottom: 16 }}>
+        <div className="category-tabs tourist-periods">
           {PERIODS.map(p => (
             <button
               key={String(p.id)}
               className={`cat-tab${period === p.id ? ' active' : ''}`}
               onClick={() => setPeriod(p.id)}
+              aria-pressed={period === p.id}
             >
-              <span className="cat-emoji">{p.emoji}</span>
+              <span className="cat-emoji" aria-hidden="true">{p.emoji}</span>
               <span>{p.label}</span>
             </button>
           ))}
         </div>
 
-        <button className="btn-primary" style={{ width: '100%' }} onClick={search}>
+        <button className="btn-primary btn-block" onClick={search}>
           Buscar rolês
         </button>
       </div>
 
       {loading && <div className="loading">Montando seu roteiro...</div>}
 
-      {!loading && searched && events.length === 0 && (
+      {!loading && error && (
+        <div className="feed-error">
+          <div className="feed-error-icon">😵</div>
+          <p>Não conseguimos buscar os eventos</p>
+          <button className="btn-retry" onClick={search}>Tentar novamente</button>
+        </div>
+      )}
+
+      {!loading && !error && searched && events.length === 0 && (
         <div className="empty-state">
           <p>Nenhum rolê encontrado nesse período 😕</p>
-          <p style={{ marginTop: 8, fontSize: 13, color: 'var(--muted)' }}>Tente ajustar as datas ou o período do dia.</p>
+          <p className="empty-hint">Tente ajustar as datas ou o período do dia.</p>
         </div>
       )}
 
       {events.length > 0 && (
         <>
-          <div className="section-header" style={{ marginTop: 20 }}>
+          <div className="section-header tourist-results-header">
             <div className="section-title">Seu roteiro</div>
             <span className="section-link">{events.length} rolês</span>
           </div>
