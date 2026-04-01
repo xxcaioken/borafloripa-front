@@ -605,8 +605,15 @@ body::before {
 /* Card hero (first featured event) */
 .event-card.hero {
   border-color: rgba(0,230,118,0.6);
+  box-shadow: 0 0 0 1px rgba(0,230,118,0.15), 0 8px 40px rgba(0,0,0,0.5);
 }
 .event-card.hero .card-cover { height: 260px; }
+.event-card.hero .card-title {
+  background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 
 /* Cover com foto real */
 .card-cover {
