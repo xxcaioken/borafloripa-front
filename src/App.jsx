@@ -1,17 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
-import Feed from './pages/Feed';
-import MapView from './pages/MapView';
-import PartnerDashboard from './pages/PartnerDashboard';
-import Venues from './pages/Venues';
-import Onboarding from './pages/Onboarding';
-import Auth from './pages/Auth';
-import EventDetail from './components/EventDetail';
-import Tourist from './pages/Tourist';
-import Profile from './pages/Profile';
-import Communities from './pages/Communities';
-import NotFound from './pages/NotFound';
 import ErrorBoundary from './components/ErrorBoundary';
+
+// Critical path — loaded eagerly
+import Feed from './pages/Feed';
+import Onboarding from './pages/Onboarding';
+
+// Lazy-loaded routes — code split by route
+const MapView         = lazy(() => import('./pages/MapView'));
+const PartnerDashboard= lazy(() => import('./pages/PartnerDashboard'));
+const Venues          = lazy(() => import('./pages/Venues'));
+const Auth            = lazy(() => import('./pages/Auth'));
+const EventDetail     = lazy(() => import('./components/EventDetail'));
+const Tourist         = lazy(() => import('./pages/Tourist'));
+const Profile         = lazy(() => import('./pages/Profile'));
+const Communities     = lazy(() => import('./pages/Communities'));
+const NotFound        = lazy(() => import('./pages/NotFound'));
+
+function RouteLoader() {
+  return <div className="loading loading-page">Carregando...</div>;
+}
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { api } from './services/api';
@@ -192,25 +200,29 @@ function AppInner() {
     <BrowserRouter>
       <ScrollToTop />
       <Layout onAuthOpen={() => setShowAuth(true)}>
-        <Routes>
-          <Route path="/" element={<Feed />} />
-          <Route path="/locais" element={<Venues />} />
-          <Route path="/mapa" element={<MapView />} />
-          <Route path="/parceiro" element={<PartnerDashboard onAuthOpen={() => setShowAuth(true)} />} />
-          <Route path="/turista" element={<Tourist />} />
-          <Route path="/comunidades" element={<Communities onAuthOpen={() => setShowAuth(true)} />} />
-          <Route path="/perfil" element={<Profile />} />
-          <Route path="/evento/:id" element={<EventPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <Suspense fallback={<RouteLoader />}>
+          <Routes>
+            <Route path="/" element={<Feed />} />
+            <Route path="/locais" element={<Venues />} />
+            <Route path="/mapa" element={<MapView />} />
+            <Route path="/parceiro" element={<PartnerDashboard onAuthOpen={() => setShowAuth(true)} />} />
+            <Route path="/turista" element={<Tourist />} />
+            <Route path="/comunidades" element={<Communities onAuthOpen={() => setShowAuth(true)} />} />
+            <Route path="/perfil" element={<Profile />} />
+            <Route path="/evento/:id" element={<EventPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </Layout>
       {showAuth && (
-        <Auth
-          onClose={() => { setShowAuth(false); setOnboardPrefs(null); }}
-          initialTab={onboardPrefs ? 'register' : 'login'}
-          prefMusic={onboardPrefs?.music ? JSON.stringify(onboardPrefs.music) : null}
-          prefVibes={onboardPrefs?.vibes ? JSON.stringify(onboardPrefs.vibes) : null}
-        />
+        <Suspense fallback={null}>
+          <Auth
+            onClose={() => { setShowAuth(false); setOnboardPrefs(null); }}
+            initialTab={onboardPrefs ? 'register' : 'login'}
+            prefMusic={onboardPrefs?.music ? JSON.stringify(onboardPrefs.music) : null}
+            prefVibes={onboardPrefs?.vibes ? JSON.stringify(onboardPrefs.vibes) : null}
+          />
+        </Suspense>
       )}
     </BrowserRouter>
   );
