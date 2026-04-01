@@ -4,6 +4,25 @@ import EventCard from '../components/EventCard';
 import EventDetail from '../components/EventDetail';
 import { useBora } from '../hooks/useBora';
 
+function groupByDate(events) {
+  const map = new Map();
+  for (const e of events) {
+    const key = e.date.slice(0, 10);
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(e);
+  }
+  return [...map.entries()];
+}
+
+function formatDateLabel(dateKey) {
+  const d = new Date(dateKey + 'T12:00:00');
+  const today = new Date();
+  const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
+  if (d.toDateString() === today.toDateString()) return '📅 Hoje';
+  if (d.toDateString() === tomorrow.toDateString()) return '📅 Amanhã';
+  return '📅 ' + d.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
 const PERIODS = [
   { id: null,     label: 'Dia todo', emoji: '☀️' },
   { id: 'manha',  label: 'Manhã',    emoji: '🌅' },
@@ -103,18 +122,23 @@ export default function Tourist() {
             <div className="section-title">Seu roteiro</div>
             <span className="section-link">{events.length} rolês</span>
           </div>
-          <div className="events-list">
-            {events.map(event => (
-              <EventCard
-                key={event.id}
-                event={event}
-                onClick={() => setSelected(event)}
-                boraCount={boraCounts[event.id]?.count || 0}
-                boraReacted={boraCounts[event.id]?.reacted || false}
-                onBora={toggleBora}
-              />
-            ))}
-          </div>
+          {groupByDate(events).map(([dateKey, group]) => (
+            <div key={dateKey} className="tourist-day-group">
+              <div className="tourist-day-label">{formatDateLabel(dateKey)}</div>
+              <div className="events-list">
+                {group.map(event => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    onClick={() => setSelected(event)}
+                    boraCount={boraCounts[event.id]?.count || 0}
+                    boraReacted={boraCounts[event.id]?.reacted || false}
+                    onBora={toggleBora}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
         </>
       )}
 
