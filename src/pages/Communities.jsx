@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 const TAG_EMOJI = {
   'Funk': '🎤', 'Eletrônico': '🎧', 'Pagode': '🥁', 'Sertanejo': '🤠',
@@ -11,6 +12,7 @@ const TAG_EMOJI = {
 
 export default function Communities({ onAuthOpen }) {
   const { user } = useAuth();
+  const toast = useToast();
   const [communities, setCommunities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState(null);
@@ -30,6 +32,8 @@ export default function Communities({ onAuthOpen }) {
     try {
       const { data } = await api.post(`/communities/${id}/join`);
       setCommunities(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
+      const community = communities.find(c => c.id === id);
+      toast?.show(`Bem-vindo(a) ao ${community?.name}! 🎉`, 'success');
     } catch {}
     setJoining(null);
   }
@@ -38,6 +42,7 @@ export default function Communities({ onAuthOpen }) {
     navigator.clipboard.writeText(code).then(() => {
       setCopied(id);
       setTimeout(() => setCopied(null), 2000);
+      toast?.show(`Código ${code} copiado! 📋`, 'success');
     });
   }
 
