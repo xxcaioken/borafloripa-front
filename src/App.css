@@ -540,6 +540,10 @@ body::before {
   animation: card-in 300ms ease both;
 }
 .event-card:active { transform: scale(0.975); }
+.event-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 
 .event-card.featured {
   border-color: rgba(0,230,118,0.5);
