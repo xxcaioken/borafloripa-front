@@ -2038,3 +2038,29 @@ body {
   border: 1px solid rgba(178,255,89,0.2);
   font-weight: 600;
 }
+
+/* ── Load more ── */
+.load-more-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0 8px;
+}
+.btn-load-more {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  border-radius: 999px;
+  padding: 10px 28px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn-load-more:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.btn-load-more:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
