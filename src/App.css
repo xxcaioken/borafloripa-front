@@ -876,6 +876,15 @@ body::before {
   border-radius: var(--radius-sm);
   border: 1px solid var(--border2);
 }
+.desc-expand-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
 
 /* Organizers (eventos temporários) */
 .modal-organizers {
