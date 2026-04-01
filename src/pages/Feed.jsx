@@ -99,17 +99,17 @@ export default function Feed() {
   useEffect(() => {
     api.get('/events/tags').then(r => setTags(r.data)).catch(() => {});
     api.get('/events/new-venues').then(r => setNewVenues(r.data)).catch(() => {});
-    api.get('/events/feed?city=Florian%C3%B3polis&today=true&limit=10')
+    api.get('/events/feed', { params: { today: true, limit: 10 } })
       .then(r => setTodayEvents(r.data)).catch(() => {});
   }, []);
 
   function buildParams(currentOffset) {
-    const params = new URLSearchParams({ city: 'Florianópolis', limit: PAGE_SIZE, offset: currentOffset });
-    if (activeCategory) params.set('category', activeCategory);
-    if (activeTag) params.set('tag', activeTag);
-    if (openNow) params.set('open_now', 'true');
-    if (accessible) params.set('accessible', 'true');
-    if (query) params.set('q', query);
+    const params = { limit: PAGE_SIZE, offset: currentOffset };
+    if (activeCategory) params.category = activeCategory;
+    if (activeTag) params.tag = activeTag;
+    if (openNow) params.open_now = true;
+    if (accessible) params.accessible = true;
+    if (query) params.q = query;
     return params;
   }
 
@@ -120,7 +120,7 @@ export default function Feed() {
     setOffset(0);
     setHasMore(false);
     const t = setTimeout(() => {
-      api.get(`/events/feed?${buildParams(0)}`)
+      api.get('/events/feed', { params: buildParams(0) })
         .then(r => {
           let data = r.data;
           if (hasPrefs && !activeCategory && !activeTag && !query) {
@@ -138,7 +138,7 @@ export default function Feed() {
   function loadMore() {
     const nextOffset = offset + PAGE_SIZE;
     setLoadingMore(true);
-    api.get(`/events/feed?${buildParams(nextOffset)}`)
+    api.get('/events/feed', { params: buildParams(nextOffset) })
       .then(r => {
         setEvents(prev => [...prev, ...r.data]);
         setOffset(nextOffset);
