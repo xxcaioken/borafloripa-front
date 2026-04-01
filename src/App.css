@@ -2129,3 +2129,84 @@ body {
 }
 .profile-actions { margin-top: 32px; }
 .profile-logout { width: 100%; justify-content: center; }
+
+/* ── Communities page ── */
+.communities-page { padding-bottom: 40px; }
+.communities-header { margin-bottom: 16px; }
+.communities-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.communities-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 10px;
+}
+.communities-section-label-mt { margin-top: 24px; }
+.community-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 8px; }
+.community-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: border-color 0.2s;
+}
+.community-card.member {
+  border-color: rgba(0,230,118,0.35);
+}
+.community-card-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.community-card-body { flex: 1; min-width: 0; }
+.community-card-name { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+.community-card-desc { font-size: 12px; color: var(--muted); margin-bottom: 6px; line-height: 1.4; }
+.community-card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.community-members { font-size: 12px; color: var(--text2); }
+.community-code {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(0,230,118,0.12);
+  color: var(--accent);
+  border: 1px solid rgba(0,230,118,0.3);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.community-code.copied {
+  background: rgba(0,230,118,0.25);
+}
+.community-code:hover { background: rgba(0,230,118,0.2); }
+.community-join-btn {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+.community-join-btn:hover:not(:disabled):not(.joined) {
+  background: var(--accent);
+  color: #000;
+}
+.community-join-btn.joined {
+  border-color: var(--border);
+  color: var(--muted);
+  cursor: default;
+}
+.community-join-btn:disabled { opacity: 0.6; }
