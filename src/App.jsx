@@ -9,6 +9,7 @@ import Auth from './pages/Auth';
 import EventDetail from './components/EventDetail';
 import Tourist from './pages/Tourist';
 import Profile from './pages/Profile';
+import Communities from './pages/Communities';
 import NotFound from './pages/NotFound';
 import ErrorBoundary from './components/ErrorBoundary';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -21,14 +22,18 @@ function BottomNav() {
   const { user } = useAuth();
   const path = location.pathname;
 
-  const items = [
+  const items = user ? [
+    { icon: '🏠', label: 'Início',       to: '/' },
+    { icon: '🍸', label: 'Locais',       to: '/locais' },
+    { icon: '🗺️', label: 'Mapa',        to: '/mapa' },
+    { icon: '🤝', label: 'Comunidades',  to: '/comunidades' },
+    { icon: '👤', label: user.name.split(' ')[0], to: '/perfil' },
+  ] : [
     { icon: '🏠', label: 'Início',  to: '/' },
     { icon: '🍸', label: 'Locais',  to: '/locais' },
     { icon: '🗺️', label: 'Mapa',   to: '/mapa' },
     { icon: '✈️', label: 'Turista', to: '/turista' },
-    user
-      ? { icon: '👤', label: user.name.split(' ')[0], to: '/perfil' }
-      : { icon: '💼', label: 'Parceiro', to: '/parceiro' },
+    { icon: '💼', label: 'Parceiro', to: '/parceiro' },
   ];
 
   return (
@@ -56,11 +61,12 @@ function Sidebar({ onAuthOpen }) {
   const path = location.pathname;
 
   const items = [
-    { icon: '🏠', label: 'Início',    to: '/' },
-    { icon: '🍸', label: 'Locais',    to: '/locais' },
-    { icon: '🗺️', label: 'Mapa',     to: '/mapa' },
-    { icon: '✈️', label: 'Turista',   to: '/turista' },
-    { icon: '💼', label: 'Parceiros', to: '/parceiro' },
+    { icon: '🏠', label: 'Início',       to: '/' },
+    { icon: '🍸', label: 'Locais',       to: '/locais' },
+    { icon: '🗺️', label: 'Mapa',        to: '/mapa' },
+    { icon: '✈️', label: 'Turista',      to: '/turista' },
+    { icon: '🤝', label: 'Comunidades',  to: '/comunidades' },
+    { icon: '💼', label: 'Parceiros',    to: '/parceiro' },
     ...(user ? [{ icon: '👤', label: user.name.split(' ')[0], to: '/perfil' }] : []),
   ];
 
@@ -191,6 +197,7 @@ function AppInner() {
           <Route path="/mapa" element={<MapView />} />
           <Route path="/parceiro" element={<PartnerDashboard onAuthOpen={() => setShowAuth(true)} />} />
           <Route path="/turista" element={<Tourist />} />
+          <Route path="/comunidades" element={<Communities onAuthOpen={() => setShowAuth(true)} />} />
           <Route path="/perfil" element={<Profile />} />
           <Route path="/evento/:id" element={<EventPage />} />
           <Route path="*" element={<NotFound />} />
