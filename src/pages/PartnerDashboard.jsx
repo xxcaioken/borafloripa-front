@@ -3,26 +3,17 @@ import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const CATEGORIES = [
-  { id: 'bar', label: 'Bar' },
-  { id: 'balada', label: 'Balada' },
-  { id: 'cultura', label: 'Cultura' },
-  { id: 'rua', label: 'Rolê na Rua' },
+  { id: 'bar', label: 'Bar' }, { id: 'balada', label: 'Balada' },
+  { id: 'cultura', label: 'Cultura' }, { id: 'rua', label: 'Rolê na Rua' },
 ];
-
 const VIBES = ['Normal', 'Animado', 'Lotado', 'Quente 🔥'];
 
 function EventForm({ venues, tags, onSave, onCancel, initial }) {
   const [form, setForm] = useState(initial || {
     venue_id: venues[0]?.id || '',
-    title: '',
-    description: '',
-    date: '',
-    vibe_status: 'Normal',
-    category: 'bar',
-    is_temporary: false,
-    organizers: '',
-    price_info: '',
-    tag_ids: [],
+    title: '', description: '', date: '',
+    vibe_status: 'Normal', category: 'bar',
+    is_temporary: false, organizers: '', price_info: '', tag_ids: [],
   });
   const [saving, setSaving] = useState(false);
 
@@ -38,11 +29,7 @@ function EventForm({ venues, tags, onSave, onCancel, initial }) {
     e.preventDefault();
     if (!form.title || !form.date || !form.venue_id) return;
     setSaving(true);
-    try {
-      await onSave(form);
-    } finally {
-      setSaving(false);
-    }
+    try { await onSave(form); } finally { setSaving(false); }
   }
 
   return (
@@ -87,11 +74,7 @@ function EventForm({ venues, tags, onSave, onCancel, initial }) {
       </div>
       <div className="form-group">
         <label>Entrada / Preço (opcional)</label>
-        <input
-          value={form.price_info || ''}
-          onChange={e => set('price_info', e.target.value)}
-          placeholder="Ex: Entrada: R$25 / Open bar: R$60"
-        />
+        <input value={form.price_info || ''} onChange={e => set('price_info', e.target.value)} placeholder="Ex: Entrada: R$25 / Open bar: R$60" />
       </div>
       <div className="form-check">
         <input type="checkbox" id="is_temp" checked={form.is_temporary} onChange={e => set('is_temporary', e.target.checked)} />
@@ -102,9 +85,7 @@ function EventForm({ venues, tags, onSave, onCancel, initial }) {
           <label>Tags</label>
           <div className="tag-picker">
             {tags.map(t => (
-              <button
-                key={t.id}
-                type="button"
+              <button key={t.id} type="button"
                 className={`tag-chip${form.tag_ids.includes(t.id) ? ' selected' : ''}`}
                 onClick={() => toggleTag(t.id)}
               >{t.name}</button>
@@ -125,16 +106,16 @@ function EventForm({ venues, tags, onSave, onCancel, initial }) {
 function ClaimVenueModal({ onClaim, onClose }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     if (query.length < 2) { setResults([]); return; }
     const t = setTimeout(() => {
-      setLoading(true);
+      setSearching(true);
       api.get(`/events/venues?q=${encodeURIComponent(query)}`)
         .then(r => setResults(r.data.slice(0, 10)))
         .catch(() => setResults([]))
-        .finally(() => setLoading(false));
+        .finally(() => setSearching(false));
     }, 300);
     return () => clearTimeout(t);
   }, [query]);
@@ -143,44 +124,45 @@ function ClaimVenueModal({ onClaim, onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-sheet" onClick={e => e.stopPropagation()}>
         <div className="modal-body">
-          <div className="modal-title" style={{ fontSize: 20, marginBottom: 6 }}>Vincular meu local</div>
-          <p style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 16 }}>
+          <div className="claim-modal-title">Vincular meu local</div>
+          <p className="claim-modal-desc">
             Busque o nome do seu estabelecimento na base de dados do Bora Floripa.
           </p>
-          <div className="search-bar" style={{ marginBottom: 16 }}>
+          <div className="search-bar claim-search">
             <div className="search-input-wrap">
-              <span className="search-icon">🔍</span>
+              <span className="search-icon" aria-hidden="true">🔍</span>
               <input
                 className="search-input"
                 placeholder="Digite o nome do local..."
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 autoFocus
+                aria-label="Buscar local"
               />
             </div>
           </div>
-          {loading && <div style={{ textAlign: 'center', padding: 12, color: 'var(--muted)', fontSize: 14 }}>Buscando...</div>}
-          <div className="venue-list">
-            {results.map(v => (
-              <div key={v.id} className="venue-row" style={{ cursor: 'pointer' }} onClick={() => onClaim(v)}>
-                <div className="venue-row-info">
-                  <div className="venue-row-name">{v.name}</div>
-                  {v.address && <div className="venue-row-addr">{v.address}</div>}
+          {searching && <div className="claim-searching">Buscando...</div>}
+          {!searching && results.length > 0 && (
+            <div className="venue-list">
+              {results.map(v => (
+                <div key={v.id} className="venue-row venue-row-clickable" onClick={() => onClaim(v)}>
+                  <div className="venue-row-info">
+                    <div className="venue-row-name">{v.name}</div>
+                    {v.address && <div className="venue-row-addr">{v.address}</div>}
+                  </div>
+                  <span className="btn-claim">Vincular</span>
                 </div>
-                <span className="btn-primary" style={{ fontSize: 13, padding: '4px 12px', flexShrink: 0 }}>Vincular</span>
-              </div>
-            ))}
-          </div>
-          {!loading && query.length >= 2 && results.length === 0 && (
-            <div className="empty-state" style={{ padding: '24px 0' }}><p>Nenhum local encontrado com esse nome</p></div>
-          )}
-          {query.length < 2 && (
-            <div style={{ textAlign: 'center', color: 'var(--muted)', fontSize: 13, padding: '24px 0' }}>
-              Digite pelo menos 2 letras para buscar
+              ))}
             </div>
           )}
+          {!searching && query.length >= 2 && results.length === 0 && (
+            <div className="empty-state claim-empty"><p>Nenhum local encontrado</p></div>
+          )}
+          {query.length < 2 && (
+            <div className="claim-hint">Digite pelo menos 2 letras para buscar</div>
+          )}
         </div>
-        <button className="modal-close" onClick={onClose}>✕</button>
+        <button className="modal-close" onClick={onClose} aria-label="Fechar">✕</button>
       </div>
     </div>
   );
@@ -203,13 +185,11 @@ export default function PartnerDashboard({ onAuthOpen }) {
     Promise.all([
       api.get('/partners/stats'),
       api.get('/partners/events'),
-      api.get('/events/tags'),
       api.get('/partners/analytics'),
     ])
-      .then(([s, e, t, a]) => {
+      .then(([s, e, a]) => {
         setStats(s.data);
         setEvents(e.data);
-        setTags(t.data.map((name, i) => ({ id: i + 1, name })));
         setAnalytics(a.data);
       })
       .catch(() => {})
@@ -218,19 +198,16 @@ export default function PartnerDashboard({ onAuthOpen }) {
 
   useEffect(() => { load(); }, [load]);
 
-  // Fetch real tag objects with IDs
   useEffect(() => {
     api.get('/events/tags-full').then(r => setTags(r.data)).catch(() => {});
   }, []);
 
   if (!user) {
     return (
-      <div className="empty-state" style={{ paddingTop: 60 }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🏪</div>
-        <h2 style={{ marginBottom: 8 }}>Área do Parceiro</h2>
-        <p style={{ color: 'var(--muted)', marginBottom: 24 }}>
-          Cadastre seu estabelecimento, publique eventos e apareça no feed do Bora Floripa.
-        </p>
+      <div className="partner-unauthenticated">
+        <div className="partner-unauthenticated-icon">🏪</div>
+        <h2>Área do Parceiro</h2>
+        <p>Cadastre seu estabelecimento, publique eventos e apareça no feed do Bora Floripa.</p>
         <button className="btn-primary" onClick={onAuthOpen}>Entrar / Cadastrar</button>
       </div>
     );
@@ -269,16 +246,14 @@ export default function PartnerDashboard({ onAuthOpen }) {
 
   return (
     <div>
-      {/* Header */}
       <div className="dashboard-header">
         <div className="dashboard-avatar">{initials}</div>
         <div>
           <h2>{user.name}</h2>
-          <p style={{ color: 'var(--muted)', fontSize: 13 }}>{user.email}</p>
+          <p className="dashboard-email">{user.email}</p>
         </div>
       </div>
 
-      {/* Stats */}
       <div className="stats-row">
         <div className="stat-card">
           <div className="stat-value">{stats?.total_events ?? 0}</div>
@@ -294,23 +269,20 @@ export default function PartnerDashboard({ onAuthOpen }) {
         </div>
       </div>
 
-      {/* Venues section */}
-      <div className="section-header" style={{ marginTop: 24 }}>
+      <div className="section-header section-mt">
         <div className="section-title">Meus Locais</div>
-        <button className="section-link" style={{ cursor: 'pointer', background: 'none', border: 'none', color: 'var(--accent)' }} onClick={() => setShowClaim(true)}>
-          + Vincular local
-        </button>
+        <button className="btn-link-accent" onClick={() => setShowClaim(true)}>+ Vincular local</button>
       </div>
 
       {venues.length === 0 ? (
-        <div className="empty-state" style={{ padding: '20px 0' }}>
+        <div className="empty-state empty-sm">
           <p>Nenhum local vinculado ainda.</p>
-          <button className="btn-secondary" style={{ marginTop: 12 }} onClick={() => setShowClaim(true)}>
+          <button className="btn-secondary mt-sm" onClick={() => setShowClaim(true)}>
             Buscar meu estabelecimento
           </button>
         </div>
       ) : (
-        <div className="venue-list" style={{ marginBottom: 24 }}>
+        <div className="venue-list venue-list-mb">
           {venues.map(v => (
             <div key={v.id} className="venue-row">
               <div className="venue-row-info">
@@ -327,11 +299,10 @@ export default function PartnerDashboard({ onAuthOpen }) {
         </div>
       )}
 
-      {/* Events section */}
       <div className="section-header">
         <div className="section-title">Meus Eventos</div>
         {venues.length > 0 && !showForm && (
-          <button className="btn-primary" style={{ fontSize: 13, padding: '6px 14px' }} onClick={() => { setEditEvent(null); setShowForm(true); }}>
+          <button className="btn-primary btn-primary-sm" onClick={() => { setEditEvent(null); setShowForm(true); }}>
             + Novo evento
           </button>
         )}
@@ -374,13 +345,13 @@ export default function PartnerDashboard({ onAuthOpen }) {
                 </div>
               )}
             </div>
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div className="pev-actions">
               {event.is_featured && <span className="badge-featured-sm">Destaque</span>}
-              <button className="btn-secondary" style={{ fontSize: 12, padding: '4px 10px' }}
+              <button className="btn-secondary btn-secondary-xs"
                 onClick={() => { setEditEvent(event); setShowForm(false); }}>
                 Editar
               </button>
-              <button style={{ fontSize: 12, padding: '4px 10px', background: 'none', border: '1px solid #c0392b', color: '#c0392b', borderRadius: 8, cursor: 'pointer' }}
+              <button className="btn-danger"
                 onClick={() => handleDelete(event.id)}>
                 Remover
               </button>

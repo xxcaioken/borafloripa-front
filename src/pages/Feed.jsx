@@ -18,7 +18,6 @@ const CATEGORIES = [
   { id: 'temporario', label: 'Especial',    emoji: '⚡' },
 ];
 
-// Mapa de IDs do onboarding → nomes de tags do backend
 const MUSIC_TO_TAG = {
   funk: 'Funk', eletronico: 'Eletrônico', pagode: 'Pagode',
   sertanejo: 'Sertanejo', rock: 'Rock', mpb: 'MPB', reggae: 'Reggae', pop: null,
@@ -38,6 +37,24 @@ function scoreEvent(event, prefMusic, prefVibes) {
   return score;
 }
 
+function SkeletonCard() {
+  return (
+    <div className="skeleton-card" aria-hidden="true">
+      <div className="skeleton-cover" />
+      <div className="skeleton-body">
+        <div className="skeleton-line w-70" />
+        <div className="skeleton-line w-45" />
+        <div className="skeleton-line w-55" />
+        <div className="skeleton-chips">
+          <div className="skeleton-chip" />
+          <div className="skeleton-chip" />
+          <div className="skeleton-chip" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Feed() {
   const { user } = useAuth();
   const { savedIds, toggle: toggleSaved } = useSaved(!!user);
@@ -50,25 +67,27 @@ export default function Feed() {
   const [accessible, setAccessible] = useState(false);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [selected, setSelected] = useState(null);
   const [showTagFilter, setShowTagFilter] = useState(false);
 
   const eventIds = useMemo(() => events.map(e => e.id), [events]);
   const { counts: boraCounts, toggle: toggleBora } = useBora(eventIds);
 
-  // Preferências: prioriza usuário logado, cai para localStorage do onboarding
   const prefMusic = useMemo(() => {
     if (user?.pref_music) {
       try { return JSON.parse(user.pref_music); } catch { return []; }
     }
     try { return JSON.parse(localStorage.getItem('bf_pref_music') || '[]'); } catch { return []; }
   }, [user?.pref_music]);
+
   const prefVibes = useMemo(() => {
     if (user?.pref_vibes) {
       try { return JSON.parse(user.pref_vibes); } catch { return []; }
     }
     try { return JSON.parse(localStorage.getItem('bf_pref_vibes') || '[]'); } catch { return []; }
   }, [user?.pref_vibes]);
+
   const hasPrefs = prefMusic.length > 0 || prefVibes.length > 0;
 
   useEffect(() => {
@@ -78,6 +97,7 @@ export default function Feed() {
 
   useEffect(() => {
     setLoading(true);
+    setError(false);
     const params = new URLSearchParams({ city: 'Florianópolis' });
     if (activeCategory) params.set('category', activeCategory);
     if (activeTag) params.set('tag', activeTag);
@@ -88,13 +108,12 @@ export default function Feed() {
       api.get(`/events/feed?${params}`)
         .then(r => {
           let data = r.data;
-          // Recomendação: reordena por score de preferência se não há filtros ativos
           if (hasPrefs && !activeCategory && !activeTag && !query) {
             data = [...data].sort((a, b) => scoreEvent(b, prefMusic, prefVibes) - scoreEvent(a, prefMusic, prefVibes));
           }
           setEvents(data);
         })
-        .catch(() => setEvents([]))
+        .catch(() => { setError(true); setEvents([]); })
         .finally(() => setLoading(false));
     }, query ? 300 : 0);
     return () => clearTimeout(t);
@@ -107,25 +126,43 @@ export default function Feed() {
       {/* Search */}
       <div className="search-bar">
         <div className="search-input-wrap">
-          <span className="search-icon">🔍</span>
+          <span className="search-icon" aria-hidden="true">🔍</span>
           <input
             className="search-input"
             placeholder="Buscar rolê, local..."
             value={query}
             onChange={e => setQuery(e.target.value)}
+            aria-label="Buscar eventos"
           />
         </div>
-        <button className={`filter-btn-icon${showTagFilter ? ' active' : ''}`} onClick={() => setShowTagFilter(v => !v)} title="Estilos">🎵</button>
-        <button className={`filter-btn-icon${openNow ? ' active' : ''}`} onClick={() => setOpenNow(v => !v)} title="Aberto agora">🟢</button>
-        <button className={`filter-btn-icon${accessible ? ' active' : ''}`} onClick={() => setAccessible(v => !v)} title="Acessível">♿</button>
+        <button
+          className={`filter-btn-icon${showTagFilter ? ' active' : ''}`}
+          onClick={() => setShowTagFilter(v => !v)}
+          aria-label="Filtrar por estilo musical"
+          aria-pressed={showTagFilter}
+        >🎵</button>
+        <button
+          className={`filter-btn-icon${openNow ? ' active' : ''}`}
+          onClick={() => setOpenNow(v => !v)}
+          aria-label="Mostrar apenas abertos agora"
+          aria-pressed={openNow}
+        >🟢</button>
+        <button
+          className={`filter-btn-icon${accessible ? ' active' : ''}`}
+          onClick={() => setAccessible(v => !v)}
+          aria-label="Mostrar apenas locais acessíveis"
+          aria-pressed={accessible}
+        >♿</button>
       </div>
 
       {showTagFilter && (
-        <div className="filter-chips">
+        <div className="filter-chips" role="group" aria-label="Estilos musicais">
           <button className={`chip${!activeTag ? ' active' : ''}`} onClick={() => setActiveTag(null)}>Todos</button>
           {tags.map(tag => (
             <button key={tag} className={`chip${activeTag === tag ? ' active' : ''}`}
-              onClick={() => setActiveTag(activeTag === tag ? null : tag)}>{tag}</button>
+              onClick={() => setActiveTag(activeTag === tag ? null : tag)}
+              aria-pressed={activeTag === tag}
+            >{tag}</button>
           ))}
         </div>
       )}
@@ -155,30 +192,33 @@ export default function Feed() {
       )}
 
       {/* Categorias */}
-      <div className="category-tabs">
+      <div className="category-tabs" role="tablist" aria-label="Categorias">
         {CATEGORIES.map(cat => (
           <button key={String(cat.id)}
             className={`cat-tab${activeCategory === cat.id ? ' active' : ''}`}
-            onClick={() => setActiveCategory(cat.id)}>
-            <span className="cat-emoji">{cat.emoji}</span>
+            onClick={() => setActiveCategory(cat.id)}
+            role="tab"
+            aria-selected={activeCategory === cat.id}
+          >
+            <span className="cat-emoji" aria-hidden="true">{cat.emoji}</span>
             <span>{cat.label}</span>
           </button>
         ))}
       </div>
 
-      {/* Banners ativos */}
+      {/* Banners de filtro ativos */}
       {(openNow || accessible) && (
-        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        <div className="active-filter-banners">
           {openNow && (
-            <div className="open-now-banner" style={{ flex: 1 }}>
+            <div className="filter-banner filter-banner-green">
               🟢 Aberto agora
-              <button onClick={() => setOpenNow(false)}>✕</button>
+              <button onClick={() => setOpenNow(false)} aria-label="Remover filtro aberto agora">✕</button>
             </div>
           )}
           {accessible && (
-            <div className="open-now-banner" style={{ flex: 1, borderColor: 'rgba(0,188,212,0.3)', color: 'var(--accent2)' }}>
+            <div className="filter-banner filter-banner-blue">
               ♿ Acessível
-              <button onClick={() => setAccessible(false)}>✕</button>
+              <button onClick={() => setAccessible(false)} aria-label="Remover filtro acessível">✕</button>
             </div>
           )}
         </div>
@@ -189,19 +229,33 @@ export default function Feed() {
         <div className="section-title">
           {hasPrefs && !hasFilter ? '⭐ Para você' : query ? `"${query}"` : activeCategory ? CATEGORIES.find(c => c.id === activeCategory)?.label : 'Em destaque'}
         </div>
-        <span className="section-link">{events.length} rolês</span>
+        {!loading && !error && (
+          <span className="section-link">{events.length} rolês</span>
+        )}
       </div>
 
       {loading ? (
-        <div className="loading">Carregando a vibe...</div>
+        <div className="events-list">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+      ) : error ? (
+        <div className="feed-error">
+          <div className="feed-error-icon">😵</div>
+          <p>Não conseguimos carregar os rolês</p>
+          <button className="btn-retry" onClick={() => setActiveCategory(activeCategory)}>
+            Tentar novamente
+          </button>
+        </div>
       ) : events.length === 0 ? (
         <div className="empty-state">
           <p>Nenhum rolê encontrado 😕</p>
-          {accessible && <p style={{ marginTop: 8, fontSize: 13 }}>Nenhum local acessível com esse filtro</p>}
+          {accessible && <p className="empty-hint">Nenhum local acessível com esse filtro</p>}
         </div>
       ) : (
         <div className="events-list">
-          {events.map(event => (
+          {events.map((event, i) => (
             <EventCard
               key={event.id}
               event={event}
@@ -211,6 +265,7 @@ export default function Feed() {
               onBora={toggleBora}
               isSaved={savedIds.has(event.id)}
               onSave={user ? toggleSaved : null}
+              hero={i === 0 && event.is_featured && !hasFilter}
             />
           ))}
         </div>

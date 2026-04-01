@@ -53,7 +53,7 @@ function AccessBadges({ venue }) {
   );
 }
 
-export default function EventCard({ event, onClick, boraCount = 0, boraReacted = false, onBora, isSaved = false, onSave }) {
+export default function EventCard({ event, onClick, boraCount = 0, boraReacted = false, onBora, isSaved = false, onSave, hero = false }) {
   const isTemp = event.is_temporary;
   const coverBg = isTemp
     ? 'linear-gradient(135deg, #0a2a0f 0%, #142a0a 100%)'
@@ -77,8 +77,10 @@ export default function EventCard({ event, onClick, boraCount = 0, boraReacted =
 
   return (
     <div
-      className={`event-card${event.is_featured ? ' featured' : ''}${isTemp ? ' temporary' : ''}`}
+      className={`event-card${event.is_featured ? ' featured' : ''}${isTemp ? ' temporary' : ''}${hero ? ' hero' : ''}`}
       onClick={onClick}
+      role="article"
+      aria-label={`${event.title} em ${event.venue.name}`}
     >
       {/* Cover */}
       <div
