@@ -1004,9 +1004,12 @@ body::before {
   font-size: 15px;
   font-weight: 800;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.1s;
+  transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
 }
-.btn-primary:hover { opacity: 0.9; }
+.btn-primary:hover {
+  opacity: 0.92;
+  box-shadow: 0 0 20px rgba(0,230,118,0.35);
+}
 .btn-primary:active { transform: scale(0.97); }
 .btn-secondary {
   background: var(--surface2);
@@ -1017,9 +1020,12 @@ body::before {
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
-.btn-secondary:hover { border-color: var(--accent); }
+.btn-secondary:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(0,230,118,0.15);
+}
 
 /* ══════════════════════════════════════
    COMMUNITIES PAGE
@@ -1583,6 +1589,7 @@ body::before {
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-dim);
+  box-shadow: 0 0 14px rgba(0,230,118,0.2);
 }
 .bora-btn:active { transform: scale(0.94); }
 .bora-btn.reacted {
