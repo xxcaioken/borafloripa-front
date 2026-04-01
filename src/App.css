@@ -1764,6 +1764,11 @@ body::before {
   padding: 0;
   line-height: 1;
 }
+.filter-banner-green {
+  background: rgba(0,230,118,0.07);
+  border-color: rgba(0,230,118,0.2);
+  color: var(--accent);
+}
 .filter-banner-blue {
   background: rgba(0,188,212,0.07);
   border-color: rgba(0,188,212,0.3);
