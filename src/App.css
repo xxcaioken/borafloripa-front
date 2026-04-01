@@ -2016,7 +2016,7 @@ body::before {
   align-items: center;
 }
 
-/* ── Event card desktop hover ── */
+/* ── Event card desktop hover + bento grid ── */
 @media (min-width: 900px) {
   .event-card:hover {
     transform: translateY(-2px);
@@ -2029,6 +2029,24 @@ body::before {
   }
   .event-card.hero {
     grid-column: span 2;
+  }
+  .event-card.hero .card-cover { height: 300px; }
+}
+
+@media (min-width: 1200px) {
+  .events-list {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .event-card.hero {
+    grid-column: span 2;
+    grid-row: span 1;
+  }
+  .event-card.hero .card-cover { height: 340px; }
+  .event-card.hero .card-title { font-size: 22px; }
+  /* Second featured card gets subtle highlight */
+  .events-list .event-card.featured:not(.hero) {
+    border-color: rgba(124,77,255,0.15);
   }
 }
 
