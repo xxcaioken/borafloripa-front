@@ -68,6 +68,14 @@ function FlyTo({ target }) {
   return null;
 }
 
+function FlyToCoords({ coords }) {
+  const map = useMap();
+  useEffect(() => {
+    if (coords) map.flyTo(coords, 15, { duration: 0.8 });
+  }, [coords, map]);
+  return null;
+}
+
 function VenuePopup({ venue, onCheckin }) {
   const todayEvents    = venue.events?.filter(e => isToday(e.date)) || [];
   const upcomingEvents = venue.events?.filter(e => !isToday(e.date)) || [];
@@ -145,6 +153,7 @@ export default function MapView() {
   const [selected, setSelected] = useState(null);
   const [flyTarget, setFlyTarget] = useState(null);
   const [search, setSearch]   = useState('');
+  const [userCoords, setUserCoords] = useState(null);
   const sessionId = useSessionId();
   const toast = useToast();
 
@@ -208,6 +217,21 @@ export default function MapView() {
               aria-label="Buscar local no mapa"
             />
           </div>
+          {navigator.geolocation && (
+            <button
+              className="map-locate-btn"
+              onClick={() => {
+                navigator.geolocation.getCurrentPosition(
+                  pos => setUserCoords([pos.coords.latitude, pos.coords.longitude]),
+                  () => toast?.show('Não foi possível obter sua localização', 'info'),
+                );
+              }}
+              aria-label="Minha localização"
+              title="Minha localização"
+            >
+              📍
+            </button>
+          )}
         </div>
         <div className="map-filter-row" role="group" aria-label="Filtros do mapa">
           {FILTERS.map(f => {
@@ -244,6 +268,7 @@ export default function MapView() {
               maxZoom={19}
             />
             <FlyTo target={flyTarget} />
+            <FlyToCoords coords={userCoords} />
             {visible.map(v => (
               <Marker
                 key={v.id}
