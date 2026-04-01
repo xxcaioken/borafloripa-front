@@ -1604,6 +1604,29 @@ body {
 }
 
 /* ── Misc ── */
+/* ── Card top right cluster ── */
+.card-top-right {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* ── Event card desktop hover ── */
+@media (min-width: 900px) {
+  .event-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  }
+  .events-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .event-card.hero {
+    grid-column: span 2;
+  }
+}
+
 /* ── Topbar actions ── */
 .topbar-actions {
   display: flex;

@@ -81,7 +81,10 @@ export default function EventCard({ event, onClick, boraCount = 0, boraReacted =
       onClick={onClick}
     >
       {/* Cover */}
-      <div className="card-cover" style={event.cover_url ? {} : { background: coverBg }}>
+      <div
+        className="card-cover"
+        style={event.cover_url ? undefined : { background: coverBg }}
+      >
         {event.cover_url && (
           <img className="card-cover-img" src={event.cover_url} alt={event.title} loading="lazy" />
         )}
@@ -93,7 +96,7 @@ export default function EventCard({ event, onClick, boraCount = 0, boraReacted =
             {isTemp && <span className="badge-temporary">⚡ Especial</span>}
             {event.is_featured && !isTemp && <span className="badge-featured">★ Destaque</span>}
           </div>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <div className="card-top-right">
             {checkinCount > 0 && (
               <div className="checkin-badge">
                 <div className={`checkin-dot${checkinCount >= 5 ? ' hot' : ''}`} />
@@ -104,7 +107,7 @@ export default function EventCard({ event, onClick, boraCount = 0, boraReacted =
               <button
                 className={`bookmark-btn${isSaved ? ' saved' : ''}`}
                 onClick={handleSave}
-                title={isSaved ? 'Remover dos favoritos' : 'Salvar'}
+                aria-label={isSaved ? 'Remover dos favoritos' : 'Salvar evento'}
               >
                 {isSaved ? '🔖' : '🏷️'}
               </button>
@@ -149,6 +152,8 @@ export default function EventCard({ event, onClick, boraCount = 0, boraReacted =
           <button
             className={`bora-btn${boraReacted ? ' reacted' : ''}`}
             onClick={handleBora}
+            aria-label={boraReacted ? 'Você confirmou presença' : `Confirmar presença em ${event.title}`}
+            aria-pressed={boraReacted}
           >
             {boraReacted ? '✓ Tô dentro!' : '🚀 Bora!'}
           </button>
