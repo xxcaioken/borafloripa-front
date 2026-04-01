@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import EventCard from '../components/EventCard';
 import EventDetail from '../components/EventDetail';
 import { useBora } from '../hooks/useBora';
+import { useFollowVenue } from '../hooks/useFollowVenue';
 
 const MUSIC_LABELS = {
   funk: 'Funk', eletronico: 'Eletrônico', pagode: 'Pagode',
@@ -23,6 +24,9 @@ export default function Profile() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
 
+  const [followed, setFollowed] = useState([]);
+  const { followedIds, toggle: toggleFollow } = useFollowVenue(!!user);
+
   const eventIds = saved.map(e => e.id);
   const { counts: boraCounts, toggle: toggleBora } = useBora(eventIds);
 
@@ -32,6 +36,9 @@ export default function Profile() {
       .then(r => setSaved(r.data))
       .catch(() => setSaved([]))
       .finally(() => setLoading(false));
+    api.get('/follows/venues')
+      .then(r => setFollowed(r.data))
+      .catch(() => setFollowed([]));
   }, [user]);
 
   if (!user) return null;
@@ -107,6 +114,32 @@ export default function Profile() {
             />
           ))}
         </div>
+      )}
+
+      {/* Locais seguidos */}
+      {followed.length > 0 && (
+        <>
+          <div className="profile-section-title profile-section-title-mt">
+            Locais que você segue <span className="profile-count">{followed.length}</span>
+          </div>
+          <div className="followed-venues-list">
+            {followed.map(venue => (
+              <div key={venue.id} className="followed-venue-row">
+                <span className="followed-venue-name">{venue.name}</span>
+                <button
+                  className="venue-follow-btn following"
+                  onClick={() => {
+                    toggleFollow(venue.id);
+                    setFollowed(prev => prev.filter(v => v.id !== venue.id));
+                  }}
+                  aria-label={`Deixar de seguir ${venue.name}`}
+                >
+                  ✓ Seguindo
+                </button>
+              </div>
+            ))}
+          </div>
+        </>
       )}
 
       <div className="profile-actions">
