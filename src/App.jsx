@@ -131,6 +131,12 @@ function Layout({ children, onAuthOpen }) {
   );
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
 function EventPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -177,6 +183,7 @@ function AppInner() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Layout onAuthOpen={() => setShowAuth(true)}>
         <Routes>
           <Route path="/" element={<Feed />} />
