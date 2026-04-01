@@ -75,6 +75,7 @@ export default function Feed() {
   const [showTagFilter, setShowTagFilter] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(false);
+  const [todayEvents, setTodayEvents] = useState([]);
 
   const eventIds = useMemo(() => events.map(e => e.id), [events]);
   const { counts: boraCounts, toggle: toggleBora } = useBora(eventIds);
@@ -98,6 +99,8 @@ export default function Feed() {
   useEffect(() => {
     api.get('/events/tags').then(r => setTags(r.data)).catch(() => {});
     api.get('/events/new-venues').then(r => setNewVenues(r.data)).catch(() => {});
+    api.get('/events/feed?city=Florian%C3%B3polis&today=true&limit=10')
+      .then(r => setTodayEvents(r.data)).catch(() => {});
   }, []);
 
   function buildParams(currentOffset) {
@@ -213,6 +216,33 @@ export default function Feed() {
                 <span>{venue.city}</span>
               </div>
             ))}
+          </div>
+        </>
+      )}
+
+      {/* Hoje */}
+      {todayEvents.length > 0 && !hasFilter && (
+        <>
+          <div className="section-header">
+            <div className="section-title today-title">🔥 Acontece Hoje</div>
+            <span className="section-link today-badge">{todayEvents.length} eventos</span>
+          </div>
+          <div className="today-scroll">
+            {todayEvents.map(event => {
+              const t = new Date(event.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+              return (
+                <button
+                  key={event.id}
+                  className="today-chip"
+                  onClick={() => setSelected(event)}
+                  aria-label={`${event.title} às ${t}`}
+                >
+                  <span className="today-chip-time">{t}</span>
+                  <span className="today-chip-name">{event.title}</span>
+                  <span className="today-chip-venue">{event.venue.name}</span>
+                </button>
+              );
+            })}
           </div>
         </>
       )}
