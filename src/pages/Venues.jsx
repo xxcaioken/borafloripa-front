@@ -5,6 +5,13 @@ import { useAuth } from '../context/AuthContext';
 import { useFollowVenue } from '../hooks/useFollowVenue';
 
 const CAT_EMOJI = { bar: '🍺', balada: '💃', cultura: '🎭', rua: '🌆' };
+const CATS = [
+  { id: null,     label: 'Todos',   emoji: '✨' },
+  { id: 'bar',    label: 'Bares',   emoji: '🍺' },
+  { id: 'balada', label: 'Baladas', emoji: '💃' },
+  { id: 'cultura',label: 'Cultura', emoji: '🎭' },
+  { id: 'rua',    label: 'Rua',     emoji: '🌆' },
+];
 
 export default function Venues() {
   usePageTitle('Locais');
@@ -12,19 +19,22 @@ export default function Venues() {
   const { followedIds, toggle: toggleFollow } = useFollowVenue(!!user);
   const [venues, setVenues]   = useState([]);
   const [query, setQuery]     = useState('');
+  const [category, setCategory] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
     const t = setTimeout(() => {
-      const params = query ? { q: query } : {};
+      const params = {};
+      if (query) params.q = query;
+      if (category) params.category = category;
       api.get('/events/venues', { params })
         .then(r => setVenues(r.data))
         .catch(() => setVenues([]))
         .finally(() => setLoading(false));
     }, query ? 300 : 0);
     return () => clearTimeout(t);
-  }, [query]);
+  }, [query, category]);
 
   return (
     <div>
@@ -38,6 +48,21 @@ export default function Venues() {
             onChange={e => setQuery(e.target.value)}
           />
         </div>
+      </div>
+
+      <div className="category-tabs venues-cat-tabs" role="tablist" aria-label="Tipo de local">
+        {CATS.map(cat => (
+          <button
+            key={String(cat.id)}
+            className={`cat-tab${category === cat.id ? ' active' : ''}`}
+            onClick={() => setCategory(cat.id)}
+            role="tab"
+            aria-selected={category === cat.id}
+          >
+            <span className="cat-emoji" aria-hidden="true">{cat.emoji}</span>
+            <span>{cat.label}</span>
+          </button>
+        ))}
       </div>
 
       <div className="section-header">
