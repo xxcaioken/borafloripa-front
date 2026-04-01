@@ -1,0 +1,249 @@
+import React, { useState, useEffect } from 'react';
+import { api } from '../services/api';
+
+const COVERS = [
+  'linear-gradient(135deg, #1a0a2e 0%, #2e0a1a 100%)',
+  'linear-gradient(135deg, #0a1a2e 0%, #1a2e0a 100%)',
+  'linear-gradient(135deg, #2e0a1a 0%, #0a1a2e 100%)',
+  'linear-gradient(135deg, #1a2e0a 0%, #2e1a0a 100%)',
+  'linear-gradient(135deg, #2e1a0a 0%, #0a2e2a 100%)',
+];
+
+const TAG_ICONS = {
+  'Eletrônico': '🎧', 'Funk': '🎤', 'Pagode': '🥁', 'MPB': '🎵',
+  'Reggae': '🌿', 'Sertanejo': '🤠', 'Rock': '🎸', 'Rooftop': '🌆',
+  'Pet Friendly': '🐾', 'Instagramável': '📸', 'Dance Floor': '💃',
+  'Música ao Vivo': '🎙️', 'Happy Hour': '🥂', 'Chopp Artesanal': '🍻',
+  'Comer e Beber': '🍔', 'TV com Esportes': '⚽',
+};
+
+function parseHours(hoursJson) {
+  if (!hoursJson) return null;
+  try { return JSON.parse(hoursJson); } catch { return null; }
+}
+
+function getTodayKey() {
+  return ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][new Date().getDay()];
+}
+
+export default function EventDetail({ event, onClose, boraCount = 0, boraReacted = false, onBora }) {
+  const gradient = COVERS[event.id % COVERS.length];
+  const date = new Date(event.date);
+  const dateStr = date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  const hours = parseHours(event.venue.hours);
+  const today = getTodayKey();
+
+  const sessionId = (() => {
+    let id = localStorage.getItem('bf_session_id');
+    if (!id) { id = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('bf_session_id', id); }
+    return id;
+  })();
+
+  const [vibeTags, setVibeTags] = useState([]);
+  const [allVibeTags, setAllVibeTags] = useState([]);
+  const [showVibeAll, setShowVibeAll] = useState(false);
+
+  useEffect(() => {
+    api.get(`/vibes/venue/${event.venue.id}?session_id=${sessionId}`).then(r => setVibeTags(r.data)).catch(() => {});
+    api.get('/vibes/tags').then(r => setAllVibeTags(r.data)).catch(() => {});
+  }, [event.venue.id]);
+
+  async function handleVibeVote(tagName) {
+    const res = await api.post(`/vibes/venue/${event.venue.id}/${encodeURIComponent(tagName)}?session_id=${sessionId}`);
+    const voted = res.data.voted;
+    setVibeTags(prev => {
+      const existing = prev.find(t => t.tag_name === tagName);
+      if (existing) {
+        return prev.map(t => t.tag_name === tagName
+          ? { ...t, count: t.count + (voted ? 1 : -1), voted }
+          : t
+        ).filter(t => t.count > 0).sort((a, b) => b.count - a.count);
+      }
+      return [...prev, { tag_name: tagName, count: 1, voted: true }].sort((a, b) => b.count - a.count);
+    });
+  }
+
+  function handleShare() {
+    const url = `${window.location.origin}/evento/${event.id}`;
+    if (navigator.share) {
+      navigator.share({ title: event.title, text: `${event.title} — ${event.venue.name}`, url });
+    } else {
+      navigator.clipboard.writeText(url).then(() => alert('Link copiado!'));
+    }
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-sheet" onClick={e => e.stopPropagation()}>
+        <div className="modal-handle" />
+
+        <div className="modal-cover" style={event.cover_url ? {} : { background: gradient }}>
+          {event.cover_url && (
+            <img className="modal-cover-img" src={event.cover_url} alt={event.title} />
+          )}
+          <div className="modal-cover-gradient" />
+        </div>
+
+        <div className="modal-body">
+          <div className="modal-title">{event.title}</div>
+          <div className="modal-venue-name">
+            {event.venue.name}
+            {hours && hours[today] && hours[today] !== 'Fechado' && (
+              <span className="opens-today">Abre hoje</span>
+            )}
+          </div>
+          <div className="modal-date">📅 {dateStr} às {timeStr}</div>
+
+          {event.description && (
+            <div className="modal-desc">{event.description}</div>
+          )}
+
+          {/* Para você curtir */}
+          {event.tags.length > 0 && (
+            <>
+              <div className="modal-section-title">Para você curtir</div>
+              <div className="curtir-badges" style={{ marginBottom: 0 }}>
+                {event.tags.map(tag => (
+                  <div key={tag.id} className="curtir-badge">
+                    <div className="cb-icon">{TAG_ICONS[tag.name] || '🎭'}</div>
+                    <span>{tag.name}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* A galera diz que é... */}
+          <div className="modal-section-title">A galera diz que é...</div>
+          <div className="vibe-vote-area">
+            {vibeTags.map(t => (
+              <button
+                key={t.tag_name}
+                className={`vibe-chip${t.voted ? ' voted' : ''}`}
+                onClick={() => handleVibeVote(t.tag_name)}
+              >
+                {t.tag_name} <span className="vibe-count">{t.count}</span>
+              </button>
+            ))}
+            {showVibeAll
+              ? allVibeTags
+                  .filter(tag => !vibeTags.find(t => t.tag_name === tag))
+                  .map(tag => (
+                    <button key={tag} className="vibe-chip add" onClick={() => handleVibeVote(tag)}>
+                      + {tag}
+                    </button>
+                  ))
+              : (
+                <button className="vibe-chip add" onClick={() => setShowVibeAll(true)}>
+                  + Adicionar
+                </button>
+              )
+            }
+          </div>
+
+          {/* Preço */}
+          {event.price_info && (
+            <div className="venue-info-row" style={{ marginBottom: 16 }}>
+              <div className="venue-info-icon">💰</div>
+              <div className="venue-info-text">
+                <strong>Entrada</strong>
+                {event.price_info}
+              </div>
+            </div>
+          )}
+
+          {/* Informações do venue */}
+          <div className="modal-section-title">Informações</div>
+
+          {event.venue.address && (
+            <div className="venue-info-row">
+              <div className="venue-info-icon">📍</div>
+              <div className="venue-info-text">
+                <strong>Endereço</strong>
+                {event.venue.address}
+              </div>
+            </div>
+          )}
+          {event.venue.instagram && (
+            <div className="venue-info-row">
+              <div className="venue-info-icon">📸</div>
+              <div className="venue-info-text">
+                <strong>Instagram</strong>
+                {event.venue.instagram}
+              </div>
+            </div>
+          )}
+          {event.venue.whatsapp && (
+            <div className="venue-info-row">
+              <div className="venue-info-icon">💬</div>
+              <div className="venue-info-text">
+                <strong>WhatsApp</strong>
+                +55 {event.venue.whatsapp}
+              </div>
+            </div>
+          )}
+
+          {/* Horários */}
+          {hours && (
+            <>
+              <div className="modal-section-title" style={{ marginTop: 20 }}>Horários</div>
+              <div className="hours-grid">
+                {Object.entries(hours).map(([day, time]) => (
+                  <div key={day} className="hour-row">
+                    <span className="hour-day">{day}</span>
+                    <span className={`hour-time${time === 'Fechado' ? ' closed' : day === today ? ' open-now' : ''}`}>
+                      {time}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* Bora! */}
+          <div className="bora-row modal-bora">
+            <button
+              className={`bora-btn large${boraReacted ? ' reacted' : ''}`}
+              onClick={() => onBora && onBora(event.id)}
+            >
+              {boraReacted ? '✓ Tô dentro!' : '🚀 Bora lá!'}
+            </button>
+            {boraCount > 0 && (
+              <span className="bora-count">
+                {boraCount} {boraCount === 1 ? 'pessoa vai' : 'pessoas vão'}
+              </span>
+            )}
+          </div>
+
+          <div className="modal-actions">
+            <button
+              className="btn-primary"
+              onClick={() => {
+                const { lat, lng, name } = event.venue;
+                const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+                const url = isIOS
+                  ? `maps://maps.apple.com/?q=${encodeURIComponent(name)}&ll=${lat},${lng}`
+                  : `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+                window.open(url, '_blank');
+              }}
+            >
+              🗺️ Como chegar
+            </button>
+            <button className="btn-secondary" onClick={handleShare} title="Compartilhar">
+              📤
+            </button>
+            {event.venue.whatsapp && (
+              <button
+                className="btn-secondary"
+                onClick={() => window.open(`https://wa.me/55${event.venue.whatsapp}`, '_blank')}
+              >
+                💬
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
