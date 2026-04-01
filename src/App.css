@@ -2033,6 +2033,17 @@ body::before {
 .tourist-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
 .tourist-periods { margin-bottom: 16px; }
 .tourist-results-header { margin-top: 20px; }
+.tourist-day-group { margin-bottom: 8px; }
+.tourist-day-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 10px 0 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
 .btn-block { width: 100%; justify-content: center; }
 .loading-page { padding: 40px; }
 
