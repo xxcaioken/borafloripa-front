@@ -1,6 +1,11 @@
 import React, { memo } from 'react';
 
 const CAT_ACCENT = { bar: '#00e676', balada: '#e040fb', cultura: '#ff6d00', rua: '#00bcd4', temporario: '#ffea00' };
+const VIBE_STYLE = {
+  'Quente 🔥': { bg: 'rgba(255,109,0,0.25)', border: 'rgba(255,109,0,0.5)', color: '#ffab40' },
+  'Lotado':    { bg: 'rgba(255,64,129,0.2)', border: 'rgba(255,64,129,0.4)', color: '#ff80ab' },
+  'Animado':   { bg: 'rgba(255,235,59,0.15)', border: 'rgba(255,235,59,0.4)', color: '#fff176' },
+};
 
 const COVERS = [
   'linear-gradient(135deg, #0d1f14 0%, #1a2e1a 100%)',
@@ -123,7 +128,14 @@ const EventCard = memo(function EventCard({ event, onClick, boraCount = 0, boraR
 
         {/* Bottom: vibe pill */}
         <div className="card-cover-bottom">
-          <span className="card-vibe">{event.vibe_status}</span>
+          <span
+            className="card-vibe"
+            style={VIBE_STYLE[event.vibe_status] ? {
+              background: VIBE_STYLE[event.vibe_status].bg,
+              borderColor: VIBE_STYLE[event.vibe_status].border,
+              color: VIBE_STYLE[event.vibe_status].color,
+            } : undefined}
+          >{event.vibe_status}</span>
         </div>
       </div>
 
