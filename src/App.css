@@ -1493,15 +1493,21 @@ body::before {
 
 .empty-state {
   text-align: center;
-  padding: 60px 20px;
+  padding: 56px 20px 48px;
   color: var(--muted);
   background: var(--surface);
   border: 1px dashed var(--border);
   border-radius: var(--radius);
   margin: 8px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
 }
-.empty-state p { font-size: 15px; font-weight: 500; margin: 0 0 4px; }
+.empty-state-icon { font-size: 40px; line-height: 1; margin-bottom: 4px; }
+.empty-state p { font-size: 15px; font-weight: 500; margin: 0; }
 .empty-hint { font-size: 12px !important; color: var(--border2) !important; font-weight: 400 !important; }
+.empty-state .btn-retry { margin-top: 8px; }
 .empty-sm { padding: 32px 20px; }
 
 /* ══════════════════════════════════════
