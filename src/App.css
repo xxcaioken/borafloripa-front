@@ -1856,6 +1856,69 @@ body {
   text-decoration: none;
 }
 
+/* ── Partner Dashboard utilities ── */
+.partner-unauthenticated {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-top: 60px;
+  gap: 12px;
+}
+.partner-unauthenticated-icon { font-size: 48px; }
+.partner-unauthenticated p { color: var(--muted); font-size: 14px; max-width: 280px; }
+
+.dashboard-email { color: var(--muted); font-size: 13px; }
+.section-mt { margin-top: 24px; }
+.empty-sm { padding: 20px 0 !important; }
+.mt-sm { margin-top: 12px; }
+.venue-list-mb { margin-bottom: 24px; }
+
+.btn-link-accent {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(0,230,118,0.2);
+}
+.btn-primary-sm { font-size: 13px; padding: 6px 14px; }
+.btn-secondary-xs { font-size: 12px; padding: 4px 10px; }
+.btn-danger {
+  font-size: 12px;
+  padding: 4px 10px;
+  background: none;
+  border: 1px solid #c0392b;
+  color: #c0392b;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-danger:hover { background: rgba(192,57,43,0.1); }
+.pev-actions { display: flex; gap: 8px; align-items: center; }
+
+/* ── Claim venue modal ── */
+.claim-modal-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+.claim-modal-desc  { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+.claim-search      { margin-bottom: 16px; }
+.claim-searching   { text-align: center; padding: 12px; color: var(--muted); font-size: 14px; }
+.claim-empty       { padding: 24px 0; }
+.claim-hint        { text-align: center; color: var(--muted); font-size: 13px; padding: 24px 0; }
+.venue-row-clickable { cursor: pointer; }
+.btn-claim {
+  font-size: 13px;
+  padding: 4px 12px;
+  flex-shrink: 0;
+  background: var(--accent);
+  color: #000;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
 /* ── Misc ── */
 /* ── Card top right cluster ── */
 .card-top-right {
