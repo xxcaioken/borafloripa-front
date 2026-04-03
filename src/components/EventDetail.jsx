@@ -183,6 +183,19 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
             </div>
           )}
 
+          {/* Acessibilidade */}
+          {(event.venue.wheelchair || event.venue.hearing_loop || event.venue.visual_aid || event.venue.adapted_wc) && (
+            <>
+              <div className="modal-section-title">Acessibilidade</div>
+              <div className="modal-a11y-row">
+                {event.venue.wheelchair && <div className="modal-a11y-pill">♿ Rampa/Elevador</div>}
+                {event.venue.hearing_loop && <div className="modal-a11y-pill">🦻 Loop magnético</div>}
+                {event.venue.visual_aid && <div className="modal-a11y-pill">👁️ Auxílio visual</div>}
+                {event.venue.adapted_wc && <div className="modal-a11y-pill">🚻 WC adaptado</div>}
+              </div>
+            </>
+          )}
+
           {/* Informações do venue */}
           <div className="modal-section-title">Informações</div>
 
