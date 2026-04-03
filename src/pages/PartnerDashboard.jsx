@@ -175,8 +175,10 @@ export default function PartnerDashboard({ onAuthOpen }) {
   const [stats, setStats] = useState(null);
   const [events, setEvents] = useState([]);
   const [analytics, setAnalytics] = useState([]);
+  const [analyticsDays, setAnalyticsDays] = useState(null); // null=all, 7, 30
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editEvent, setEditEvent] = useState(null);
   const [showClaim, setShowClaim] = useState(false);
@@ -187,7 +189,7 @@ export default function PartnerDashboard({ onAuthOpen }) {
     Promise.all([
       api.get('/partners/stats'),
       api.get('/partners/events'),
-      api.get('/partners/analytics'),
+      api.get('/partners/analytics', { params: analyticsDays ? { days: analyticsDays } : {} }),
     ])
       .then(([s, e, a]) => {
         setStats(s.data);
@@ -196,7 +198,16 @@ export default function PartnerDashboard({ onAuthOpen }) {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [user]);
+  }, [user, analyticsDays]);
+
+  useEffect(() => {
+    if (!user || loading) return;
+    setLoadingAnalytics(true);
+    api.get('/partners/analytics', { params: analyticsDays ? { days: analyticsDays } : {} })
+      .then(r => setAnalytics(r.data))
+      .catch(() => {})
+      .finally(() => setLoadingAnalytics(false));
+  }, [analyticsDays]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -279,6 +290,16 @@ export default function PartnerDashboard({ onAuthOpen }) {
           <div className="stat-label">Locais</div>
         </div>
       </div>
+      <div className="analytics-period-row">
+        {[null, 7, 30].map(d => (
+          <button
+            key={String(d)}
+            className={`sort-chip${analyticsDays === d ? ' active' : ''}`}
+            onClick={() => setAnalyticsDays(d)}
+          >{d ? `${d}d` : 'Total'}</button>
+        ))}
+        {loadingAnalytics && <span className="analytics-loading">…</span>}
+      </div>
       <div className="stats-row stats-row-mt">
         <div className="stat-card stat-card-accent">
           <div className="stat-value">👁 {totalViews}</div>
@@ -286,7 +307,7 @@ export default function PartnerDashboard({ onAuthOpen }) {
         </div>
         <div className="stat-card stat-card-secondary">
           <div className="stat-value">🚀 {totalBoras}</div>
-          <div className="stat-label">Boras confirmados</div>
+          <div className="stat-label">Boras{analyticsDays ? ` (${analyticsDays}d)` : ''}</div>
         </div>
       </div>
 
