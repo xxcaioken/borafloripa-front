@@ -154,6 +154,7 @@ export default function MapView() {
   const [flyTarget, setFlyTarget] = useState(null);
   const [search, setSearch]   = useState('');
   const [userCoords, setUserCoords] = useState(null);
+  const [nearbyEvents, setNearbyEvents] = useState([]);
   const sessionId = useSessionId();
   const toast = useToast();
 
@@ -222,7 +223,13 @@ export default function MapView() {
               className="map-locate-btn"
               onClick={() => {
                 navigator.geolocation.getCurrentPosition(
-                  pos => setUserCoords([pos.coords.latitude, pos.coords.longitude]),
+                  pos => {
+                    const coords = [pos.coords.latitude, pos.coords.longitude];
+                    setUserCoords(coords);
+                    api.get('/events/nearby', { params: { lat: coords[0], lng: coords[1] } })
+                      .then(r => setNearbyEvents(r.data))
+                      .catch(() => {});
+                  },
                   () => toast?.show('Não foi possível obter sua localização', 'info'),
                 );
               }}
@@ -250,6 +257,24 @@ export default function MapView() {
           })}
         </div>
       </div>
+
+      {nearbyEvents.length > 0 && (
+        <div className="nearby-strip">
+          <div className="nearby-strip-label">📍 Próximos a você</div>
+          <div className="nearby-scroll">
+            {nearbyEvents.map(e => {
+              const t = new Date(e.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+              return (
+                <div key={e.id} className="nearby-chip">
+                  <span className="nearby-chip-name">{e.title}</span>
+                  <span className="nearby-chip-venue">{e.venue.name}</span>
+                  <span className="nearby-chip-time">{t}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="map-container">
         {loading ? (
