@@ -1,11 +1,12 @@
 import { usePageTitle } from '../hooks/usePageTitle';
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { api } from '../services/api';
 import EventCard from '../components/EventCard';
 import EventDetail from '../components/EventDetail';
 import { useBora } from '../hooks/useBora';
 import { useAuth } from '../context/AuthContext';
 import { useSaved } from '../hooks/useSaved';
+import { useToast } from '../context/ToastContext';
 
 const VENUE_EMOJIS = ['🍸', '🎵', '🏖️', '🌆', '🎉', '🍻'];
 const VENUE_BG = ['#0a1a0e', '#0a0f1a', '#0a1a0a', '#121a0a', '#0a1a14', '#0a120a'];
@@ -84,8 +85,14 @@ export default function Feed() {
   const [suggestions, setSuggestions] = useState(null); // {events, venues} | null
   const [showSuggestions, setShowSuggestions] = useState(false);
 
+  const toast = useToast();
   const eventIds = useMemo(() => events.map(e => e.id), [events]);
-  const { counts: boraCounts, toggle: toggleBora } = useBora(eventIds);
+  const { counts: boraCounts, toggle: _toggleBora } = useBora(eventIds);
+  const toggleBora = useCallback(async (eventId) => {
+    await _toggleBora(eventId);
+    const reacted = !boraCounts[eventId]?.reacted;
+    if (reacted) toast?.show('Tô dentro! 🚀', 'success');
+  }, [_toggleBora, boraCounts, toast]);
 
   const prefMusic = useMemo(() => {
     if (user?.pref_music) {
