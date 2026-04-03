@@ -2592,8 +2592,24 @@ body::before {
 .community-card-body { flex: 1; min-width: 0; }
 .community-card-name { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
 .community-card-desc { font-size: 12px; color: var(--muted); margin-bottom: 6px; line-height: 1.4; }
+.community-progress {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  margin-bottom: 6px;
+  overflow: hidden;
+}
+.community-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #29e08a);
+  border-radius: 2px;
+  transition: width 0.6s ease;
+}
 .community-card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .community-members { font-size: 12px; color: var(--text2); }
+.community-next { font-size: 11px; color: var(--muted); }
+.skeleton-community { display: flex; gap: 12px; align-items: flex-start; padding: 14px; }
+.skeleton-community-icon { width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0; }
 .community-code {
   font-size: 11px;
   font-weight: 700;
