@@ -948,6 +948,41 @@ body::before {
   align-items: center;
   gap: 6px;
 }
+.modal-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 8px 14px;
+}
+.modal-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+.modal-stat-n {
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--text);
+  font-family: var(--font-display);
+  letter-spacing: -0.5px;
+}
+.modal-stat-hot .modal-stat-n { color: #ffab40; }
+.modal-stat-sep {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  flex-shrink: 0;
+}
 .modal-desc {
   font-size: 14px;
   color: var(--text2);

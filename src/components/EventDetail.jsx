@@ -42,12 +42,14 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
   const [allVibeTags, setAllVibeTags] = useState([]);
   const [showVibeAll, setShowVibeAll] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
+  const [stats, setStats] = useState(null);
   const DESC_LIMIT = 150;
 
   useEffect(() => {
     api.get(`/vibes/venue/${event.venue.id}?session_id=${sessionId}`).then(r => setVibeTags(r.data)).catch(() => {});
     api.get('/vibes/tags').then(r => setAllVibeTags(r.data)).catch(() => {});
-  }, [event.venue.id]);
+    api.get(`/events/${event.id}/stats`).then(r => setStats(r.data)).catch(() => {});
+  }, [event.id, event.venue.id]);
 
   async function handleVibeVote(tagName) {
     const res = await api.post(`/vibes/venue/${event.venue.id}/${encodeURIComponent(tagName)}?session_id=${sessionId}`);
@@ -94,6 +96,22 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
             )}
           </div>
           <div className="modal-date">📅 {dateStr} às {timeStr}</div>
+
+          {stats && (
+            <div className="modal-stats-row">
+              <div className="modal-stat"><span className="modal-stat-n">{stats.view_count}</span><span>views</span></div>
+              <div className="modal-stat-sep" />
+              <div className="modal-stat"><span className="modal-stat-n">{stats.bora_count}</span><span>boras</span></div>
+              {stats.checkin_count > 0 && (
+                <>
+                  <div className="modal-stat-sep" />
+                  <div className="modal-stat modal-stat-hot">
+                    <span className="modal-stat-n">{stats.checkin_count}</span><span>aqui agora</span>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
           {event.description && (
             <div className="modal-desc">
