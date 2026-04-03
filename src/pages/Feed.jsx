@@ -81,6 +81,8 @@ export default function Feed() {
   const [trendingEvents, setTrendingEvents] = useState([]);
   const [retryKey, setRetryKey] = useState(0);
   const [sortBy, setSortBy] = useState(null); // null | 'date' | 'popular'
+  const [suggestions, setSuggestions] = useState(null); // {events, venues} | null
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const eventIds = useMemo(() => events.map(e => e.id), [events]);
   const { counts: boraCounts, toggle: toggleBora } = useBora(eventIds);
@@ -100,6 +102,16 @@ export default function Feed() {
   }, [user?.pref_vibes]);
 
   const hasPrefs = prefMusic.length > 0 || prefVibes.length > 0;
+
+  useEffect(() => {
+    if (query.length < 2) { setSuggestions(null); setShowSuggestions(false); return; }
+    const t = setTimeout(() => {
+      api.get('/search', { params: { q: query } })
+        .then(r => { setSuggestions(r.data); setShowSuggestions(true); })
+        .catch(() => {});
+    }, 200);
+    return () => clearTimeout(t);
+  }, [query]);
 
   useEffect(() => {
     api.get('/events/tags').then(r => setTags(r.data)).catch(() => {});
@@ -168,8 +180,42 @@ export default function Feed() {
             placeholder="Buscar rolê, local..."
             value={query}
             onChange={e => setQuery(e.target.value)}
+            onFocus={() => suggestions && setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
             aria-label="Buscar eventos"
+            aria-autocomplete="list"
           />
+          {showSuggestions && suggestions && (
+            <div className="search-suggestions" role="listbox">
+              {suggestions.events.slice(0, 4).map(e => (
+                <button
+                  key={`ev-${e.id}`}
+                  className="suggestion-item"
+                  onMouseDown={() => { setSelected(e); setShowSuggestions(false); }}
+                  role="option"
+                >
+                  <span className="suggestion-icon">🎉</span>
+                  <span className="suggestion-label">{e.title}</span>
+                  <span className="suggestion-sub">{e.venue.name}</span>
+                </button>
+              ))}
+              {suggestions.venues.slice(0, 3).map(v => (
+                <button
+                  key={`ve-${v.id}`}
+                  className="suggestion-item"
+                  onMouseDown={() => { setQuery(v.name); setShowSuggestions(false); }}
+                  role="option"
+                >
+                  <span className="suggestion-icon">📍</span>
+                  <span className="suggestion-label">{v.name}</span>
+                  <span className="suggestion-sub">{v.city}</span>
+                </button>
+              ))}
+              {suggestions.events.length === 0 && suggestions.venues.length === 0 && (
+                <div className="suggestion-empty">Nenhum resultado</div>
+              )}
+            </div>
+          )}
         </div>
         <button
           className={`filter-btn-icon${showTagFilter ? ' active' : ''}`}
