@@ -1793,6 +1793,9 @@ body::before {
 .venue-row-ig { font-size: 11px; color: var(--accent2); font-weight: 600; }
 .venue-row-phone { font-size: 11px; color: var(--muted); }
 .venue-row-empty { font-size: 11px; color: var(--border2); font-style: italic; }
+.venue-row-a11y { display: flex; gap: 4px; margin-top: 4px; font-size: 13px; }
+.skeleton-venue { display: flex; gap: 12px; align-items: flex-start; padding: 14px; }
+.skeleton-venue-icon { width: 44px; height: 44px; border-radius: var(--radius-xs); flex-shrink: 0; }
 
 .venue-row-actions {
   display: flex;
