@@ -411,33 +411,35 @@ export default function Feed() {
           )}
         </div>
       ) : (
-        <div className="events-list">
-          {events.map((event, i) => (
-            <EventCard
-              key={event.id}
-              event={event}
-              onClick={() => setSelected(event)}
-              boraCount={boraCounts[event.id]?.count || 0}
-              boraReacted={boraCounts[event.id]?.reacted || false}
-              onBora={toggleBora}
-              isSaved={savedIds.has(event.id)}
-              onSave={user ? toggleSaved : null}
-              hero={i === 0 && event.is_featured && !hasFilter}
-            />
-          ))}
-        </div>
-        {hasMore && (
-          <div className="load-more-wrap">
-            <button
-              className="btn-load-more"
-              onClick={loadMore}
-              disabled={loadingMore}
-              aria-label="Carregar mais eventos"
-            >
-              {loadingMore ? 'Carregando...' : 'Carregar mais'}
-            </button>
+        <>
+          <div className="events-list">
+            {events.map((event, i) => (
+              <EventCard
+                key={event.id}
+                event={event}
+                onClick={() => setSelected(event)}
+                boraCount={boraCounts[event.id]?.count || 0}
+                boraReacted={boraCounts[event.id]?.reacted || false}
+                onBora={toggleBora}
+                isSaved={savedIds.has(event.id)}
+                onSave={user ? toggleSaved : null}
+                hero={i === 0 && event.is_featured && !hasFilter}
+              />
+            ))}
           </div>
-        )}
+          {hasMore && (
+            <div className="load-more-wrap">
+              <button
+                className="btn-load-more"
+                onClick={loadMore}
+                disabled={loadingMore}
+                aria-label="Carregar mais eventos"
+              >
+                {loadingMore ? 'Carregando...' : 'Carregar mais'}
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {selected && (
