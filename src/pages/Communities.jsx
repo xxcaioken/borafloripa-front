@@ -61,7 +61,18 @@ export default function Communities({ onAuthOpen }) {
       </div>
 
       {loading ? (
-        <div className="loading">Carregando...</div>
+        <div className="community-list">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="skeleton-card skeleton-community" aria-hidden="true">
+              <div className="skeleton-cover skeleton-community-icon" />
+              <div className="skeleton-body">
+                <div className="skeleton-line w-70" />
+                <div className="skeleton-line w-55" />
+                <div className="skeleton-line w-45" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <>
           {myCommunities.length > 0 && (
@@ -107,15 +118,27 @@ export default function Communities({ onAuthOpen }) {
   );
 }
 
+const MEMBER_MILESTONES = [10, 50, 100, 500, 1000];
+function memberProgress(count) {
+  const next = MEMBER_MILESTONES.find(m => m > count) || count * 2;
+  const prev = MEMBER_MILESTONES.slice().reverse().find(m => m <= count) || 0;
+  return { pct: Math.min(100, Math.round(((count - prev) / (next - prev)) * 100)), next };
+}
+
 function CommunityCard({ community: c, joining, copied, onJoin, onCopy }) {
+  const { pct, next } = memberProgress(c.member_count || 0);
   return (
     <div className={`community-card${c.is_member ? ' member' : ''}`}>
       <div className="community-card-icon">{TAG_EMOJI[c.tag_name] || '🎭'}</div>
       <div className="community-card-body">
         <div className="community-card-name">{c.name}</div>
         {c.description && <div className="community-card-desc">{c.description}</div>}
+        <div className="community-progress">
+          <div className="community-progress-bar" style={{ width: `${pct}%` }} />
+        </div>
         <div className="community-card-meta">
           <span className="community-members">👥 {c.member_count} membros</span>
+          <span className="community-next">próx. marco: {next}</span>
           {c.is_member && c.discount_code && (
             <button
               className={`community-code${copied ? ' copied' : ''}`}
