@@ -71,9 +71,20 @@ export default function Venues() {
       </div>
 
       {loading ? (
-        <div className="loading">Carregando...</div>
+        <div className="venue-list">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="skeleton-card skeleton-venue" aria-hidden="true">
+              <div className="skeleton-cover skeleton-venue-icon" />
+              <div className="skeleton-body">
+                <div className="skeleton-line w-70" />
+                <div className="skeleton-line w-45" />
+                <div className="skeleton-line w-55" />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : venues.length === 0 ? (
-        <div className="empty-state"><p>Nenhum local encontrado</p></div>
+        <div className="empty-state"><div className="empty-state-icon">🏙️</div><p>Nenhum local encontrado</p></div>
       ) : (
         <div className="venue-list">
           {venues.map(venue => (
@@ -111,6 +122,12 @@ function VenueRow({ venue, isFollowed, onFollow }) {
           {ig && <span className="venue-row-ig">{ig}</span>}
           {venue.whatsapp && <span className="venue-row-phone">📞 {venue.whatsapp}</span>}
           {!hasContact && <span className="venue-row-empty">Sem contato cadastrado</span>}
+        </div>
+        <div className="venue-row-a11y">
+          {venue.wheelchair && <span title="Acessível">♿</span>}
+          {venue.hearing_loop && <span title="Loop magnético">🦻</span>}
+          {venue.visual_aid && <span title="Auxílio visual">👁️</span>}
+          {venue.adapted_wc && <span title="WC adaptado">🚻</span>}
         </div>
       </div>
       <div className="venue-row-actions">
