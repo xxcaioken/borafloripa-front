@@ -57,6 +57,17 @@ function SkeletonCard() {
   );
 }
 
+const NEIGHBORHOODS = [
+  { id: 'Centro',            label: 'Centro' },
+  { id: 'Lagoa da Conceição', label: 'Lagoa' },
+  { id: 'Jurerê',            label: 'Jurerê' },
+  { id: 'Ingleses',          label: 'Ingleses' },
+  { id: 'Canasvieiras',      label: 'Canasvieiras' },
+  { id: 'Trindade',          label: 'Trindade' },
+  { id: 'Campeche',          label: 'Campeche' },
+  { id: 'Beira-Mar',         label: 'Beira-Mar' },
+];
+
 const PAGE_SIZE = 20;
 
 export default function Feed() {
@@ -68,6 +79,7 @@ export default function Feed() {
   const [tags, setTags] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeTag, setActiveTag] = useState(null);
+  const [activeNeighborhood, setActiveNeighborhood] = useState(null);
   const [openNow, setOpenNow] = useState(false);
   const [accessible, setAccessible] = useState(false);
   const [query, setQuery] = useState('');
@@ -132,6 +144,7 @@ export default function Feed() {
     const params = { limit: PAGE_SIZE, offset: currentOffset };
     if (activeCategory) params.category = activeCategory;
     if (activeTag) params.tag = activeTag;
+    if (activeNeighborhood) params.neighborhood = activeNeighborhood;
     if (openNow) params.open_now = true;
     if (accessible) params.accessible = true;
     if (query) params.q = query;
@@ -159,7 +172,7 @@ export default function Feed() {
         .finally(() => setLoading(false));
     }, query ? 300 : 0);
     return () => clearTimeout(t);
-  }, [activeCategory, activeTag, openNow, accessible, query, sortBy, retryKey]);
+  }, [activeCategory, activeTag, activeNeighborhood, openNow, accessible, query, sortBy, retryKey]);
 
   function loadMore() {
     const nextOffset = offset + PAGE_SIZE;
@@ -174,7 +187,7 @@ export default function Feed() {
       .finally(() => setLoadingMore(false));
   }
 
-  const hasFilter = activeCategory || activeTag || openNow || accessible || query;
+  const hasFilter = activeCategory || activeTag || activeNeighborhood || openNow || accessible || query;
 
   return (
     <div>
@@ -345,9 +358,31 @@ export default function Feed() {
         ))}
       </div>
 
+      {/* Bairros */}
+      <div className="neighborhood-chips" role="group" aria-label="Filtrar por bairro">
+        <button
+          className={`neighborhood-chip${!activeNeighborhood ? ' active' : ''}`}
+          onClick={() => setActiveNeighborhood(null)}
+        >📍 Todos</button>
+        {NEIGHBORHOODS.map(n => (
+          <button
+            key={n.id}
+            className={`neighborhood-chip${activeNeighborhood === n.id ? ' active' : ''}`}
+            onClick={() => setActiveNeighborhood(activeNeighborhood === n.id ? null : n.id)}
+            aria-pressed={activeNeighborhood === n.id}
+          >{n.label}</button>
+        ))}
+      </div>
+
       {/* Banners de filtro ativos */}
-      {(openNow || accessible) && (
+      {(openNow || accessible || activeNeighborhood) && (
         <div className="active-filter-banners">
+          {activeNeighborhood && (
+            <div className="filter-banner filter-banner-cyan">
+              📍 {NEIGHBORHOODS.find(n => n.id === activeNeighborhood)?.label || activeNeighborhood}
+              <button onClick={() => setActiveNeighborhood(null)} aria-label="Remover filtro de bairro">✕</button>
+            </div>
+          )}
           {openNow && (
             <div className="filter-banner filter-banner-green">
               🟢 Aberto agora
@@ -396,7 +431,7 @@ export default function Feed() {
           </div>
           <p>{query ? `Nenhum resultado para "${query}"` : 'Nenhum rolê encontrado'}</p>
           {accessible && <p className="empty-hint">Tenta remover o filtro de acessibilidade</p>}
-          {(activeCategory || activeTag || accessible || openNow) && (
+          {(activeCategory || activeTag || accessible || openNow || activeNeighborhood) && (
             <button
               className="btn-retry"
               onClick={() => {
@@ -404,6 +439,7 @@ export default function Feed() {
                 setActiveTag(null);
                 setAccessible(false);
                 setOpenNow(false);
+                setActiveNeighborhood(null);
               }}
             >
               Limpar filtros

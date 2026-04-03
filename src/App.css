@@ -615,6 +615,38 @@ body::before {
   font-weight: 700;
 }
 
+/* ── Neighborhood chips ── */
+.neighborhood-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0 0 8px;
+  margin-bottom: 4px;
+  scrollbar-width: none;
+}
+.neighborhood-chips::-webkit-scrollbar { display: none; }
+.neighborhood-chip {
+  flex-shrink: 0;
+  padding: 5px 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  font-family: var(--font-body);
+}
+.neighborhood-chip:hover { border-color: var(--accent3); color: var(--text); }
+.neighborhood-chip.active {
+  background: var(--accent3);
+  border-color: var(--accent3);
+  color: #000;
+  font-weight: 700;
+}
+
 /* ══════════════════════════════════════
    EVENT CARD — redesign completo
 ═══════════════════════════════════════ */
@@ -2031,6 +2063,11 @@ body::before {
   border-color: rgba(0,188,212,0.3);
   color: var(--accent2);
 }
+.filter-banner-cyan {
+  background: rgba(0,184,212,0.07);
+  border-color: rgba(0,184,212,0.25);
+  color: var(--accent3);
+}
 
 /* ── MapView ── */
 .map-page {
@@ -2366,14 +2403,51 @@ body::before {
   }
   .event-card.hero {
     grid-column: span 2;
-    grid-row: span 1;
   }
   .event-card.hero .card-cover { height: 340px; }
   .event-card.hero .card-title { font-size: 22px; }
-  /* Second featured card gets subtle highlight */
   .events-list .event-card.featured:not(.hero) {
-    border-color: rgba(124,77,255,0.15);
+    border-color: rgba(124,77,255,0.2);
+    box-shadow: 0 0 0 1px rgba(124,77,255,0.08), 0 8px 32px rgba(124,77,255,0.08);
   }
+}
+
+/* ── Bento hero — layout horizontal em telas largas ── */
+@media (min-width: 1400px) {
+  .events-list {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+  }
+  .event-card.hero {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: row;
+    min-height: 360px;
+  }
+  .event-card.hero .card-cover {
+    width: 52%;
+    height: auto;
+    min-height: 360px;
+    flex-shrink: 0;
+  }
+  .event-card.hero .card-body {
+    flex: 1;
+    padding: 32px 36px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .event-card.hero .card-title {
+    font-size: 30px;
+    line-height: 1.2;
+    font-family: var(--font-display);
+  }
+  .event-card.hero .card-venue,
+  .event-card.hero .card-date { font-size: 15px; }
+  .event-card.hero .bora-row { margin-top: auto; }
+  .event-card.hero .bora-btn { padding: 14px 32px; font-size: 16px; }
+  .event-card.hero .curtir-badges { flex-wrap: wrap; gap: 8px; }
 }
 
 /* ── Topbar actions ── */
