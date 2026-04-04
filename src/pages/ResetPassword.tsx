@@ -18,7 +18,7 @@ export default function ResetPassword() {
     if (!token) navigate('/');
   }, [token, navigate]);
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (password !== confirm) { setError('As senhas não coincidem.'); return; }
     if (password.length < 6) { setError('Senha deve ter pelo menos 6 caracteres.'); return; }
@@ -27,8 +27,9 @@ export default function ResetPassword() {
     try {
       await api.post('/auth/reset-password', { token, new_password: password });
       setDone(true);
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Link inválido ou expirado.');
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      setError(axiosErr.response?.data?.detail || 'Link inválido ou expirado.');
     } finally {
       setLoading(false);
     }

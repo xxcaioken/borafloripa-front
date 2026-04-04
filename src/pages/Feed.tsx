@@ -2,6 +2,7 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import type { EventOut, VenueOut } from '../services/api';
 import EventDetail from '../components/EventDetail';
 import { useBora } from '../hooks/useBora';
 import { useAuth } from '../context/AuthContext';
@@ -26,7 +27,7 @@ const CATEGORIES = [
   { id: 'temporario', label: 'Especial',    emoji: '⚡' },
 ];
 
-const CATEGORY_LABEL = {
+const CATEGORY_LABEL: Record<string, string> = {
   bar: 'Bar', balada: 'Balada', cultura: 'Cultura', rua: 'Rolê na Rua', temporario: 'Especial'
 };
 
@@ -42,7 +43,7 @@ const NEIGHBORHOODS = [
 ];
 
 // Music/vibe preferences → venue category affinity
-const MUSIC_TO_CATEGORY = {
+const MUSIC_TO_CATEGORY: Record<string, string> = {
   funk:       'balada',  // funk em Floripa = pista de dança
   eletronico: 'balada',
   sertanejo:  'balada',
@@ -52,7 +53,7 @@ const MUSIC_TO_CATEGORY = {
   mpb:        'cultura',
   reggae:     'cultura',
 };
-const VIBE_TO_CATEGORY = {
+const VIBE_TO_CATEGORY: Record<string, string> = {
   'universitário': 'balada',
   'rooftop':       'bar',
   'happy-hour':    'bar',
@@ -63,7 +64,7 @@ const VIBE_TO_CATEGORY = {
   'tv-esportes':   'bar',
 };
 
-function scoreVenue(venue, prefMusic, prefVibes) {
+function scoreVenue(venue: VenueOut, prefMusic: string[], prefVibes: string[]): number {
   let score = (venue.checkin_count || 0) * 0.5;
   prefMusic.forEach(id => { if (MUSIC_TO_CATEGORY[id] === venue.category) score += 2; });
   prefVibes.forEach(id => { if (VIBE_TO_CATEGORY[id] === venue.category) score += 1; });
@@ -88,7 +89,13 @@ function SkeletonCard() {
   );
 }
 
-function VenueCard({ venue, index, score }) {
+interface VenueCardProps {
+  venue: VenueOut;
+  index: number;
+  score: number;
+}
+
+function VenueCard({ venue, index, score }: VenueCardProps) {
   const navigate = useNavigate();
   const isHot = (venue.checkin_count || 0) >= 5;
   const isMatch = !isHot && (score || 0) >= 2;
@@ -103,33 +110,38 @@ function VenueCard({ venue, index, score }) {
       </div>
       <div className="venue-grid-card-info">
         <p className="venue-grid-name">{venue.name}</p>
-        <span className="venue-grid-cat">{CATEGORY_LABEL[venue.category] || venue.category || venue.city}</span>
+        <span className="venue-grid-cat">{CATEGORY_LABEL[venue.category || ''] || venue.category || venue.city}</span>
       </div>
     </div>
   );
 }
 
+interface SearchSuggestions {
+  venues: VenueOut[];
+  events: EventOut[];
+}
+
 export default function Feed() {
   usePageTitle(null);
   const { user } = useAuth();
-  const [allVenues, setAllVenues] = useState([]);
-  const [newVenues, setNewVenues] = useState([]);
-  const [tags, setTags] = useState([]);
-  const [activeCategory, setActiveCategory] = useState(null);
-  const [activeTag, setActiveTag] = useState(null);
-  const [activeNeighborhood, setActiveNeighborhood] = useState(null);
+  const [allVenues, setAllVenues] = useState<VenueOut[]>([]);
+  const [newVenues, setNewVenues] = useState<VenueOut[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [activeNeighborhood, setActiveNeighborhood] = useState<string | null>(null);
   const [openNow, setOpenNow] = useState(false);
   const [accessible, setAccessible] = useState(false);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState<EventOut | null>(null);
   const [showTagFilter, setShowTagFilter] = useState(false);
-  const [todayEvents, setTodayEvents] = useState([]);
-  const [trendingEvents, setTrendingEvents] = useState([]);
+  const [todayEvents, setTodayEvents] = useState<EventOut[]>([]);
+  const [trendingEvents, setTrendingEvents] = useState<EventOut[]>([]);
   const [retryKey, setRetryKey] = useState(0);
-  const [sortBy, setSortBy] = useState(null); // null | 'popular' | 'name'
-  const [suggestions, setSuggestions] = useState(null);
+  const [sortBy, setSortBy] = useState<string | null>(null); // null | 'popular' | 'name'
+  const [suggestions, setSuggestions] = useState<SearchSuggestions | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const toast = useToast();
@@ -140,7 +152,7 @@ export default function Feed() {
     ...trendingEvents.map(e => e.id),
   ], [todayEvents, trendingEvents]);
   const { counts: boraCounts, toggle: _toggleBora } = useBora(eventIds);
-  const toggleBora = useCallback(async (eventId) => {
+  const toggleBora = useCallback(async (eventId: number) => {
     await _toggleBora(eventId);
     if (!boraCounts[eventId]?.reacted) toast?.show('Tô dentro! 🚀', 'success');
   }, [_toggleBora, boraCounts, toast]);

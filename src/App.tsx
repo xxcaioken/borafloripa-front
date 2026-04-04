@@ -26,6 +26,7 @@ function RouteLoader() {
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { api } from './services/api';
+import type { EventOut } from './services/api';
 import './App.css';
 
 function BottomNav() {
@@ -66,7 +67,11 @@ function BottomNav() {
   );
 }
 
-function Sidebar({ onAuthOpen }) {
+interface SidebarProps {
+  onAuthOpen: () => void;
+}
+
+function Sidebar({ onAuthOpen }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
@@ -108,11 +113,11 @@ function Sidebar({ onAuthOpen }) {
             <span className="sidebar-user-out">Sair</span>
           </button>
         ) : (
-          
+
           <button className="btn-primary sidebar-login" onClick={onAuthOpen}>
             Entrar 2
           </button>
-          
+
         )}
         <div className="sidebar-city">📍 Floripa</div>
       </div>
@@ -120,7 +125,12 @@ function Sidebar({ onAuthOpen }) {
   );
 }
 
-function Layout({ children, onAuthOpen }) {
+interface LayoutProps {
+  children: React.ReactNode;
+  onAuthOpen: () => void;
+}
+
+function Layout({ children, onAuthOpen }: LayoutProps) {
   const { user, logout } = useAuth();
 
   return (
@@ -178,7 +188,7 @@ function BackToTopBtn() {
 function EventPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [event, setEvent] = useState(null);
+  const [event, setEvent] = useState<EventOut | null>(null);
   const [notFound, setNotFound] = useState(false);
   usePageTitle(event ? `${event.title} — ${event.venue.name}` : null);
 
@@ -206,9 +216,9 @@ function EventPage() {
 function AppInner() {
   const [onboarded, setOnboarded] = useState(() => !!localStorage.getItem('bf_onboarded'));
   const [showAuth, setShowAuth] = useState(false);
-  const [onboardPrefs, setOnboardPrefs] = useState(null);
+  const [onboardPrefs, setOnboardPrefs] = useState<{ music: string[]; vibes: string[] } | null>(null);
 
-  function handleOnboardComplete(prefs) {
+  function handleOnboardComplete(prefs?: { music: string[]; vibes: string[] }) {
     localStorage.setItem('bf_onboarded', '1');
     setOnboarded(true);
     if (prefs) {

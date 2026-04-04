@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import type { EventOut } from '../services/api';
+import type { EventOut, VenueOut } from '../services/api';
 
 interface EventCardProps {
   event: EventOut;
@@ -12,8 +12,8 @@ interface EventCardProps {
   hero?: boolean;
 }
 
-const CAT_ACCENT = { bar: '#00e676', balada: '#e040fb', cultura: '#ff6d00', rua: '#00bcd4', temporario: '#ffea00' };
-const VIBE_STYLE = {
+const CAT_ACCENT: Record<string, string> = { bar: '#00e676', balada: '#e040fb', cultura: '#ff6d00', rua: '#00bcd4', temporario: '#ffea00' };
+const VIBE_STYLE: Record<string, { bg: string; border: string; color: string }> = {
   'Quente 🔥': { bg: 'rgba(255,109,0,0.25)', border: 'rgba(255,109,0,0.5)', color: '#ffab40' },
   'Lotado':    { bg: 'rgba(255,64,129,0.2)', border: 'rgba(255,64,129,0.4)', color: '#ff80ab' },
   'Animado':   { bg: 'rgba(255,235,59,0.15)', border: 'rgba(255,235,59,0.4)', color: '#fff176' },
@@ -27,7 +27,7 @@ const COVERS = [
   'linear-gradient(135deg, #0a1f1a 0%, #0f2a25 100%)',
 ];
 
-const TAG_ICONS = {
+const TAG_ICONS: Record<string, { icon: string; label: string }> = {
   'Eletrônico':      { icon: '🎧', label: 'Eletrônico' },
   'Funk':            { icon: '🎤', label: 'Funk' },
   'Pagode':          { icon: '🥁', label: 'Pagode' },
@@ -46,7 +46,7 @@ const TAG_ICONS = {
   'TV com Esportes': { icon: '⚽', label: 'TV Esportes' },
 };
 
-function isOpenToday(hoursJson) {
+function isOpenToday(hoursJson: string | null | undefined): boolean {
   if (!hoursJson) return false;
   try {
     const hours = JSON.parse(hoursJson);
@@ -56,7 +56,7 @@ function isOpenToday(hoursJson) {
   } catch { return false; }
 }
 
-function AccessBadges({ venue }) {
+function AccessBadges({ venue }: { venue: VenueOut }) {
   const badges = [];
   if (venue.wheelchair) badges.push({ icon: '♿', label: 'Acessível' });
   if (venue.hearing_loop) badges.push({ icon: '🦻', label: 'Loop magnético' });
@@ -85,12 +85,12 @@ const EventCard = memo(function EventCard({ event, onClick, boraCount = 0, boraR
   const badges = event.tags.slice(0, 4).map(t => TAG_ICONS[t.name] || { icon: '🎭', label: t.name });
   const checkinCount = event.venue.checkin_count || 0;
 
-  function handleBora(e) {
+  function handleBora(e: React.MouseEvent) {
     e.stopPropagation();
     onBora && onBora(event.id);
   }
 
-  function handleSave(e) {
+  function handleSave(e: React.MouseEvent) {
     e.stopPropagation();
     onSave && onSave(event.id);
   }

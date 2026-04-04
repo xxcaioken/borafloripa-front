@@ -1,10 +1,11 @@
 import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
+import type { VenueOut } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useFollowVenue } from '../hooks/useFollowVenue';
 
-const CAT_EMOJI = { bar: '🍺', balada: '💃', cultura: '🎭', rua: '🌆' };
+const CAT_EMOJI: Record<string, string> = { bar: '🍺', balada: '💃', cultura: '🎭', rua: '🌆' };
 const CATS = [
   { id: null,     label: 'Todos',   emoji: '✨' },
   { id: 'bar',    label: 'Bares',   emoji: '🍺' },
@@ -17,9 +18,9 @@ export default function Venues() {
   usePageTitle('Locais');
   const { user } = useAuth();
   const { followedIds, toggle: toggleFollow } = useFollowVenue(!!user);
-  const [venues, setVenues]   = useState([]);
+  const [venues, setVenues]   = useState<VenueOut[]>([]);
   const [query, setQuery]     = useState('');
-  const [category, setCategory] = useState(null);
+  const [category, setCategory] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -102,7 +103,13 @@ export default function Venues() {
   );
 }
 
-function VenueRow({ venue, isFollowed, onFollow }) {
+interface VenueRowProps {
+  venue: VenueOut;
+  isFollowed: boolean;
+  onFollow: (() => void) | null;
+}
+
+function VenueRow({ venue, isFollowed, onFollow }: VenueRowProps) {
   const ig = venue.instagram;
   const hasContact = ig || venue.whatsapp;
 
@@ -111,7 +118,7 @@ function VenueRow({ venue, isFollowed, onFollow }) {
       <div className="venue-row-icon">
         {venue.logo_url
           ? <img src={venue.logo_url} alt={venue.name} className="venue-row-img" loading="lazy" />
-          : <span>{CAT_EMOJI[venue.category] || '🍸'}</span>
+          : <span>{CAT_EMOJI[venue.category || ''] || '🍸'}</span>
         }
       </div>
       <div className="venue-row-info">
