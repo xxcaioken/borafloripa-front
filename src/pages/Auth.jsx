@@ -10,6 +10,7 @@ export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVib
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
   const { login } = useAuth();
 
   async function handleSubmit(e) {
@@ -17,6 +18,11 @@ export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVib
     setError('');
     setLoading(true);
     try {
+      if (tab === 'forgot') {
+        await api.post('/auth/forgot-password', { email });
+        setForgotSent(true);
+        return;
+      }
       const endpoint = tab === 'login' ? '/auth/login' : '/auth/register';
       const body = tab === 'login'
         ? { email, password }
@@ -25,7 +31,7 @@ export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVib
       login(data.access_token, data.user);
       onClose?.();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Erro ao entrar. Tente novamente.');
+      setError(err.response?.data?.detail || 'Erro. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -38,75 +44,86 @@ export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVib
         <div className="auth-body">
           <div className="auth-logo">Bora <span>Floripa</span></div>
 
-          <div className="auth-tabs">
-            <button className={`auth-tab${tab === 'login' ? ' active' : ''}`} onClick={() => setTab('login')}>
-              Entrar
-            </button>
-            <button className={`auth-tab${tab === 'register' ? ' active' : ''}`} onClick={() => setTab('register')}>
-              Criar conta
-            </button>
-          </div>
+          {tab !== 'forgot' && (
+            <div className="auth-tabs">
+              <button className={`auth-tab${tab === 'login' ? ' active' : ''}`} onClick={() => { setTab('login'); setError(''); }}>
+                Entrar
+              </button>
+              <button className={`auth-tab${tab === 'register' ? ' active' : ''}`} onClick={() => { setTab('register'); setError(''); }}>
+                Criar conta
+              </button>
+            </div>
+          )}
 
-          <form onSubmit={handleSubmit} className="auth-form">
-            {tab === 'register' && (
+          {tab === 'forgot' && !forgotSent && (
+            <div className="auth-forgot-header">
+              <button className="auth-back-btn" onClick={() => { setTab('login'); setError(''); setForgotSent(false); }}>
+                ← Voltar
+              </button>
+              <p className="auth-forgot-desc">Digite seu email e enviaremos um link para redefinir sua senha.</p>
+            </div>
+          )}
+
+          {forgotSent ? (
+            <div className="auth-sent">
+              <div className="auth-sent-icon">📬</div>
+              <p>Link enviado! Verifique sua caixa de entrada.</p>
+              <p className="auth-sent-sub">O link expira em 1 hora.</p>
+              <button className="btn-primary" onClick={onClose}>Fechar</button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="auth-form">
+              {tab === 'register' && (
+                <div className="auth-field">
+                  <label>Nome</label>
+                  <input value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome" required />
+                </div>
+              )}
               <div className="auth-field">
-                <label>Nome</label>
-                <input
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  placeholder="Seu nome"
-                  required
-                />
+                <label>E-mail</label>
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" required />
               </div>
-            )}
-            <div className="auth-field">
-              <label>E-mail</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="seu@email.com"
-                required
-              />
-            </div>
-            <div className="auth-field">
-              <label>Senha</label>
-              <div className="auth-password-wrap">
-                <input
-                  type={showPass ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  minLength={6}
-                />
-                <button
-                  type="button"
-                  className="auth-pass-toggle"
-                  onClick={() => setShowPass(v => !v)}
-                  aria-label={showPass ? 'Ocultar senha' : 'Mostrar senha'}
-                >
-                  {showPass ? '🙈' : '👁'}
+              {tab !== 'forgot' && (
+                <div className="auth-field">
+                  <label>Senha</label>
+                  <div className="auth-password-wrap">
+                    <input
+                      type={showPass ? 'text' : 'password'}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      minLength={6}
+                    />
+                    <button type="button" className="auth-pass-toggle" onClick={() => setShowPass(v => !v)}
+                      aria-label={showPass ? 'Ocultar senha' : 'Mostrar senha'}>
+                      {showPass ? '🙈' : '👁'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {error && <div className="auth-error">{error}</div>}
+
+              {tab === 'register' && prefMusic && (
+                <div className="auth-prefs-notice">✅ Suas preferências do onboarding serão salvas no perfil</div>
+              )}
+
+              <button className="btn-primary" type="submit" disabled={loading}>
+                {loading ? 'Aguarde...' : tab === 'login' ? 'Entrar' : tab === 'register' ? 'Criar conta' : 'Enviar link'}
+              </button>
+
+              {tab === 'login' && (
+                <button type="button" className="auth-forgot-link" onClick={() => { setTab('forgot'); setError(''); }}>
+                  Esqueci minha senha
                 </button>
-              </div>
-            </div>
+              )}
+            </form>
+          )}
 
-            {error && <div className="auth-error">{error}</div>}
-
-            {tab === 'register' && prefMusic && (
-              <div className="auth-prefs-notice">
-                ✅ Suas preferências do onboarding serão salvas no perfil
-              </div>
-            )}
-
-            <button className="btn-primary" type="submit" disabled={loading}>
-              {loading ? 'Aguarde...' : tab === 'login' ? 'Entrar' : 'Criar conta'}
-            </button>
-          </form>
-
-          <button className="auth-skip" onClick={onClose}>
-            Continuar sem conta
-          </button>
+          {tab !== 'forgot' && (
+            <button className="auth-skip" onClick={onClose}>Continuar sem conta</button>
+          )}
         </div>
       </div>
     </div>

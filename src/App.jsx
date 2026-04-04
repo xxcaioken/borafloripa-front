@@ -17,6 +17,7 @@ const Tourist         = lazy(() => import('./pages/Tourist'));
 const Profile         = lazy(() => import('./pages/Profile'));
 const Communities     = lazy(() => import('./pages/Communities'));
 const NotFound        = lazy(() => import('./pages/NotFound'));
+const ResetPassword   = lazy(() => import('./pages/ResetPassword'));
 
 function RouteLoader() {
   return <div className="loading loading-page">Carregando...</div>;
@@ -231,6 +232,7 @@ function AppInner() {
             <Route path="/comunidades" element={<Communities onAuthOpen={() => setShowAuth(true)} />} />
             <Route path="/perfil" element={<Profile />} />
             <Route path="/evento/:id" element={<EventPage />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

@@ -1940,6 +1940,64 @@ body::before {
   padding: 10px 14px;
   font-weight: 500;
 }
+.auth-forgot-link {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 13px;
+  cursor: pointer;
+  text-align: center;
+  padding: 4px 0;
+  transition: color 0.15s;
+}
+.auth-forgot-link:hover { color: var(--accent); }
+
+.auth-forgot-header { margin-bottom: 20px; }
+.auth-back-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 12px;
+}
+.auth-forgot-desc { font-size: 14px; color: var(--text2); margin: 0; }
+
+.auth-sent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 0;
+  text-align: center;
+}
+.auth-sent-icon { font-size: 40px; }
+.auth-sent p { margin: 0; font-size: 15px; font-weight: 600; color: var(--text); }
+.auth-sent-sub { font-size: 13px; color: var(--muted) !important; font-weight: 400 !important; }
+
+/* Reset Password page */
+.reset-page {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+.reset-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.reset-desc { font-size: 14px; color: var(--text2); margin: 0; }
+
 .auth-skip {
   background: none;
   border: none;
