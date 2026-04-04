@@ -237,7 +237,6 @@ body::before {
     margin: 0;
   }
 
-  .bottom-nav { display: none; }
 }
 
 @media (min-width: 1200px) {
@@ -291,6 +290,11 @@ body::before {
   z-index: 200;
   padding: 0 8px 4px;
 }
+
+@media (min-width: 900px) {
+  .bottom-nav { display: none; }
+}
+
 .bnav-item {
   display: flex;
   flex-direction: column;
