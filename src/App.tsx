@@ -19,6 +19,7 @@ const Communities     = lazy(() => import('./pages/Communities'));
 const NotFound        = lazy(() => import('./pages/NotFound'));
 const ResetPassword   = lazy(() => import('./pages/ResetPassword'));
 const VenueDetail     = lazy(() => import('./pages/VenueDetail'));
+const Search          = lazy(() => import('./pages/Search'));
 
 function RouteLoader() {
   return <div className="loading loading-page">Carregando...</div>;
@@ -79,6 +80,7 @@ function Sidebar({ onAuthOpen }: SidebarProps) {
 
   const items = [
     { icon: '🏠', label: 'Início',       to: '/' },
+    { icon: '🔍', label: 'Busca',        to: '/busca' },
     { icon: '🍸', label: 'Locais',       to: '/locais' },
     { icon: '🗺️', label: 'Mapa',        to: '/mapa' },
     { icon: '✈️', label: 'Turista',      to: '/turista' },
@@ -132,12 +134,19 @@ interface LayoutProps {
 
 function Layout({ children, onAuthOpen }: LayoutProps) {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <>
       <header className="topbar">
         <div className="topbar-brand">Bora <span>Floripa</span></div>
         <div className="topbar-actions">
+          <button
+            className="topbar-search-btn"
+            onClick={() => navigate('/busca')}
+            aria-label="Buscar"
+            title="Buscar"
+          >🔍</button>
           {user ? (
             <button className="topbar-user" onClick={logout} title="Sair">
               👤 {user.name.split(' ')[0]}
@@ -247,6 +256,7 @@ function AppInner() {
             <Route path="/evento/:id" element={<EventPage />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/venue/:id" element={<VenueDetail />} />
+            <Route path="/busca" element={<Search />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
