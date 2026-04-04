@@ -1,9 +1,9 @@
 import { usePageTitle } from '../hooks/usePageTitle';
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { api } from '../services/api';
 import type { EventOut } from '../services/api';
 import EventCard from '../components/EventCard';
-import EventDetail from '../components/EventDetail';
+const EventDetail = lazy(() => import('../components/EventDetail'));
 import { useBora } from '../hooks/useBora';
 
 function groupByDate(events: EventOut[]): [string, EventOut[]][] {
@@ -146,13 +146,15 @@ export default function Tourist() {
       )}
 
       {selected && (
-        <EventDetail
-          event={selected}
-          onClose={() => setSelected(null)}
-          boraCount={boraCounts[selected.id]?.count || 0}
-          boraReacted={boraCounts[selected.id]?.reacted || false}
-          onBora={toggleBora}
-        />
+        <Suspense fallback={null}>
+          <EventDetail
+            event={selected}
+            onClose={() => setSelected(null)}
+            boraCount={boraCounts[selected.id]?.count || 0}
+            boraReacted={boraCounts[selected.id]?.reacted || false}
+            onBora={toggleBora}
+          />
+        </Suspense>
       )}
     </div>
   );

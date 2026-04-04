@@ -7,6 +7,8 @@ import EventCard from '../components/EventCard';
 import { useBora } from '../hooks/useBora';
 import { useAuth } from '../context/AuthContext';
 import { useSaved } from '../hooks/useSaved';
+import { useSessionId } from '../hooks/useSessionId';
+import { useToast } from '../context/ToastContext';
 
 const VENUE_BG = [
   'radial-gradient(circle at 30% 30%, #0d2e1a 0%, #061008 100%)',
@@ -44,10 +46,13 @@ export default function VenueDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { savedIds, toggle: toggleSaved } = useSaved(!!user);
+  const sessionId = useSessionId();
+  const toast = useToast();
 
   const [venue, setVenue] = useState<VenueOut | null>(null);
   const [events, setEvents] = useState<EventOut[]>([]);
   const [notFound, setNotFound] = useState(false);
+  const [checkinDone, setCheckinDone] = useState(false);
 
   usePageTitle(venue ? venue.name : null);
 
@@ -62,6 +67,23 @@ export default function VenueDetail() {
 
   const eventIds = events.map(e => e.id);
   const { counts: boraCounts, toggle: toggleBora } = useBora(eventIds);
+
+  async function handleCheckin() {
+    try {
+      const { data } = await api.post('/checkins', { venue_id: Number(id), session_id: sessionId });
+      setVenue(prev => prev ? { ...prev, checkin_count: data.checkin_count } : prev);
+      setCheckinDone(true);
+      toast?.show(`Check-in em ${venue?.name ?? 'local'}! 📍`, 'success');
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { status?: number } };
+        if (axiosErr.response?.status === 429) {
+          toast?.show('Você já fez check-in recentemente aqui', 'info');
+          setCheckinDone(true);
+        }
+      }
+    }
+  }
 
   if (notFound) {
     return (
@@ -108,6 +130,23 @@ export default function VenueDetail() {
           {venue.category && (
             <span className="vd-cat-badge">{CATEGORY_LABEL[venue.category] || venue.category}</span>
           )}
+        </div>
+
+        {/* Check-in */}
+        <div className="checkin-zone">
+          <div className="checkin-info">
+            <div className="checkin-count">{venue.checkin_count || 0}</div>
+            <div className="checkin-label">
+              {(venue.checkin_count || 0) === 1 ? 'pessoa aqui agora' : 'pessoas aqui agora'}
+            </div>
+          </div>
+          <button
+            className="btn-checkin"
+            onClick={handleCheckin}
+            disabled={checkinDone}
+          >
+            {checkinDone ? '✓ Check-in feito' : '📍 Estou aqui!'}
+          </button>
         </div>
 
         {/* Endereço + Como chegar */}

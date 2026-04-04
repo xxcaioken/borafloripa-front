@@ -1,9 +1,9 @@
 import { usePageTitle } from '../hooks/usePageTitle';
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import type { EventOut, VenueOut } from '../services/api';
-import EventDetail from '../components/EventDetail';
+const EventDetail = lazy(() => import('../components/EventDetail'));
 import { useBora } from '../hooks/useBora';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -488,13 +488,15 @@ export default function Feed() {
       )}
 
       {selected && (
-        <EventDetail
-          event={selected}
-          onClose={() => setSelected(null)}
-          boraCount={boraCounts[selected.id]?.count || 0}
-          boraReacted={boraCounts[selected.id]?.reacted || false}
-          onBora={toggleBora}
-        />
+        <Suspense fallback={null}>
+          <EventDetail
+            event={selected}
+            onClose={() => setSelected(null)}
+            boraCount={boraCounts[selected.id]?.count || 0}
+            boraReacted={boraCounts[selected.id]?.reacted || false}
+            onBora={toggleBora}
+          />
+        </Suspense>
       )}
     </div>
   );

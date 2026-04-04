@@ -1,11 +1,11 @@
 import { usePageTitle } from '../hooks/usePageTitle';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import type { EventOut, VenueOut } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import EventCard from '../components/EventCard';
-import EventDetail from '../components/EventDetail';
+const EventDetail = lazy(() => import('../components/EventDetail'));
 import { useBora } from '../hooks/useBora';
 import { useFollowVenue } from '../hooks/useFollowVenue';
 
@@ -244,13 +244,15 @@ export default function Profile() {
       </div>
 
       {selected && (
-        <EventDetail
-          event={selected}
-          onClose={() => setSelected(null)}
-          boraCount={boraCounts[selected.id]?.count || 0}
-          boraReacted={boraCounts[selected.id]?.reacted || false}
-          onBora={toggleBora}
-        />
+        <Suspense fallback={null}>
+          <EventDetail
+            event={selected}
+            onClose={() => setSelected(null)}
+            boraCount={boraCounts[selected.id]?.count || 0}
+            boraReacted={boraCounts[selected.id]?.reacted || false}
+            onBora={toggleBora}
+          />
+        </Suspense>
       )}
     </div>
   );
