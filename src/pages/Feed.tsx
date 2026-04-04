@@ -71,6 +71,90 @@ function scoreVenue(venue: VenueOut, prefMusic: string[], prefVibes: string[]): 
   return score;
 }
 
+// ── Curador "Rola hoje?" ──────────────────────────────────────────────────────
+
+function scoreTodayEvent(e: EventOut): number {
+  let s = 0;
+  if (e.is_featured)                     s += 10;
+  if (e.is_temporary)                    s += 4;
+  s += Math.min((e.venue.checkin_count || 0) * 3, 12);
+  if (e.tags.length > 0)                 s += 3;
+  if (e.description)                     s += 2;
+  if (e.cover_url)                       s += 2;
+  return s;
+}
+
+interface RolaHojeProps {
+  events: EventOut[];
+  onSelect: (e: EventOut) => void;
+  boraCounts: Record<number, { count: number; reacted: boolean }>;
+  onBora: (id: number) => void;
+}
+
+function RolaHoje({ events, onSelect, boraCounts, onBora }: RolaHojeProps) {
+  const sorted = [...events].sort((a, b) => scoreTodayEvent(b) - scoreTodayEvent(a));
+  const top    = sorted[0];
+  const outros = sorted.slice(1, 3);
+  if (!top) return null;
+
+  const time = new Date(top.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+  return (
+    <>
+      {/* Hero pick */}
+      <div className="rola-hoje" onClick={() => onSelect(top)}>
+        {top.cover_url && <img className="rola-hoje-cover" src={top.cover_url} alt={top.title} loading="lazy" />}
+        <div className="rola-hoje-overlay">
+          <div className="rola-hoje-label">Rola hoje</div>
+          <div className="rola-hoje-title">{top.title}</div>
+          <div className="rola-hoje-venue">
+            <span className="rola-hoje-venue-name">📍 {top.venue.name}</span>
+            <span className="rola-hoje-time">{time}</span>
+          </div>
+          {top.tags.length > 0 && (
+            <div className="rola-hoje-tags">
+              {top.tags.slice(0, 3).map(t => (
+                <span key={t.id} className="rola-hoje-tag">{t.name}</span>
+              ))}
+            </div>
+          )}
+          {top.price_info && (
+            <div className="rola-hoje-price">💰 {top.price_info}</div>
+          )}
+          <div className="rola-hoje-footer">
+            <span className="rola-hoje-picks">
+              {events.length > 1 ? `+${events.length - 1} opções hoje` : '1 evento hoje'}
+            </span>
+            <button
+              className={`rola-hoje-bora${boraCounts[top.id]?.reacted ? ' reacted' : ''}`}
+              onClick={ev => { ev.stopPropagation(); onBora(top.id); }}
+              aria-label={boraCounts[top.id]?.reacted ? 'Confirmado' : `Confirmar presença em ${top.title}`}
+            >
+              {boraCounts[top.id]?.reacted ? '✓ Tô dentro!' : '🚀 Bora lá!'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Outros picks */}
+      {outros.length > 0 && (
+        <div className="rola-hoje-outros">
+          {outros.map(ev => {
+            const t = new Date(ev.date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            return (
+              <button key={ev.id} className="rola-hoje-outro" onClick={() => onSelect(ev)}>
+                <div className="rola-hoje-outro-time">{t}</div>
+                <div className="rola-hoje-outro-name">{ev.title}</div>
+                <div className="rola-hoje-outro-venue">{ev.venue.name}</div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
+}
+
 function SkeletonCard() {
   return (
     <div className="skeleton-card" aria-hidden="true">
@@ -141,6 +225,9 @@ export default function Feed() {
   const [trendingEvents, setTrendingEvents] = useState<EventOut[]>([]);
   const [retryKey, setRetryKey] = useState(0);
   const [sortBy, setSortBy] = useState<string | null>(null); // null | 'popular' | 'name'
+  const [freeEntry, setFreeEntry] = useState(false);
+  const [freeEvents, setFreeEvents] = useState<EventOut[]>([]);
+  const [loadingFree, setLoadingFree] = useState(false);
   const [suggestions, setSuggestions] = useState<SearchSuggestions | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -150,7 +237,8 @@ export default function Feed() {
   const eventIds = useMemo(() => [
     ...todayEvents.map(e => e.id),
     ...trendingEvents.map(e => e.id),
-  ], [todayEvents, trendingEvents]);
+    ...freeEvents.map(e => e.id),
+  ], [todayEvents, trendingEvents, freeEvents]);
   const { counts: boraCounts, toggle: _toggleBora } = useBora(eventIds);
   const toggleBora = useCallback(async (eventId: number) => {
     await _toggleBora(eventId);
@@ -190,6 +278,16 @@ export default function Feed() {
     api.get('/events/trending').then(r => setTrendingEvents(r.data)).catch(() => {});
   }, []);
 
+  // Fetch free events when filter toggled on
+  useEffect(() => {
+    if (!freeEntry) { setFreeEvents([]); return; }
+    setLoadingFree(true);
+    api.get('/events/feed', { params: { free: true, limit: 15, sort: 'date' } })
+      .then(r => setFreeEvents(r.data))
+      .catch(() => setFreeEvents([]))
+      .finally(() => setLoadingFree(false));
+  }, [freeEntry]);
+
   // Fetch venues when filters change
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -224,7 +322,7 @@ export default function Feed() {
     return result;
   }, [allVenues, accessible, sortBy, hasPrefs, prefMusic, prefVibes, activeCategory, query]);
 
-  const hasFilter = activeCategory || activeTag || activeNeighborhood || openNow || accessible || query;
+  const hasFilter = activeCategory || activeTag || activeNeighborhood || openNow || accessible || freeEntry || query;
 
   return (
     <div>
@@ -292,6 +390,13 @@ export default function Feed() {
           aria-label="Mostrar apenas locais acessíveis"
           aria-pressed={accessible}
         >♿</button>
+        <button
+          className={`filter-btn-icon${freeEntry ? ' active' : ''}`}
+          onClick={() => setFreeEntry(v => !v)}
+          aria-label="Mostrar apenas eventos com entrada grátis"
+          aria-pressed={freeEntry}
+          title="Entrada grátis"
+        >💸</button>
       </div>
 
       {showTagFilter && (
@@ -306,7 +411,52 @@ export default function Feed() {
         </div>
       )}
 
-      {/* Acontece Hoje — eventos */}
+      {/* Rola hoje? — curador diário */}
+      {todayEvents.length > 0 && !hasFilter && (
+        <RolaHoje
+          events={todayEvents}
+          onSelect={setSelected}
+          boraCounts={boraCounts}
+          onBora={toggleBora}
+        />
+      )}
+
+      {/* Entrada grátis — seção dedicada */}
+      {freeEntry && (
+        <div className="free-events-section">
+          <div className="section-header">
+            <div className="section-title section-title-free">💸 Entrada grátis</div>
+            {!loadingFree && <span className="section-link">{freeEvents.length} eventos</span>}
+          </div>
+          {loadingFree ? (
+            <div className="loading">Carregando...</div>
+          ) : freeEvents.length === 0 ? (
+            <div className="empty-state empty-sm"><p>Nenhum evento gratuito encontrado</p></div>
+          ) : (
+            <div className="free-events-list">
+              {freeEvents.map(ev => {
+                const d = new Date(ev.date);
+                const isToday = d.toDateString() === new Date().toDateString();
+                const dateLabel = isToday
+                  ? d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                  : d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
+                return (
+                  <div key={ev.id} className="free-event-row" onClick={() => setSelected(ev)} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setSelected(ev)}>
+                    <span className="free-event-badge">{ev.price_info || 'Grátis'}</span>
+                    <div className="free-event-info">
+                      <div className="free-event-title">{ev.title}</div>
+                      <div className="free-event-meta">{ev.venue.name}</div>
+                    </div>
+                    <span className="free-event-date">{dateLabel}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Acontece Hoje — chips horizontais */}
       {todayEvents.length > 0 && !hasFilter && (
         <>
           <div className="section-header">
@@ -412,7 +562,7 @@ export default function Feed() {
       </div>
 
       {/* Banners de filtros ativos */}
-      {(openNow || accessible || activeNeighborhood) && (
+      {(openNow || accessible || activeNeighborhood || freeEntry) && (
         <div className="active-filter-banners">
           {activeNeighborhood && (
             <div className="filter-banner filter-banner-cyan">
@@ -430,6 +580,12 @@ export default function Feed() {
             <div className="filter-banner filter-banner-blue">
               ♿ Acessível
               <button onClick={() => setAccessible(false)} aria-label="Remover filtro acessível">✕</button>
+            </div>
+          )}
+          {freeEntry && (
+            <div className="filter-banner filter-banner-free">
+              💸 Entrada grátis
+              <button onClick={() => setFreeEntry(false)} aria-label="Remover filtro entrada grátis">✕</button>
             </div>
           )}
         </div>
