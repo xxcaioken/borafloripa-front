@@ -4,21 +4,35 @@ import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
-const TAG_EMOJI = {
+const TAG_EMOJI: Record<string, string> = {
   'Funk': '🎤', 'Eletrônico': '🎧', 'Pagode': '🥁', 'Sertanejo': '🤠',
   'Rock': '🎸', 'MPB': '🎵', 'Reggae': '🌿',
   'Rooftop': '🌆', 'Pet Friendly': '🐾', 'Happy Hour': '🥂',
   'Chopp Artesanal': '🍻', 'Comer e Beber': '🍔', 'TV com Esportes': '⚽',
 };
 
-export default function Communities({ onAuthOpen }) {
+interface Community {
+  id: number;
+  name: string;
+  tag_name: string;
+  description?: string;
+  member_count: number;
+  is_member: boolean;
+  discount_code?: string;
+}
+
+interface CommunitiesProps {
+  onAuthOpen: () => void;
+}
+
+export default function Communities({ onAuthOpen }: CommunitiesProps) {
   usePageTitle('Comunidades');
   const { user } = useAuth();
   const toast = useToast();
-  const [communities, setCommunities] = useState([]);
+  const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);
-  const [joining, setJoining] = useState(null);
-  const [copied, setCopied] = useState(null);
+  const [joining, setJoining] = useState<number | null>(null);
+  const [copied, setCopied] = useState<number | null>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -29,7 +43,7 @@ export default function Communities({ onAuthOpen }) {
       .finally(() => setLoading(false));
   }, [user]);
 
-  async function handleJoin(id) {
+  async function handleJoin(id: number) {
     if (!user) { onAuthOpen?.(); return; }
     setJoining(id);
     try {
@@ -41,7 +55,7 @@ export default function Communities({ onAuthOpen }) {
     setJoining(null);
   }
 
-  function copyCode(code, id) {
+  function copyCode(code: string, id: number) {
     navigator.clipboard.writeText(code).then(() => {
       setCopied(id);
       setTimeout(() => setCopied(null), 2000);
@@ -120,13 +134,21 @@ export default function Communities({ onAuthOpen }) {
 }
 
 const MEMBER_MILESTONES = [10, 50, 100, 500, 1000];
-function memberProgress(count) {
+function memberProgress(count: number) {
   const next = MEMBER_MILESTONES.find(m => m > count) || count * 2;
   const prev = MEMBER_MILESTONES.slice().reverse().find(m => m <= count) || 0;
   return { pct: Math.min(100, Math.round(((count - prev) / (next - prev)) * 100)), next };
 }
 
-function CommunityCard({ community: c, joining, copied, onJoin, onCopy }) {
+interface CommunityCardProps {
+  community: Community;
+  joining: boolean;
+  copied: boolean;
+  onJoin: (id: number) => void;
+  onCopy: (code: string, id: number) => void;
+}
+
+function CommunityCard({ community: c, joining, copied, onJoin, onCopy }: CommunityCardProps) {
   const { pct, next } = memberProgress(c.member_count || 0);
   return (
     <div className={`community-card${c.is_member ? ' member' : ''}`}>
@@ -143,7 +165,7 @@ function CommunityCard({ community: c, joining, copied, onJoin, onCopy }) {
           {c.is_member && c.discount_code && (
             <button
               className={`community-code${copied ? ' copied' : ''}`}
-              onClick={() => onCopy(c.discount_code, c.id)}
+              onClick={() => onCopy(c.discount_code!, c.id)}
               aria-label="Copiar código de desconto"
             >
               {copied ? '✓ Copiado!' : `🎁 ${c.discount_code}`}

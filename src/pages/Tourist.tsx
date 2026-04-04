@@ -1,21 +1,22 @@
 import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useState } from 'react';
 import { api } from '../services/api';
+import type { EventOut } from '../services/api';
 import EventCard from '../components/EventCard';
 import EventDetail from '../components/EventDetail';
 import { useBora } from '../hooks/useBora';
 
-function groupByDate(events) {
-  const map = new Map();
+function groupByDate(events: EventOut[]): [string, EventOut[]][] {
+  const map = new Map<string, EventOut[]>();
   for (const e of events) {
     const key = e.date.slice(0, 10);
     if (!map.has(key)) map.set(key, []);
-    map.get(key).push(e);
+    map.get(key)!.push(e);
   }
   return [...map.entries()];
 }
 
-function formatDateLabel(dateKey) {
+function formatDateLabel(dateKey: string): string {
   const d = new Date(dateKey + 'T12:00:00');
   const today = new Date();
   const tomorrow = new Date(today); tomorrow.setDate(today.getDate() + 1);
@@ -36,12 +37,12 @@ export default function Tourist() {
   const today = new Date().toISOString().slice(0, 10);
   const [dateFrom, setDateFrom] = useState(today);
   const [dateTo, setDateTo] = useState(today);
-  const [period, setPeriod] = useState(null);
-  const [events, setEvents] = useState([]);
+  const [period, setPeriod] = useState<string | null>(null);
+  const [events, setEvents] = useState<EventOut[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [searched, setSearched] = useState(false);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState<EventOut | null>(null);
 
   const eventIds = events.map(e => e.id);
   const { counts: boraCounts, toggle: toggleBora } = useBora(eventIds);

@@ -2,7 +2,14 @@ import React, { useState } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVibes }) {
+interface AuthProps {
+  onClose?: () => void;
+  initialTab?: string;
+  prefMusic?: string | null;
+  prefVibes?: string | null;
+}
+
+export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVibes }: AuthProps) {
   const [tab, setTab] = useState(initialTab);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -13,7 +20,7 @@ export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVib
   const [forgotSent, setForgotSent] = useState(false);
   const { login } = useAuth();
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -30,8 +37,9 @@ export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVib
       const { data } = await api.post(endpoint, body);
       login(data.access_token, data.user);
       onClose?.();
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Erro. Tente novamente.');
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { detail?: string } } };
+      setError(axiosErr.response?.data?.detail || 'Erro. Tente novamente.');
     } finally {
       setLoading(false);
     }

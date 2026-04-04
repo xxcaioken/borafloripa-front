@@ -22,12 +22,16 @@ const VIBES = [
   { id: 'comer-beber',   label: 'Comer e Beber',    emoji: '🍔', bg: '#1a0a0a' },
 ];
 
-export default function Onboarding({ onComplete }) {
-  const [step, setStep] = useState(0); // 0 = música, 1 = vibe
-  const [selectedMusic, setSelectedMusic] = useState([]);
-  const [selectedVibes, setSelectedVibes] = useState([]);
+interface OnboardingProps {
+  onComplete: (prefs?: { music: string[]; vibes: string[] }) => void;
+}
 
-  function toggle(id, list, setList) {
+export default function Onboarding({ onComplete }: OnboardingProps) {
+  const [step, setStep] = useState(0); // 0 = música, 1 = vibe
+  const [selectedMusic, setSelectedMusic] = useState<string[]>([]);
+  const [selectedVibes, setSelectedVibes] = useState<string[]>([]);
+
+  function toggle(id: string, list: string[], setList: React.Dispatch<React.SetStateAction<string[]>>) {
     setList(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   }
 
@@ -86,7 +90,7 @@ export default function Onboarding({ onComplete }) {
         <button className="btn-primary" onClick={next}>
           {step === 0 ? 'Próxima →' : 'Entrar no app 🎉'}
         </button>
-        <button className="btn-skip" onClick={onComplete}>Pular</button>
+        <button className="btn-skip" onClick={() => onComplete()}>Pular</button>
       </div>
     </div>
   );

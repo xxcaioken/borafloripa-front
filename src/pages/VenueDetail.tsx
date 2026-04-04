@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import type { VenueOut, EventOut } from '../services/api';
 import { usePageTitle } from '../hooks/usePageTitle';
 import EventCard from '../components/EventCard';
 import { useBora } from '../hooks/useBora';
@@ -16,7 +17,7 @@ const VENUE_BG = [
   'radial-gradient(circle at 20% 80%, #081a2e 0%, #040810 100%)',
 ];
 const VENUE_EMOJIS = ['🍸', '🎵', '🏖️', '🌆', '🎉', '🍻'];
-const CATEGORY_LABEL = {
+const CATEGORY_LABEL: Record<string, string> = {
   bar: 'Bar', balada: 'Balada', cultura: 'Cultura', rua: 'Rolê na Rua', temporario: 'Especial'
 };
 const DAYS_ORDER = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
@@ -25,12 +26,12 @@ function getTodayKey() {
   return ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][new Date().getDay()];
 }
 
-function parseHours(hoursJson) {
+function parseHours(hoursJson: string | null | undefined): Record<string, string> | null {
   if (!hoursJson) return null;
-  try { return JSON.parse(hoursJson); } catch { return null; }
+  try { return JSON.parse(hoursJson) as Record<string, string>; } catch { return null; }
 }
 
-function openMaps(lat, lng, name) {
+function openMaps(lat: number, lng: number, name: string) {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const url = isIOS
     ? `https://maps.apple.com/?q=${lat},${lng}`
@@ -44,8 +45,8 @@ export default function VenueDetail() {
   const { user } = useAuth();
   const { savedIds, toggle: toggleSaved } = useSaved(!!user);
 
-  const [venue, setVenue] = useState(null);
-  const [events, setEvents] = useState([]);
+  const [venue, setVenue] = useState<VenueOut | null>(null);
+  const [events, setEvents] = useState<EventOut[]>([]);
   const [notFound, setNotFound] = useState(false);
 
   usePageTitle(venue ? venue.name : null);
@@ -82,12 +83,13 @@ export default function VenueDetail() {
   const bgIdx = venue.id % VENUE_BG.length;
   const emoji = VENUE_EMOJIS[venue.id % VENUE_EMOJIS.length];
 
+  type AccessKey = keyof VenueOut;
   const accessItems = [
-    { key: 'wheelchair', label: 'Cadeirantes', icon: '♿' },
-    { key: 'hearing_loop', label: 'Loop auditivo', icon: '🦻' },
-    { key: 'visual_aid', label: 'Aux. visual', icon: '👁' },
-    { key: 'adapted_wc', label: 'WC adaptado', icon: '🚻' },
-    { key: 'parking', label: 'Vaga especial', icon: '🅿️' },
+    { key: 'wheelchair' as AccessKey, label: 'Cadeirantes', icon: '♿' },
+    { key: 'hearing_loop' as AccessKey, label: 'Loop auditivo', icon: '🦻' },
+    { key: 'visual_aid' as AccessKey, label: 'Aux. visual', icon: '👁' },
+    { key: 'adapted_wc' as AccessKey, label: 'WC adaptado', icon: '🚻' },
+    { key: 'parking' as AccessKey, label: 'Vaga especial', icon: '🅿️' },
   ].filter(a => venue[a.key]);
 
   return (
@@ -173,7 +175,7 @@ export default function VenueDetail() {
             <div className="vd-section-title">Acessibilidade</div>
             <div className="vd-access-pills">
               {accessItems.map(a => (
-                <span key={a.key} className="vd-access-pill">
+                <span key={String(a.key)} className="vd-access-pill">
                   {a.icon} {a.label}
                 </span>
               ))}

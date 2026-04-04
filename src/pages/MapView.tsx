@@ -1,18 +1,23 @@
 import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useEffect, useState, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+// react-leaflet v5 has minor TypeScript incompatibilities with leaflet v1 types — cast components to any
+import { MapContainer as _MapContainer, TileLayer as _TileLayer, Marker as _Marker, Popup, useMap } from 'react-leaflet';
+const MapContainer = _MapContainer as React.ComponentType<any>;  // eslint-disable-line @typescript-eslint/no-explicit-any
+const TileLayer    = _TileLayer    as React.ComponentType<any>;  // eslint-disable-line @typescript-eslint/no-explicit-any
+const Marker       = _Marker       as React.ComponentType<any>;  // eslint-disable-line @typescript-eslint/no-explicit-any
 import L from 'leaflet';
 import { api } from '../services/api';
+import type { VenueOut, EventOut } from '../services/api';
 import { useSessionId } from '../hooks/useSessionId';
 import { useToast } from '../context/ToastContext';
 import 'leaflet/dist/leaflet.css';
 
-delete L.Icon.Default.prototype._getIconUrl;
+delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
 
-const FLORIPA = [-27.5954, -48.548];
-const CAT_COLOR  = { bar: '#00e676', balada: '#e040fb', cultura: '#ff6d00', rua: '#00bcd4' };
-const CAT_EMOJI  = { bar: '🍺', balada: '💃', cultura: '🎭', rua: '🌆' };
-const VIBE_COLOR = { 'Quente 🔥': '#ff6d00', 'Lotado': '#ff4081', 'Animado': '#ffeb3b', 'Normal': null };
+const FLORIPA: [number, number] = [-27.5954, -48.548];
+const CAT_COLOR: Record<string, string>  = { bar: '#00e676', balada: '#e040fb', cultura: '#ff6d00', rua: '#00bcd4' };
+const CAT_EMOJI: Record<string, string>  = { bar: '🍺', balada: '💃', cultura: '🎭', rua: '🌆' };
+const VIBE_COLOR: Record<string, string | null> = { 'Quente 🔥': '#ff6d00', 'Lotado': '#ff4081', 'Animado': '#ffeb3b', 'Normal': null };
 
 const FILTERS = [
   { id: 'all',    label: 'Todos',   emoji: '🗺️' },
@@ -23,14 +28,19 @@ const FILTERS = [
   { id: 'balada', label: 'Baladas', emoji: '💃' },
 ];
 
-function isToday(iso) {
+// Extended venue type for map (includes events from /events/map endpoint)
+interface MapVenue extends VenueOut {
+  events?: EventOut[];
+}
+
+function isToday(iso: string): boolean {
   const d = new Date(iso), now = new Date();
   return d.getDate() === now.getDate() && d.getMonth() === now.getMonth();
 }
 
-function makeIcon(venue, isSelected) {
+function makeIcon(venue: MapVenue, isSelected: boolean) {
   const hot = venue.checkin_count > 0;
-  const hasEvents = venue.events?.length > 0;
+  const hasEvents = (venue.events?.length ?? 0) > 0;
   const cat = venue.category || 'bar';
   const color = hot ? '#ff6d00' : (CAT_COLOR[cat] || '#00e676');
   const opacity = hasEvents ? 1 : 0.45;
@@ -46,7 +56,7 @@ function makeIcon(venue, isSelected) {
 
   const badge = hasEvents
     ? `<circle cx="33" cy="13" r="8" fill="#060908" stroke="${color}" stroke-width="1.5"/>
-       <text x="33" y="17" font-size="9" font-weight="700" text-anchor="middle" fill="${color}">${venue.events.length}</text>`
+       <text x="33" y="17" font-size="9" font-weight="700" text-anchor="middle" fill="${color}">${venue.events!.length}</text>`
     : '';
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="46" height="46" viewBox="0 0 46 46" opacity="${opacity}">
@@ -60,7 +70,7 @@ function makeIcon(venue, isSelected) {
   return L.divIcon({ html: svg, className: '', iconSize: [46,46], iconAnchor: [23,23], popupAnchor: [0,-26] });
 }
 
-function FlyTo({ target }) {
+function FlyTo({ target }: { target: MapVenue | null }) {
   const map = useMap();
   useEffect(() => {
     if (target) map.flyTo([target.lat, target.lng], 16, { duration: 0.7 });
@@ -68,7 +78,7 @@ function FlyTo({ target }) {
   return null;
 }
 
-function FlyToCoords({ coords }) {
+function FlyToCoords({ coords }: { coords: [number, number] | null }) {
   const map = useMap();
   useEffect(() => {
     if (coords) map.flyTo(coords, 15, { duration: 0.8 });
@@ -76,7 +86,12 @@ function FlyToCoords({ coords }) {
   return null;
 }
 
-function VenuePopup({ venue, onCheckin }) {
+interface VenuePopupProps {
+  venue: MapVenue;
+  onCheckin: (venue: MapVenue) => void;
+}
+
+function VenuePopup({ venue, onCheckin }: VenuePopupProps) {
   const todayEvents    = venue.events?.filter(e => isToday(e.date)) || [];
   const upcomingEvents = venue.events?.filter(e => !isToday(e.date)) || [];
   const shortAddr = venue.address
@@ -146,15 +161,15 @@ function VenuePopup({ venue, onCheckin }) {
 
 export default function MapView() {
   usePageTitle('Mapa');
-  const [venues, setVenues]   = useState([]);
+  const [venues, setVenues]   = useState<MapVenue[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState(false);
   const [filter, setFilter]   = useState('all');
-  const [selected, setSelected] = useState(null);
-  const [flyTarget, setFlyTarget] = useState(null);
+  const [selected, setSelected] = useState<MapVenue | null>(null);
+  const [flyTarget, setFlyTarget] = useState<MapVenue | null>(null);
   const [search, setSearch]   = useState('');
-  const [userCoords, setUserCoords] = useState(null);
-  const [nearbyEvents, setNearbyEvents] = useState([]);
+  const [userCoords, setUserCoords] = useState<[number, number] | null>(null);
+  const [nearbyEvents, setNearbyEvents] = useState<EventOut[]>([]);
   const sessionId = useSessionId();
   const toast = useToast();
 
@@ -170,16 +185,19 @@ export default function MapView() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, [load]);
 
-  async function handleCheckin(venue) {
+  async function handleCheckin(venue: MapVenue) {
     try {
       const { data } = await api.post('/checkins', { venue_id: venue.id, session_id: sessionId });
       setVenues(prev => prev.map(v =>
         v.id === venue.id ? { ...v, checkin_count: data.checkin_count } : v
       ));
       toast?.show(`Check-in em ${venue.name}! 📍`, 'success');
-    } catch (err) {
-      if (err.response?.status === 429) {
-        toast?.show('Você já fez check-in recentemente aqui', 'info');
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { status?: number } };
+        if (axiosErr.response?.status === 429) {
+          toast?.show('Você já fez check-in recentemente aqui', 'info');
+        }
       }
     }
   }
@@ -188,7 +206,7 @@ export default function MapView() {
     if (search && !v.name.toLowerCase().includes(search.toLowerCase())) return false;
     if (filter === 'hot')    return v.checkin_count > 0;
     if (filter === 'today')  return v.events?.some(e => isToday(e.date));
-    if (filter === 'week')   return v.events?.length > 0;
+    if (filter === 'week')   return (v.events?.length ?? 0) > 0;
     if (filter === 'bar')    return v.category === 'bar';
     if (filter === 'balada') return v.category === 'balada';
     return true;
@@ -196,9 +214,9 @@ export default function MapView() {
 
   const hotCount   = venues.filter(v => v.checkin_count > 0).length;
   const todayCount = venues.filter(v => v.events?.some(e => isToday(e.date))).length;
-  const weekCount  = venues.filter(v => v.events?.length > 0).length;
+  const weekCount  = venues.filter(v => (v.events?.length ?? 0) > 0).length;
 
-  const labelOf = (f) => {
+  const labelOf = (f: string) => {
     if (f === 'hot')   return `${hotCount} quentes`;
     if (f === 'today') return `${todayCount} hoje`;
     if (f === 'week')  return `${weekCount} esta semana`;
@@ -225,7 +243,7 @@ export default function MapView() {
               onClick={() => {
                 navigator.geolocation.getCurrentPosition(
                   pos => {
-                    const coords = [pos.coords.latitude, pos.coords.longitude];
+                    const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
                     setUserCoords(coords);
                     api.get('/events/nearby', { params: { lat: coords[0], lng: coords[1] } })
                       .then(r => setNearbyEvents(r.data))

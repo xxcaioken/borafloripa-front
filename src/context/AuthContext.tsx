@@ -1,10 +1,19 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '../services/api';
+import type { UserOut } from '../services/api';
 
-const AuthContext = createContext(null);
+interface AuthContextType {
+  user: UserOut | null;
+  loading: boolean;
+  login: (token: string, userData: UserOut) => void;
+  logout: () => void;
+  refreshUser: () => Promise<void>;
+}
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<UserOut | null>(null);
   // Inicializa como true só se há token — evita setState síncrono no effect
   const [loading, setLoading] = useState(() => !!localStorage.getItem('bf_token'));
 
@@ -17,7 +26,7 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []);
 
-  function login(token, userData) {
+  function login(token: string, userData: UserOut) {
     localStorage.setItem('bf_token', token);
     setUser(userData);
   }
@@ -27,7 +36,7 @@ export function AuthProvider({ children }) {
     setUser(null);
   }
 
-  function refreshUser() {
+  function refreshUser(): Promise<void> {
     return api.get('/auth/me').then(r => setUser(r.data));
   }
 
@@ -38,4 +47,4 @@ export function AuthProvider({ children }) {
   );
 }
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => useContext(AuthContext) as AuthContextType;
