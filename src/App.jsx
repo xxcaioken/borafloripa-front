@@ -18,6 +18,7 @@ const Profile         = lazy(() => import('./pages/Profile'));
 const Communities     = lazy(() => import('./pages/Communities'));
 const NotFound        = lazy(() => import('./pages/NotFound'));
 const ResetPassword   = lazy(() => import('./pages/ResetPassword'));
+const VenueDetail     = lazy(() => import('./pages/VenueDetail'));
 
 function RouteLoader() {
   return <div className="loading loading-page">Carregando...</div>;
@@ -233,6 +234,7 @@ function AppInner() {
             <Route path="/perfil" element={<Profile />} />
             <Route path="/evento/:id" element={<EventPage />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/venue/:id" element={<VenueDetail />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

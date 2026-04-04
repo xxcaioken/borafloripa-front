@@ -3066,3 +3066,251 @@ body::before {
 .today-chip-hot .today-chip-name {
   color: #ffab40;
 }
+
+/* =========================================
+   VENUE DETAIL PAGE
+   ========================================= */
+.venue-detail {
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+/* Hero */
+.vd-hero {
+  position: relative;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.vd-back {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: rgba(0,0,0,0.45);
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  z-index: 2;
+  transition: background 0.15s;
+}
+.vd-back:hover { background: rgba(0,0,0,0.65); }
+.vd-hero-emoji {
+  font-size: 72px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+}
+.vd-hot-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 109, 0, 0.18);
+  border: 1px solid rgba(255, 109, 0, 0.45);
+  color: #ffab40;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  backdrop-filter: blur(8px);
+}
+
+/* Body */
+.vd-body {
+  padding: 20px 16px 0;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+/* Title row */
+.vd-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.vd-name {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+  font-family: 'Syne', sans-serif;
+}
+.vd-cat-badge {
+  background: rgba(124, 77, 255, 0.15);
+  border: 1px solid rgba(124, 77, 255, 0.35);
+  color: #b39ddb;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Address row */
+.vd-address-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.vd-address {
+  font-size: 13px;
+  color: var(--text2);
+  flex: 1;
+  min-width: 0;
+}
+.vd-maps-btn {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.vd-maps-btn:hover { opacity: 0.85; }
+
+/* Contacts */
+.vd-contacts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.vd-contact-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 20px;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.vd-contact-chip:hover { opacity: 0.8; }
+.vd-instagram {
+  background: rgba(225, 48, 108, 0.12);
+  border: 1px solid rgba(225, 48, 108, 0.35);
+  color: #f48fb1;
+}
+.vd-whatsapp {
+  background: rgba(37, 211, 102, 0.12);
+  border: 1px solid rgba(37, 211, 102, 0.35);
+  color: #69f0ae;
+}
+
+/* Sections */
+.vd-section {
+  margin-bottom: 20px;
+}
+.vd-section-title {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text2);
+  margin-bottom: 10px;
+}
+
+/* Hours */
+.vd-hours {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+.vd-hours-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.vd-hours-row:last-child { border-bottom: none; }
+.vd-hours-row.today {
+  background: rgba(0, 230, 118, 0.06);
+  border-radius: 6px;
+  padding: 5px 6px;
+  margin: 0 -6px;
+}
+.vd-hours-day {
+  font-size: 13px;
+  color: var(--text2);
+  width: 36px;
+}
+.vd-hours-row.today .vd-hours-day {
+  color: var(--accent);
+  font-weight: 700;
+}
+.vd-hours-val {
+  font-size: 13px;
+  color: var(--text);
+}
+.vd-hours-val.closed {
+  color: #ef5350;
+}
+
+/* Accessibility pills */
+.vd-access-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.vd-access-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: rgba(0, 184, 212, 0.1);
+  border: 1px solid rgba(0, 184, 212, 0.3);
+  color: #80deea;
+}
+
+/* Events empty */
+.vd-events-empty {
+  text-align: center;
+  padding: 28px 0;
+  color: var(--text2);
+  font-size: 14px;
+}
+
+/* Venue grid card — clickable cursor */
+.venue-grid-card {
+  cursor: pointer;
+}
+
+@media (min-width: 900px) {
+  .vd-hero {
+    height: 280px;
+    border-radius: 16px;
+    margin-bottom: 0;
+  }
+  .vd-body {
+    padding: 24px 0 0;
+  }
+  .vd-name {
+    font-size: 28px;
+  }
+}

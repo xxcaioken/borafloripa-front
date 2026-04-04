@@ -1,5 +1,6 @@
 import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import EventDetail from '../components/EventDetail';
 import { useBora } from '../hooks/useBora';
@@ -75,9 +76,10 @@ function SkeletonCard() {
 }
 
 function VenueCard({ venue, index }) {
+  const navigate = useNavigate();
   const isHot = (venue.checkin_count || 0) >= 5;
   return (
-    <div className="venue-grid-card">
+    <div className="venue-grid-card" onClick={() => navigate(`/venue/${venue.id}`)} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && navigate(`/venue/${venue.id}`)}>
       <div className="venue-grid-card-cover" style={{ background: VENUE_BG[index % VENUE_BG.length] }}>
         <span className="venue-grid-card-emoji">{VENUE_EMOJIS[index % VENUE_EMOJIS.length]}</span>
         {isHot && <span className="venue-grid-hot">🔥 Hot</span>}
