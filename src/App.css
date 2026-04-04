@@ -39,9 +39,9 @@
 }
 
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: var(--font-body);
+  background: var(--bg) !important;
+  color: var(--text)  !important;
+  font-family: var(--font-body) !important;
   line-height: 1.5;
   min-height: 100svh;
   overflow-x: hidden;
