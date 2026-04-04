@@ -9,7 +9,14 @@ import { useSaved } from '../hooks/useSaved';
 import { useToast } from '../context/ToastContext';
 
 const VENUE_EMOJIS = ['🍸', '🎵', '🏖️', '🌆', '🎉', '🍻'];
-const VENUE_BG = ['#0a1a0e', '#0a0f1a', '#0a1a0a', '#121a0a', '#0a1a14', '#0a120a'];
+const VENUE_BG = [
+  'radial-gradient(circle at 30% 30%, #0d2e1a 0%, #061008 100%)',
+  'radial-gradient(circle at 70% 30%, #13082e 0%, #070410 100%)',
+  'radial-gradient(circle at 30% 70%, #082e24 0%, #040f0c 100%)',
+  'radial-gradient(circle at 60% 60%, #1a2208 0%, #0a100a 100%)',
+  'radial-gradient(circle at 50% 20%, #2e1408 0%, #100804 100%)',
+  'radial-gradient(circle at 20% 80%, #081a2e 0%, #040810 100%)',
+];
 
 const CATEGORIES = [
   { id: null,         label: 'Todos',       emoji: '✨' },
