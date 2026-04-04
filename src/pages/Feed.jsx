@@ -275,31 +275,6 @@ export default function Feed() {
         </div>
       )}
 
-      {/* Carousel — todos os venues (scroll horizontal) */}
-      {!hasFilter && (
-        <>
-          <div className="section-header">
-            <div className="section-title">Lugares 📍</div>
-          </div>
-          <div className="carousel-scroll">
-            {allVenues.slice(0, 20).map((venue, i) => (
-              <div key={venue.id} className="venue-card-mini">
-                <div className="venue-card-mini-cover">
-                  <div className="venue-card-mini-bg" style={{ background: VENUE_BG[i % VENUE_BG.length] }}>
-                    {VENUE_EMOJIS[i % VENUE_EMOJIS.length]}
-                  </div>
-                  {(venue.checkin_count || 0) >= 5 && <span className="venue-card-mini-badge" style={{background:'#ff6d00'}}>🔥</span>}
-                  {venue.is_new && <span className="venue-card-mini-badge">Novo</span>}
-                  {venue.wheelchair && <span className="venue-card-mini-access">♿</span>}
-                </div>
-                <p>{venue.name}</p>
-                <span>{venue.category ? CATEGORY_LABEL[venue.category] || venue.category : venue.city}</span>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
       {/* Acontece Hoje — eventos */}
       {todayEvents.length > 0 && !hasFilter && (
         <>
@@ -345,6 +320,30 @@ export default function Feed() {
                 <span className="today-chip-name">{event.title}</span>
                 <span className="today-chip-venue">{event.venue.name}</span>
               </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Novidades — venues novos */}
+      {newVenues.length > 0 && !hasFilter && (
+        <>
+          <div className="section-header">
+            <div className="section-title">Acabaram de chegar! 🆕</div>
+          </div>
+          <div className="carousel-scroll">
+            {newVenues.map((venue, i) => (
+              <div key={venue.id} className="venue-card-mini">
+                <div className="venue-card-mini-cover">
+                  <div className="venue-card-mini-bg" style={{ background: VENUE_BG[i % VENUE_BG.length] }}>
+                    {VENUE_EMOJIS[i % VENUE_EMOJIS.length]}
+                  </div>
+                  <span className="venue-card-mini-badge">Novo</span>
+                  {venue.wheelchair && <span className="venue-card-mini-access">♿</span>}
+                </div>
+                <p>{venue.name}</p>
+                <span>{venue.city}</span>
+              </div>
             ))}
           </div>
         </>
