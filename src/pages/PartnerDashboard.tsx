@@ -207,8 +207,52 @@ interface PartnerStats {
 
 interface AnalyticsItem {
   event_id: number;
+  title: string;
+  date: string;
   view_count: number;
   bora_count: number;
+}
+
+function AnalyticsChart({ analytics, mode }: { analytics: AnalyticsItem[]; mode: 'views' | 'boras' }) {
+  const sorted = [...analytics]
+    .sort((a, b) => (mode === 'views' ? b.view_count - a.view_count : b.bora_count - a.bora_count))
+    .slice(0, 8);
+  const max = sorted.reduce((m, a) => Math.max(m, mode === 'views' ? a.view_count : a.bora_count), 1);
+
+  if (sorted.length === 0) {
+    return (
+      <div className="analytics-chart">
+        <div className="analytics-chart-empty">Sem dados para exibir</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="analytics-chart">
+      <div className="analytics-chart-title">
+        {mode === 'views' ? '👁 Views por evento' : '🚀 Boras por evento'}
+      </div>
+      <div className="analytics-bar-list">
+        {sorted.map(a => {
+          const val = mode === 'views' ? a.view_count : a.bora_count;
+          const pct = Math.round((val / max) * 100);
+          const shortTitle = a.title.length > 18 ? a.title.slice(0, 17) + '…' : a.title;
+          return (
+            <div key={a.event_id} className="analytics-bar-row">
+              <div className="analytics-bar-label" title={a.title}>{shortTitle}</div>
+              <div className="analytics-bar-track">
+                <div
+                  className={`analytics-bar-fill ${mode === 'views' ? 'views' : 'boras'}`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <div className="analytics-bar-val">{val}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 interface PartnerDashboardProps {
@@ -222,6 +266,7 @@ export default function PartnerDashboard({ onAuthOpen }: PartnerDashboardProps) 
   const [events, setEvents] = useState<EventOut[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsItem[]>([]);
   const [analyticsDays, setAnalyticsDays] = useState<number | null>(null); // null=all, 7, 30
+  const [chartMode, setChartMode] = useState<'views' | 'boras'>('views');
   const [tags, setTags] = useState<TagOut[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
@@ -358,6 +403,21 @@ export default function PartnerDashboard({ onAuthOpen }: PartnerDashboardProps) 
           <div className="stat-label">Boras{analyticsDays ? ` (${analyticsDays}d)` : ''}</div>
         </div>
       </div>
+
+      {analytics.length > 0 && (
+        <>
+          <div className="analytics-period-row" style={{ marginTop: 12 }}>
+            {(['views', 'boras'] as const).map(m => (
+              <button
+                key={m}
+                className={`sort-chip${chartMode === m ? ' active' : ''}`}
+                onClick={() => setChartMode(m)}
+              >{m === 'views' ? '👁 Views' : '🚀 Boras'}</button>
+            ))}
+          </div>
+          <AnalyticsChart analytics={analytics} mode={chartMode} />
+        </>
+      )}
 
       <div className="section-header section-mt">
         <div className="section-title">Meus Locais</div>

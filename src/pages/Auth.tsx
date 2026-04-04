@@ -1,6 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+
+// Google Identity Services (GSI) types — loaded dynamically
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (cfg: { client_id: string; callback: (r: { credential: string }) => void }) => void;
+          renderButton: (el: HTMLElement, opts: Record<string, unknown>) => void;
+        };
+      };
+    };
+  }
+}
 
 interface AuthProps {
   onClose?: () => void;
@@ -18,7 +32,58 @@ export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVib
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const googleBtnRef = useRef<HTMLDivElement>(null);
   const { login } = useAuth();
+
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return;
+
+    function initGoogle() {
+      window.google?.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID!,
+        callback: async ({ credential }) => {
+          setGoogleLoading(true);
+          try {
+            const { data } = await api.post('/auth/google', { credential });
+            login(data.access_token, data.user);
+            onClose?.();
+          } catch {
+            // handled silently — user stays on form
+          } finally {
+            setGoogleLoading(false);
+          }
+        },
+      });
+      if (googleBtnRef.current) {
+        window.google?.accounts.id.renderButton(googleBtnRef.current, {
+          theme: 'filled_black',
+          size: 'large',
+          width: 300,
+          text: 'continue_with',
+          shape: 'rectangular',
+          logo_alignment: 'left',
+        });
+      }
+    }
+
+    if (window.google) {
+      initGoogle();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = initGoogle;
+    document.head.appendChild(script);
+    return () => {
+      if (document.head.contains(script)) document.head.removeChild(script);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [GOOGLE_CLIENT_ID]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -127,6 +192,17 @@ export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVib
                 </button>
               )}
             </form>
+          )}
+
+          {tab !== 'forgot' && GOOGLE_CLIENT_ID && (
+            <>
+              <div className="auth-divider">ou</div>
+              <div
+                ref={googleBtnRef}
+                style={{ minHeight: 44, opacity: googleLoading ? 0.5 : 1, transition: 'opacity 0.2s' }}
+                aria-label="Entrar com Google"
+              />
+            </>
           )}
 
           {tab !== 'forgot' && (
