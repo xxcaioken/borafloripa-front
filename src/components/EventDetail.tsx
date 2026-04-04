@@ -89,10 +89,12 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
 
   function handleShare() {
     const url = `${window.location.origin}/evento/${event.id}`;
+    const dateLabel = new Date(event.date).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    const text = `${event.title} em ${event.venue.name} — ${dateLabel}${event.price_info ? ` (${event.price_info})` : ''}`;
     if (navigator.share) {
-      navigator.share({ title: event.title, text: `${event.title} — ${event.venue.name}`, url });
+      navigator.share({ title: event.title, text, url }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(url).then(() => toast?.show('Link copiado! 📋', 'success'));
+      navigator.clipboard.writeText(`${text}\n${url}`).then(() => toast?.show('Link copiado! 📋', 'success'));
     }
   }
 

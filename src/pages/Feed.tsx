@@ -223,6 +223,7 @@ export default function Feed() {
   const [showTagFilter, setShowTagFilter] = useState(false);
   const [todayEvents, setTodayEvents] = useState<EventOut[]>([]);
   const [trendingEvents, setTrendingEvents] = useState<EventOut[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<EventOut[]>([]);
   const [retryKey, setRetryKey] = useState(0);
   const [sortBy, setSortBy] = useState<string | null>(null); // null | 'popular' | 'name'
   const [freeEntry, setFreeEntry] = useState(false);
@@ -238,7 +239,8 @@ export default function Feed() {
     ...todayEvents.map(e => e.id),
     ...trendingEvents.map(e => e.id),
     ...freeEvents.map(e => e.id),
-  ], [todayEvents, trendingEvents, freeEvents]);
+    ...upcomingEvents.map(e => e.id),
+  ], [todayEvents, trendingEvents, freeEvents, upcomingEvents]);
   const { counts: boraCounts, toggle: _toggleBora } = useBora(eventIds);
   const toggleBora = useCallback(async (eventId: number) => {
     await _toggleBora(eventId);
@@ -276,17 +278,21 @@ export default function Feed() {
     api.get('/events/feed', { params: { today: true, limit: 10 } })
       .then(r => setTodayEvents(r.data)).catch(() => {});
     api.get('/events/trending').then(r => setTrendingEvents(r.data)).catch(() => {});
+    api.get('/events/feed', { params: { limit: 4, sort: 'date' } })
+      .then(r => setUpcomingEvents(r.data)).catch(() => {});
   }, []);
 
   // Fetch free events when filter toggled on
   useEffect(() => {
     if (!freeEntry) { setFreeEvents([]); return; }
     setLoadingFree(true);
-    api.get('/events/feed', { params: { free: true, limit: 15, sort: 'date' } })
+    const params: Record<string, string | number | boolean> = { free: true, limit: 15, sort: 'date' };
+    if (activeNeighborhood) params.neighborhood = activeNeighborhood;
+    api.get('/events/feed', { params })
       .then(r => setFreeEvents(r.data))
       .catch(() => setFreeEvents([]))
       .finally(() => setLoadingFree(false));
-  }, [freeEntry]);
+  }, [freeEntry, activeNeighborhood]);
 
   // Fetch venues when filters change
   useEffect(() => {
@@ -315,12 +321,12 @@ export default function Feed() {
       result = [...result].sort((a, b) => a.name.localeCompare(b.name));
     } else if (sortBy === 'popular') {
       result = [...result].sort((a, b) => (b.checkin_count || 0) - (a.checkin_count || 0));
-    } else if (hasPrefs && !activeCategory && !query) {
+    } else if (hasPrefs && !activeCategory && !activeNeighborhood && !query) {
       result = [...result].sort((a, b) => scoreVenue(b, prefMusic, prefVibes) - scoreVenue(a, prefMusic, prefVibes));
     }
 
     return result;
-  }, [allVenues, accessible, sortBy, hasPrefs, prefMusic, prefVibes, activeCategory, query]);
+  }, [allVenues, accessible, sortBy, hasPrefs, prefMusic, prefVibes, activeCategory, activeNeighborhood, query]);
 
   const hasFilter = activeCategory || activeTag || activeNeighborhood || openNow || accessible || freeEntry || query;
 
@@ -615,11 +621,33 @@ export default function Feed() {
           <button className="btn-retry" onClick={() => setRetryKey(k => k + 1)}>Tentar novamente</button>
         </div>
       ) : venues.length === 0 ? (
-        <div className="empty-state">
+        <div className="empty-smart-panel">
           <div className="empty-state-icon">
             {query ? '🔍' : accessible ? '♿' : activeCategory ? CATEGORIES.find(c => c.id === activeCategory)?.emoji || '📍' : '📍'}
           </div>
-          <p>{query ? `Nenhum resultado para "${query}"` : 'Nenhum local encontrado'}</p>
+          <p>{query ? `Nenhum resultado para "${query}"` : 'Nenhum local encontrado com esses filtros'}</p>
+          {upcomingEvents.length > 0 && (
+            <div className="empty-smart-section">
+              <div className="empty-smart-title">Mas esses rolês chegam em breve 👀</div>
+              <div className="today-scroll">
+                {upcomingEvents.map(ev => {
+                  const t = new Date(ev.date).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+                  return (
+                    <button
+                      key={ev.id}
+                      className="today-chip"
+                      onClick={() => setSelected(ev)}
+                      aria-label={`${ev.title} em ${ev.venue.name}`}
+                    >
+                      <span className="today-chip-time">{t}</span>
+                      <span className="today-chip-name">{ev.title}</span>
+                      <span className="today-chip-venue">{ev.venue.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           {(activeCategory || accessible || activeNeighborhood) && (
             <button
               className="btn-retry"

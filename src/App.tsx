@@ -20,6 +20,7 @@ const NotFound        = lazy(() => import('./pages/NotFound'));
 const ResetPassword   = lazy(() => import('./pages/ResetPassword'));
 const VenueDetail     = lazy(() => import('./pages/VenueDetail'));
 const Search          = lazy(() => import('./pages/Search'));
+const Agenda          = lazy(() => import('./pages/Agenda'));
 
 function RouteLoader() {
   return <div className="loading loading-page">Carregando...</div>;
@@ -38,13 +39,13 @@ function BottomNav() {
 
   const items = user ? [
     { icon: '🏠', label: 'Início',       to: '/' },
-    { icon: '🍸', label: 'Locais',       to: '/locais' },
+    { icon: '📅', label: 'Agenda',       to: '/agenda' },
     { icon: '🗺️', label: 'Mapa',        to: '/mapa' },
     { icon: '🤝', label: 'Comunidades',  to: '/comunidades' },
     { icon: '👤', label: user.name.split(' ')[0], to: '/perfil' },
   ] : [
     { icon: '🏠', label: 'Início',  to: '/' },
-    { icon: '🍸', label: 'Locais',  to: '/locais' },
+    { icon: '📅', label: 'Agenda',  to: '/agenda' },
     { icon: '🗺️', label: 'Mapa',   to: '/mapa' },
     { icon: '✈️', label: 'Turista', to: '/turista' },
     { icon: '💼', label: 'Parceiro', to: '/parceiro' },
@@ -81,6 +82,7 @@ function Sidebar({ onAuthOpen }: SidebarProps) {
   const items = [
     { icon: '🏠', label: 'Início',       to: '/' },
     { icon: '🔍', label: 'Busca',        to: '/busca' },
+    { icon: '📅', label: 'Agenda',       to: '/agenda' },
     { icon: '🍸', label: 'Locais',       to: '/locais' },
     { icon: '🗺️', label: 'Mapa',        to: '/mapa' },
     { icon: '✈️', label: 'Turista',      to: '/turista' },
@@ -257,6 +259,7 @@ function AppInner() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/venue/:id" element={<VenueDetail />} />
             <Route path="/busca" element={<Search />} />
+            <Route path="/agenda" element={<Agenda />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
