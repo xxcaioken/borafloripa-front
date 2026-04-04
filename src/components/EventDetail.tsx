@@ -19,9 +19,9 @@ const TAG_ICONS = {
   'Comer e Beber': '🍔', 'TV com Esportes': '⚽',
 };
 
-function parseHours(hoursJson) {
+function parseHours(hoursJson: string | null | undefined): Record<string, string> | null {
   if (!hoursJson) return null;
-  try { return JSON.parse(hoursJson); } catch { return null; }
+  try { return JSON.parse(hoursJson) as Record<string, string>; } catch { return null; }
 }
 
 function getTodayKey() {

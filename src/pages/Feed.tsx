@@ -183,7 +183,7 @@ export default function Feed() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError(false);
-    const params = {};
+    const params: Record<string, string> = {};
     if (activeCategory) params.category = activeCategory;
     if (activeNeighborhood) params.neighborhood = activeNeighborhood;
     if (query) params.q = query;

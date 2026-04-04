@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default class ErrorBoundary extends React.Component {
+export default class ErrorBoundary extends React.Component<{ children: React.ReactNode }> {
   state = { error: null };
 
   static getDerivedStateFromError(error) {

@@ -1,15 +1,19 @@
 import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useEffect, useState, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+// react-leaflet v5 has minor TypeScript incompatibilities with leaflet v1 types — cast components to any
+import { MapContainer as _MapContainer, TileLayer as _TileLayer, Marker as _Marker, Popup, useMap } from 'react-leaflet';
+const MapContainer = _MapContainer as React.ComponentType<any>;  // eslint-disable-line @typescript-eslint/no-explicit-any
+const TileLayer    = _TileLayer    as React.ComponentType<any>;  // eslint-disable-line @typescript-eslint/no-explicit-any
+const Marker       = _Marker       as React.ComponentType<any>;  // eslint-disable-line @typescript-eslint/no-explicit-any
 import L from 'leaflet';
 import { api } from '../services/api';
 import { useSessionId } from '../hooks/useSessionId';
 import { useToast } from '../context/ToastContext';
 import 'leaflet/dist/leaflet.css';
 
-delete L.Icon.Default.prototype._getIconUrl;
+delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
 
-const FLORIPA = [-27.5954, -48.548];
+const FLORIPA: [number, number] = [-27.5954, -48.548];
 const CAT_COLOR  = { bar: '#00e676', balada: '#e040fb', cultura: '#ff6d00', rua: '#00bcd4' };
 const CAT_EMOJI  = { bar: '🍺', balada: '💃', cultura: '🎭', rua: '🌆' };
 const VIBE_COLOR = { 'Quente 🔥': '#ff6d00', 'Lotado': '#ff4081', 'Animado': '#ffeb3b', 'Normal': null };

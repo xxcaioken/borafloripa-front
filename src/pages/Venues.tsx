@@ -26,7 +26,7 @@ export default function Venues() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     const t = setTimeout(() => {
-      const params = {};
+      const params: Record<string, string> = {};
       if (query) params.q = query;
       if (category) params.category = category;
       api.get('/events/venues', { params })

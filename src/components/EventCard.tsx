@@ -1,4 +1,16 @@
 import React, { memo } from 'react';
+import type { EventOut } from '../services/api';
+
+interface EventCardProps {
+  event: EventOut;
+  onClick?: () => void;
+  boraCount?: number;
+  boraReacted?: boolean;
+  onBora?: (id: number) => void;
+  isSaved?: boolean;
+  onSave?: ((id: number) => void) | null;
+  hero?: boolean;
+}
 
 const CAT_ACCENT = { bar: '#00e676', balada: '#e040fb', cultura: '#ff6d00', rua: '#00bcd4', temporario: '#ffea00' };
 const VIBE_STYLE = {
@@ -60,7 +72,7 @@ function AccessBadges({ venue }) {
   );
 }
 
-const EventCard = memo(function EventCard({ event, onClick, boraCount = 0, boraReacted = false, onBora, isSaved = false, onSave, hero = false }) {
+const EventCard = memo(function EventCard({ event, onClick, boraCount = 0, boraReacted = false, onBora, isSaved = false, onSave, hero = false }: EventCardProps) {
   const isTemp = event.is_temporary;
   const coverBg = isTemp
     ? 'linear-gradient(135deg, #0a2a0f 0%, #142a0a 100%)'
@@ -91,7 +103,7 @@ const EventCard = memo(function EventCard({ event, onClick, boraCount = 0, boraR
       role="button"
       tabIndex={0}
       aria-label={`${event.title} em ${event.venue.name}`}
-      style={{ '--cat-accent': accentColor }}
+      style={{ '--cat-accent': accentColor } as React.CSSProperties}
     >
       {/* Cover */}
       <div
