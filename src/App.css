@@ -538,6 +538,112 @@ body::before {
 }
 .venue-card-mini span { font-size: 11px; color: var(--muted); }
 
+/* ── Venue List (feed principal) ── */
+.venue-list { display: flex; flex-direction: column; gap: 12px; }
+
+.venue-list-card {
+  display: flex;
+  gap: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  transition: border-color 0.2s, transform 0.15s;
+  cursor: pointer;
+}
+.venue-list-card:hover {
+  border-color: rgba(0,230,118,0.25);
+  transform: translateY(-1px);
+}
+
+.venue-list-card-cover {
+  width: 72px;
+  min-height: 80px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-size: 26px;
+}
+.venue-list-hot-badge {
+  position: absolute;
+  bottom: 5px; left: 0; right: 0;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 800;
+  color: #ff6d00;
+  letter-spacing: 0.3px;
+  text-shadow: 0 0 8px rgba(255,109,0,0.7);
+}
+
+.venue-list-card-body {
+  flex: 1;
+  padding: 12px 12px 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.venue-list-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.venue-list-card-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.venue-list-cat-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent2);
+  background: rgba(124,77,255,0.12);
+  border: 1px solid rgba(124,77,255,0.2);
+  border-radius: 20px;
+  padding: 2px 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.venue-list-card-address {
+  font-size: 12px;
+  color: var(--text2);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.venue-list-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+.venue-list-instagram {
+  font-size: 11px;
+  color: var(--accent3);
+  font-weight: 600;
+}
+.venue-list-access-icons {
+  display: flex;
+  gap: 4px;
+  font-size: 13px;
+}
+
+@media (min-width: 900px) {
+  .venue-list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+}
+@media (min-width: 1200px) {
+  .venue-list { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+}
+
 /* ── Category Tabs ── */
 .category-tabs {
   display: flex;

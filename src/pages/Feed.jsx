@@ -1,11 +1,9 @@
 import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { api } from '../services/api';
-import EventCard from '../components/EventCard';
 import EventDetail from '../components/EventDetail';
 import { useBora } from '../hooks/useBora';
 import { useAuth } from '../context/AuthContext';
-import { useSaved } from '../hooks/useSaved';
 import { useToast } from '../context/ToastContext';
 
 const VENUE_EMOJIS = ['🍸', '🎵', '🏖️', '🌆', '🎉', '🍻'];
@@ -27,22 +25,34 @@ const CATEGORIES = [
   { id: 'temporario', label: 'Especial',    emoji: '⚡' },
 ];
 
-const MUSIC_TO_TAG = {
-  funk: 'Funk', eletronico: 'Eletrônico', pagode: 'Pagode',
-  sertanejo: 'Sertanejo', rock: 'Rock', mpb: 'MPB', reggae: 'Reggae', pop: null,
-};
-const VIBE_TO_TAG = {
-  rooftop: 'Rooftop', 'pet-friendly': 'Pet Friendly', 'happy-hour': 'Happy Hour',
-  chopp: 'Chopp Artesanal', 'comer-beber': 'Comer e Beber', 'tv-esportes': 'TV com Esportes',
-  litrão: null, universitário: null,
+const CATEGORY_LABEL = {
+  bar: 'Bar', balada: 'Balada', cultura: 'Cultura', rua: 'Rolê na Rua', temporario: 'Especial'
 };
 
-function scoreEvent(event, prefMusic, prefVibes) {
-  const eventTags = new Set(event.tags.map(t => t.name));
-  let score = 0;
-  prefMusic.forEach(id => { if (MUSIC_TO_TAG[id] && eventTags.has(MUSIC_TO_TAG[id])) score += 2; });
-  prefVibes.forEach(id => { if (VIBE_TO_TAG[id] && eventTags.has(VIBE_TO_TAG[id])) score += 1; });
-  if (event.is_featured) score += 0.5;
+const NEIGHBORHOODS = [
+  { id: 'Centro',            label: 'Centro' },
+  { id: 'Lagoa da Conceição', label: 'Lagoa' },
+  { id: 'Jurerê',            label: 'Jurerê' },
+  { id: 'Ingleses',          label: 'Ingleses' },
+  { id: 'Canasvieiras',      label: 'Canasvieiras' },
+  { id: 'Trindade',          label: 'Trindade' },
+  { id: 'Campeche',          label: 'Campeche' },
+  { id: 'Beira-Mar',         label: 'Beira-Mar' },
+];
+
+// Music/vibe preferences → venue category affinity
+const MUSIC_TO_CATEGORY = {
+  funk: 'bar', pagode: 'bar', sertanejo: 'bar',
+  eletronico: 'balada', rock: 'bar', mpb: 'cultura', reggae: 'bar',
+};
+const VIBE_TO_CATEGORY = {
+  rooftop: 'bar', 'happy-hour': 'bar', chopp: 'bar', 'comer-beber': 'bar',
+};
+
+function scoreVenue(venue, prefMusic, prefVibes) {
+  let score = (venue.checkin_count || 0) * 0.5;
+  prefMusic.forEach(id => { if (MUSIC_TO_CATEGORY[id] === venue.category) score += 2; });
+  prefVibes.forEach(id => { if (VIBE_TO_CATEGORY[id] === venue.category) score += 1; });
   return score;
 }
 
@@ -64,24 +74,42 @@ function SkeletonCard() {
   );
 }
 
-const NEIGHBORHOODS = [
-  { id: 'Centro',            label: 'Centro' },
-  { id: 'Lagoa da Conceição', label: 'Lagoa' },
-  { id: 'Jurerê',            label: 'Jurerê' },
-  { id: 'Ingleses',          label: 'Ingleses' },
-  { id: 'Canasvieiras',      label: 'Canasvieiras' },
-  { id: 'Trindade',          label: 'Trindade' },
-  { id: 'Campeche',          label: 'Campeche' },
-  { id: 'Beira-Mar',         label: 'Beira-Mar' },
-];
-
-const PAGE_SIZE = 20;
+function VenueCard({ venue, index }) {
+  const isHot = (venue.checkin_count || 0) >= 5;
+  return (
+    <div className="venue-list-card">
+      <div className="venue-list-card-cover" style={{ background: VENUE_BG[index % VENUE_BG.length] }}>
+        <span className="venue-list-card-emoji">{VENUE_EMOJIS[index % VENUE_EMOJIS.length]}</span>
+        {isHot && <span className="venue-list-hot-badge">🔥 Hot Zone</span>}
+      </div>
+      <div className="venue-list-card-body">
+        <div className="venue-list-card-top">
+          <h3 className="venue-list-card-name">{venue.name}</h3>
+          {venue.category && (
+            <span className="venue-list-cat-badge">{CATEGORY_LABEL[venue.category] || venue.category}</span>
+          )}
+        </div>
+        {venue.address && (
+          <p className="venue-list-card-address">📍 {venue.address}</p>
+        )}
+        <div className="venue-list-card-footer">
+          {venue.instagram && (
+            <span className="venue-list-instagram">{venue.instagram.startsWith('@') ? venue.instagram : `@${venue.instagram}`}</span>
+          )}
+          <div className="venue-list-access-icons">
+            {venue.wheelchair && <span title="Acessível para cadeirantes">♿</span>}
+            {venue.hearing_loop && <span title="Loop auditivo">🦻</span>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Feed() {
   usePageTitle(null);
   const { user } = useAuth();
-  const { savedIds, toggle: toggleSaved } = useSaved(!!user);
-  const [events, setEvents] = useState([]);
+  const [allVenues, setAllVenues] = useState([]);
   const [newVenues, setNewVenues] = useState([]);
   const [tags, setTags] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
@@ -91,44 +119,42 @@ export default function Feed() {
   const [accessible, setAccessible] = useState(false);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(false);
   const [selected, setSelected] = useState(null);
   const [showTagFilter, setShowTagFilter] = useState(false);
-  const [offset, setOffset] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
   const [todayEvents, setTodayEvents] = useState([]);
   const [trendingEvents, setTrendingEvents] = useState([]);
   const [retryKey, setRetryKey] = useState(0);
-  const [sortBy, setSortBy] = useState(null); // null | 'date' | 'popular'
-  const [suggestions, setSuggestions] = useState(null); // {events, venues} | null
+  const [sortBy, setSortBy] = useState(null); // null | 'popular' | 'name'
+  const [suggestions, setSuggestions] = useState(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const toast = useToast();
-  const eventIds = useMemo(() => events.map(e => e.id), [events]);
+
+  // Bora for event chips
+  const eventIds = useMemo(() => [
+    ...todayEvents.map(e => e.id),
+    ...trendingEvents.map(e => e.id),
+  ], [todayEvents, trendingEvents]);
   const { counts: boraCounts, toggle: _toggleBora } = useBora(eventIds);
   const toggleBora = useCallback(async (eventId) => {
     await _toggleBora(eventId);
-    const reacted = !boraCounts[eventId]?.reacted;
-    if (reacted) toast?.show('Tô dentro! 🚀', 'success');
+    if (!boraCounts[eventId]?.reacted) toast?.show('Tô dentro! 🚀', 'success');
   }, [_toggleBora, boraCounts, toast]);
 
   const prefMusic = useMemo(() => {
-    if (user?.pref_music) {
-      try { return JSON.parse(user.pref_music); } catch { return []; }
-    }
+    if (user?.pref_music) { try { return JSON.parse(user.pref_music); } catch { return []; } }
     try { return JSON.parse(localStorage.getItem('bf_pref_music') || '[]'); } catch { return []; }
   }, [user?.pref_music]);
 
   const prefVibes = useMemo(() => {
-    if (user?.pref_vibes) {
-      try { return JSON.parse(user.pref_vibes); } catch { return []; }
-    }
+    if (user?.pref_vibes) { try { return JSON.parse(user.pref_vibes); } catch { return []; } }
     try { return JSON.parse(localStorage.getItem('bf_pref_vibes') || '[]'); } catch { return []; }
   }, [user?.pref_vibes]);
 
   const hasPrefs = prefMusic.length > 0 || prefVibes.length > 0;
 
+  // Search suggestions
   useEffect(() => {
     if (query.length < 2) { setSuggestions(null); setShowSuggestions(false); return; }
     const t = setTimeout(() => {
@@ -139,6 +165,7 @@ export default function Feed() {
     return () => clearTimeout(t);
   }, [query]);
 
+  // Initial data load
   useEffect(() => {
     api.get('/events/tags').then(r => setTags(r.data)).catch(() => {});
     api.get('/events/new-venues').then(r => setNewVenues(r.data)).catch(() => {});
@@ -147,52 +174,38 @@ export default function Feed() {
     api.get('/events/trending').then(r => setTrendingEvents(r.data)).catch(() => {});
   }, []);
 
-  function buildParams(currentOffset) {
-    const params = { limit: PAGE_SIZE, offset: currentOffset };
-    if (activeCategory) params.category = activeCategory;
-    if (activeTag) params.tag = activeTag;
-    if (activeNeighborhood) params.neighborhood = activeNeighborhood;
-    if (openNow) params.open_now = true;
-    if (accessible) params.accessible = true;
-    if (query) params.q = query;
-    if (sortBy) params.sort = sortBy;
-    return params;
-  }
-
-  // Reset and refetch when filters change
+  // Fetch venues when filters change
   useEffect(() => {
     setLoading(true);
     setError(false);
-    setOffset(0);
-    setHasMore(false);
+    const params = {};
+    if (activeCategory) params.category = activeCategory;
+    if (activeNeighborhood) params.neighborhood = activeNeighborhood;
+    if (query) params.q = query;
+
     const t = setTimeout(() => {
-      api.get('/events/feed', { params: buildParams(0) })
-        .then(r => {
-          let data = r.data;
-          if (hasPrefs && !activeCategory && !activeTag && !query) {
-            data = [...data].sort((a, b) => scoreEvent(b, prefMusic, prefVibes) - scoreEvent(a, prefMusic, prefVibes));
-          }
-          setEvents(data);
-          setHasMore(data.length === PAGE_SIZE);
-        })
-        .catch(() => { setError(true); setEvents([]); })
+      api.get('/events/venues', { params })
+        .then(r => setAllVenues(r.data))
+        .catch(() => setError(true))
         .finally(() => setLoading(false));
     }, query ? 300 : 0);
     return () => clearTimeout(t);
-  }, [activeCategory, activeTag, activeNeighborhood, openNow, accessible, query, sortBy, retryKey]);
+  }, [activeCategory, activeNeighborhood, query, retryKey]);
 
-  function loadMore() {
-    const nextOffset = offset + PAGE_SIZE;
-    setLoadingMore(true);
-    api.get('/events/feed', { params: buildParams(nextOffset) })
-      .then(r => {
-        setEvents(prev => [...prev, ...r.data]);
-        setOffset(nextOffset);
-        setHasMore(r.data.length === PAGE_SIZE);
-      })
-      .catch(() => {})
-      .finally(() => setLoadingMore(false));
-  }
+  // Client-side: score + sort + accessibility filter
+  const venues = useMemo(() => {
+    let result = accessible ? allVenues.filter(v => v.wheelchair) : allVenues;
+
+    if (sortBy === 'name') {
+      result = [...result].sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortBy === 'popular') {
+      result = [...result].sort((a, b) => (b.checkin_count || 0) - (a.checkin_count || 0));
+    } else if (hasPrefs && !activeCategory && !query) {
+      result = [...result].sort((a, b) => scoreVenue(b, prefMusic, prefVibes) - scoreVenue(a, prefMusic, prefVibes));
+    }
+
+    return result;
+  }, [allVenues, accessible, sortBy, hasPrefs, prefMusic, prefVibes, activeCategory, query]);
 
   const hasFilter = activeCategory || activeTag || activeNeighborhood || openNow || accessible || query;
 
@@ -204,29 +217,17 @@ export default function Feed() {
           <span className="search-icon" aria-hidden="true">🔍</span>
           <input
             className="search-input"
-            placeholder="Buscar rolê, local..."
+            placeholder="Buscar local..."
             value={query}
             onChange={e => setQuery(e.target.value)}
             onFocus={() => suggestions && setShowSuggestions(true)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-            aria-label="Buscar eventos"
+            aria-label="Buscar local"
             aria-autocomplete="list"
           />
           {showSuggestions && suggestions && (
             <div className="search-suggestions" role="listbox">
-              {suggestions.events.slice(0, 4).map(e => (
-                <button
-                  key={`ev-${e.id}`}
-                  className="suggestion-item"
-                  onMouseDown={() => { setSelected(e); setShowSuggestions(false); }}
-                  role="option"
-                >
-                  <span className="suggestion-icon">🎉</span>
-                  <span className="suggestion-label">{e.title}</span>
-                  <span className="suggestion-sub">{e.venue.name}</span>
-                </button>
-              ))}
-              {suggestions.venues.slice(0, 3).map(v => (
+              {suggestions.venues.slice(0, 5).map(v => (
                 <button
                   key={`ve-${v.id}`}
                   className="suggestion-item"
@@ -236,6 +237,18 @@ export default function Feed() {
                   <span className="suggestion-icon">📍</span>
                   <span className="suggestion-label">{v.name}</span>
                   <span className="suggestion-sub">{v.city}</span>
+                </button>
+              ))}
+              {suggestions.events.slice(0, 2).map(e => (
+                <button
+                  key={`ev-${e.id}`}
+                  className="suggestion-item"
+                  onMouseDown={() => { setSelected(e); setShowSuggestions(false); }}
+                  role="option"
+                >
+                  <span className="suggestion-icon">🎉</span>
+                  <span className="suggestion-label">{e.title}</span>
+                  <span className="suggestion-sub">{e.venue.name}</span>
                 </button>
               ))}
               {suggestions.events.length === 0 && suggestions.venues.length === 0 && (
@@ -276,7 +289,7 @@ export default function Feed() {
         </div>
       )}
 
-      {/* Novidades */}
+      {/* Acabaram de chegar */}
       {newVenues.length > 0 && !hasFilter && (
         <>
           <div className="section-header">
@@ -300,7 +313,7 @@ export default function Feed() {
         </>
       )}
 
-      {/* Hoje */}
+      {/* Acontece Hoje — eventos */}
       {todayEvents.length > 0 && !hasFilter && (
         <>
           <div className="section-header">
@@ -327,7 +340,7 @@ export default function Feed() {
         </>
       )}
 
-      {/* Em Alta */}
+      {/* Em Alta — eventos */}
       {trendingEvents.length > 0 && !hasFilter && (
         <>
           <div className="section-header">
@@ -381,7 +394,7 @@ export default function Feed() {
         ))}
       </div>
 
-      {/* Banners de filtro ativos */}
+      {/* Banners de filtros ativos */}
       {(openNow || accessible || activeNeighborhood) && (
         <div className="active-filter-banners">
           {activeNeighborhood && (
@@ -408,37 +421,33 @@ export default function Feed() {
       {/* Header resultados */}
       <div className="section-header">
         <div className="section-title">
-          {hasPrefs && !hasFilter ? '⭐ Para você' : query ? `"${query}"` : activeCategory ? CATEGORIES.find(c => c.id === activeCategory)?.label : 'Em destaque'}
+          {hasPrefs && !hasFilter ? '⭐ Para você' : query ? `"${query}"` : activeCategory ? CATEGORIES.find(c => c.id === activeCategory)?.label : 'Lugares'}
         </div>
         <div className="sort-chips">
-          <button className={`sort-chip${!sortBy ? ' active' : ''}`} onClick={() => setSortBy(null)}>★</button>
-          <button className={`sort-chip${sortBy === 'date' ? ' active' : ''}`} onClick={() => setSortBy('date')}>📅</button>
-          <button className={`sort-chip${sortBy === 'popular' ? ' active' : ''}`} onClick={() => setSortBy('popular')}>🔥</button>
+          <button className={`sort-chip${!sortBy ? ' active' : ''}`} onClick={() => setSortBy(null)} title="Recomendados">★</button>
+          <button className={`sort-chip${sortBy === 'popular' ? ' active' : ''}`} onClick={() => setSortBy('popular')} title="Mais movimentados">🔥</button>
+          <button className={`sort-chip${sortBy === 'name' ? ' active' : ''}`} onClick={() => setSortBy('name')} title="A-Z">🔤</button>
         </div>
       </div>
 
+      {/* Lista de venues */}
       {loading ? (
         <div className="events-list">
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
+          <SkeletonCard /><SkeletonCard /><SkeletonCard />
         </div>
       ) : error ? (
         <div className="feed-error">
           <div className="feed-error-icon">😵</div>
-          <p>Não conseguimos carregar os rolês</p>
-          <button className="btn-retry" onClick={() => setRetryKey(k => k + 1)}>
-            Tentar novamente
-          </button>
+          <p>Não conseguimos carregar os locais</p>
+          <button className="btn-retry" onClick={() => setRetryKey(k => k + 1)}>Tentar novamente</button>
         </div>
-      ) : events.length === 0 ? (
+      ) : venues.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">
-            {query ? '🔍' : accessible ? '♿' : activeCategory ? CATEGORIES.find(c => c.id === activeCategory)?.emoji || '🎉' : '😕'}
+            {query ? '🔍' : accessible ? '♿' : activeCategory ? CATEGORIES.find(c => c.id === activeCategory)?.emoji || '📍' : '📍'}
           </div>
-          <p>{query ? `Nenhum resultado para "${query}"` : 'Nenhum rolê encontrado'}</p>
-          {accessible && <p className="empty-hint">Tenta remover o filtro de acessibilidade</p>}
-          {(activeCategory || activeTag || accessible || openNow || activeNeighborhood) && (
+          <p>{query ? `Nenhum resultado para "${query}"` : 'Nenhum local encontrado'}</p>
+          {(activeCategory || accessible || activeNeighborhood) && (
             <button
               className="btn-retry"
               onClick={() => {
@@ -454,35 +463,11 @@ export default function Feed() {
           )}
         </div>
       ) : (
-        <>
-          <div className="events-list">
-            {events.map((event, i) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                onClick={() => setSelected(event)}
-                boraCount={boraCounts[event.id]?.count || 0}
-                boraReacted={boraCounts[event.id]?.reacted || false}
-                onBora={toggleBora}
-                isSaved={savedIds.has(event.id)}
-                onSave={user ? toggleSaved : null}
-                hero={i === 0 && event.is_featured && !hasFilter}
-              />
-            ))}
-          </div>
-          {hasMore && (
-            <div className="load-more-wrap">
-              <button
-                className="btn-load-more"
-                onClick={loadMore}
-                disabled={loadingMore}
-                aria-label="Carregar mais eventos"
-              >
-                {loadingMore ? 'Carregando...' : 'Carregar mais'}
-              </button>
-            </div>
-          )}
-        </>
+        <div className="venue-list">
+          {venues.map((venue, i) => (
+            <VenueCard key={venue.id} venue={venue} index={i} />
+          ))}
+        </div>
       )}
 
       {selected && (
