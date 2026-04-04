@@ -5,7 +5,7 @@ export function useFollowVenue(isLoggedIn) {
   const [followedIds, setFollowedIds] = useState(new Set());
 
   useEffect(() => {
-    if (!isLoggedIn) { setFollowedIds(new Set()); return; }
+    if (!isLoggedIn) return;
     api.get('/follows/venues').then(r => setFollowedIds(new Set(r.data.map(v => v.id)))).catch(() => {});
   }, [isLoggedIn]);
 

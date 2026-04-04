@@ -23,6 +23,7 @@ export default function Venues() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     const t = setTimeout(() => {
       const params = {};

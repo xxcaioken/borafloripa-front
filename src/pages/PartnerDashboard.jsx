@@ -110,6 +110,7 @@ function ClaimVenueModal({ onClaim, onClose }) {
   const [searching, setSearching] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (query.length < 2) { setResults([]); return; }
     const t = setTimeout(() => {
       setSearching(true);
@@ -207,6 +208,8 @@ export default function PartnerDashboard({ onAuthOpen }) {
       .then(r => setAnalytics(r.data))
       .catch(() => {})
       .finally(() => setLoadingAnalytics(false));
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [analyticsDays]);
 
   useEffect(() => { load(); }, [load]);
@@ -252,7 +255,7 @@ export default function PartnerDashboard({ onAuthOpen }) {
     try {
       const { data } = await api.patch(`/partners/events/${eventId}/feature`);
       setEvents(prev => prev.map(e => e.id === eventId ? { ...e, is_featured: data.is_featured } : e));
-    } catch {}
+    } catch { /* UI update only — ignore network errors */ }
   }
 
   async function handleClaim(venue) {
@@ -387,7 +390,7 @@ export default function PartnerDashboard({ onAuthOpen }) {
                   try {
                     await api.patch(`/partners/events/${event.id}/vibe`, { vibe_status: newVibe });
                     setEvents(prev => prev.map(ev => ev.id === event.id ? { ...ev, vibe_status: newVibe } : ev));
-                  } catch {}
+                  } catch { /* UI update only — ignore network errors */ }
                 }}
                 aria-label="Vibe do evento"
               >

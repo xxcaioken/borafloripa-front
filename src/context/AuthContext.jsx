@@ -5,11 +5,12 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Inicializa como true só se há token — evita setState síncrono no effect
+  const [loading, setLoading] = useState(() => !!localStorage.getItem('bf_token'));
 
   useEffect(() => {
     const token = localStorage.getItem('bf_token');
-    if (!token) { setLoading(false); return; }
+    if (!token) return;
     api.get('/auth/me')
       .then(r => setUser(r.data))
       .catch(() => localStorage.removeItem('bf_token'))

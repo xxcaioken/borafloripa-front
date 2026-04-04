@@ -108,9 +108,11 @@ function Sidebar({ onAuthOpen }) {
             <span className="sidebar-user-out">Sair</span>
           </button>
         ) : (
+          
           <button className="btn-primary sidebar-login" onClick={onAuthOpen}>
-            Entrar
+            Entrar 2
           </button>
+          
         )}
         <div className="sidebar-city">📍 Floripa</div>
       </div>

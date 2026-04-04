@@ -49,7 +49,7 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
     api.get(`/vibes/venue/${event.venue.id}?session_id=${sessionId}`).then(r => setVibeTags(r.data)).catch(() => {});
     api.get('/vibes/tags').then(r => setAllVibeTags(r.data)).catch(() => {});
     api.get(`/events/${event.id}/stats`).then(r => setStats(r.data)).catch(() => {});
-  }, [event.id, event.venue.id]);
+  }, [event.id, event.venue.id, sessionId]);
 
   async function handleVibeVote(tagName) {
     const res = await api.post(`/vibes/venue/${event.venue.id}/${encodeURIComponent(tagName)}?session_id=${sessionId}`);

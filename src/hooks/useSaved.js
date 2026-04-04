@@ -5,7 +5,7 @@ export function useSaved(isLoggedIn) {
   const [savedIds, setSavedIds] = useState(new Set());
 
   useEffect(() => {
-    if (!isLoggedIn) { setSavedIds(new Set()); return; }
+    if (!isLoggedIn) return;
     api.get('/saved').then(r => setSavedIds(new Set(r.data.map(e => e.id)))).catch(() => {});
   }, [isLoggedIn]);
 

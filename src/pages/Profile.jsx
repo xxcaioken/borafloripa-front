@@ -45,7 +45,7 @@ export default function Profile() {
   const [savingPrefs, setSavingPrefs] = useState(false);
 
   const [followed, setFollowed] = useState([]);
-  const { followedIds, toggle: toggleFollow } = useFollowVenue(!!user);
+  const { toggle: toggleFollow } = useFollowVenue(!!user);
 
   const eventIds = saved.map(e => e.id);
   const { counts: boraCounts, toggle: toggleBora } = useBora(eventIds);
@@ -59,7 +59,7 @@ export default function Profile() {
     api.get('/follows/venues')
       .then(r => setFollowed(r.data))
       .catch(() => setFollowed([]));
-  }, [user]);
+  }, [user, navigate]);
 
   if (!user) return null;
 

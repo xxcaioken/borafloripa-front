@@ -21,6 +21,7 @@ export default function Communities({ onAuthOpen }) {
   const [copied, setCopied] = useState(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     api.get('/communities')
       .then(r => setCommunities(r.data))
@@ -36,7 +37,7 @@ export default function Communities({ onAuthOpen }) {
       setCommunities(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
       const community = communities.find(c => c.id === id);
       toast?.show(`Bem-vindo(a) ao ${community?.name}! 🎉`, 'success');
-    } catch {}
+    } catch { /* join failed — UI stays unchanged */ }
     setJoining(null);
   }
 

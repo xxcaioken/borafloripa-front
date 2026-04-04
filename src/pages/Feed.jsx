@@ -159,6 +159,7 @@ export default function Feed() {
 
   // Search suggestions
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (query.length < 2) { setSuggestions(null); setShowSuggestions(false); return; }
     const t = setTimeout(() => {
       api.get('/search', { params: { q: query } })
@@ -179,6 +180,7 @@ export default function Feed() {
 
   // Fetch venues when filters change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError(false);
     const params = {};

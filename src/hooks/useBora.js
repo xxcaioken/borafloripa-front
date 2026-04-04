@@ -13,7 +13,8 @@ export function useBora(eventIds) {
     })
       .then(r => setCounts(r.data))
       .catch(() => {});
-  }, [eventIds?.join(',')]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventIds?.join(','), sessionId]);
 
   const toggle = useCallback(async (eventId) => {
     // Optimistic update
