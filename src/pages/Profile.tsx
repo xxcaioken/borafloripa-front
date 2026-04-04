@@ -8,6 +8,7 @@ import EventCard from '../components/EventCard';
 const EventDetail = lazy(() => import('../components/EventDetail'));
 import { useBora } from '../hooks/useBora';
 import { useFollowVenue } from '../hooks/useFollowVenue';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 
 const MUSIC_STYLES = [
   { id: 'funk',       label: 'Funk',       emoji: '🎤' },
@@ -46,9 +47,11 @@ export default function Profile() {
   const [savingPrefs, setSavingPrefs] = useState(false);
 
   const [followed, setFollowed] = useState<VenueOut[]>([]);
+  const [followedFeed, setFollowedFeed] = useState<EventOut[]>([]);
   const { toggle: toggleFollow } = useFollowVenue(!!user);
+  const push = usePushNotifications(!!user);
 
-  const eventIds = saved.map(e => e.id);
+  const eventIds = [...saved.map(e => e.id), ...followedFeed.map(e => e.id)];
   const { counts: boraCounts, toggle: toggleBora } = useBora(eventIds);
 
   useEffect(() => {
@@ -60,6 +63,9 @@ export default function Profile() {
     api.get('/follows/venues')
       .then(r => setFollowed(r.data))
       .catch(() => setFollowed([]));
+    api.get('/follows/venues/feed')
+      .then(r => setFollowedFeed(r.data))
+      .catch(() => setFollowedFeed([]));
   }, [user, navigate]);
 
   if (!user) return null;
@@ -211,12 +217,25 @@ export default function Profile() {
         </div>
       )}
 
-      {/* Locais seguidos */}
+      {/* Locais seguidos + push */}
       {followed.length > 0 && (
         <>
-          <div className="profile-section-title profile-section-title-mt">
-            Locais que você segue <span className="profile-count">{followed.length}</span>
+          <div className="profile-section-header profile-section-title-mt">
+            <div className="profile-section-title">
+              Locais que você segue <span className="profile-count">{followed.length}</span>
+            </div>
+            {push.supported && push.permission !== 'denied' && (
+              <button
+                className={`push-toggle-btn${push.subscribed ? ' active' : ''}`}
+                onClick={push.subscribed ? push.unsubscribe : push.subscribe}
+                disabled={push.loading}
+                title={push.subscribed ? 'Desativar notificações' : 'Ativar notificações de novos eventos'}
+              >
+                {push.loading ? '...' : push.subscribed ? '🔔 Ativo' : '🔔 Ativar'}
+              </button>
+            )}
           </div>
+
           <div className="followed-venues-list">
             {followed.map(venue => (
               <div key={venue.id} className="followed-venue-row">
@@ -234,6 +253,27 @@ export default function Profile() {
               </div>
             ))}
           </div>
+
+          {followedFeed.length > 0 && (
+            <>
+              <div className="profile-section-title profile-section-title-mt">
+                Próximos eventos dos seus favoritos
+                <span className="profile-count">{followedFeed.length}</span>
+              </div>
+              <div className="events-list">
+                {followedFeed.slice(0, 6).map(event => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    onClick={() => setSelected(event)}
+                    boraCount={boraCounts[event.id]?.count || 0}
+                    boraReacted={boraCounts[event.id]?.reacted || false}
+                    onBora={toggleBora}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </>
       )}
 
