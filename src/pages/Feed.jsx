@@ -77,30 +77,16 @@ function SkeletonCard() {
 function VenueCard({ venue, index }) {
   const isHot = (venue.checkin_count || 0) >= 5;
   return (
-    <div className="venue-list-card">
-      <div className="venue-list-card-cover" style={{ background: VENUE_BG[index % VENUE_BG.length] }}>
-        <span className="venue-list-card-emoji">{VENUE_EMOJIS[index % VENUE_EMOJIS.length]}</span>
-        {isHot && <span className="venue-list-hot-badge">🔥 Hot Zone</span>}
+    <div className="venue-grid-card">
+      <div className="venue-grid-card-cover" style={{ background: VENUE_BG[index % VENUE_BG.length] }}>
+        <span className="venue-grid-card-emoji">{VENUE_EMOJIS[index % VENUE_EMOJIS.length]}</span>
+        {isHot && <span className="venue-grid-hot">🔥 Hot</span>}
+        {venue.is_new && !isHot && <span className="venue-grid-new">Novo</span>}
+        {venue.wheelchair && <span className="venue-grid-access">♿</span>}
       </div>
-      <div className="venue-list-card-body">
-        <div className="venue-list-card-top">
-          <h3 className="venue-list-card-name">{venue.name}</h3>
-          {venue.category && (
-            <span className="venue-list-cat-badge">{CATEGORY_LABEL[venue.category] || venue.category}</span>
-          )}
-        </div>
-        {venue.address && (
-          <p className="venue-list-card-address">📍 {venue.address}</p>
-        )}
-        <div className="venue-list-card-footer">
-          {venue.instagram && (
-            <span className="venue-list-instagram">{venue.instagram.startsWith('@') ? venue.instagram : `@${venue.instagram}`}</span>
-          )}
-          <div className="venue-list-access-icons">
-            {venue.wheelchair && <span title="Acessível para cadeirantes">♿</span>}
-            {venue.hearing_loop && <span title="Loop auditivo">🦻</span>}
-          </div>
-        </div>
+      <div className="venue-grid-card-info">
+        <p className="venue-grid-name">{venue.name}</p>
+        <span className="venue-grid-cat">{CATEGORY_LABEL[venue.category] || venue.category || venue.city}</span>
       </div>
     </div>
   );
@@ -289,24 +275,25 @@ export default function Feed() {
         </div>
       )}
 
-      {/* Acabaram de chegar */}
-      {newVenues.length > 0 && !hasFilter && (
+      {/* Carousel — todos os venues (scroll horizontal) */}
+      {!hasFilter && (
         <>
           <div className="section-header">
-            <div className="section-title">Acabaram de chegar! 🆕</div>
+            <div className="section-title">Lugares 📍</div>
           </div>
           <div className="carousel-scroll">
-            {newVenues.map((venue, i) => (
+            {allVenues.slice(0, 20).map((venue, i) => (
               <div key={venue.id} className="venue-card-mini">
                 <div className="venue-card-mini-cover">
                   <div className="venue-card-mini-bg" style={{ background: VENUE_BG[i % VENUE_BG.length] }}>
                     {VENUE_EMOJIS[i % VENUE_EMOJIS.length]}
                   </div>
-                  <span className="venue-card-mini-badge">Novo</span>
+                  {(venue.checkin_count || 0) >= 5 && <span className="venue-card-mini-badge" style={{background:'#ff6d00'}}>🔥</span>}
+                  {venue.is_new && <span className="venue-card-mini-badge">Novo</span>}
                   {venue.wheelchair && <span className="venue-card-mini-access">♿</span>}
                 </div>
                 <p>{venue.name}</p>
-                <span>{venue.city}</span>
+                <span>{venue.category ? CATEGORY_LABEL[venue.category] || venue.category : venue.city}</span>
               </div>
             ))}
           </div>
@@ -463,7 +450,7 @@ export default function Feed() {
           )}
         </div>
       ) : (
-        <div className="venue-list">
+        <div className="venue-grid">
           {venues.map((venue, i) => (
             <VenueCard key={venue.id} venue={venue} index={i} />
           ))}
