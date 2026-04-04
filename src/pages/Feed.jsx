@@ -43,11 +43,24 @@ const NEIGHBORHOODS = [
 
 // Music/vibe preferences → venue category affinity
 const MUSIC_TO_CATEGORY = {
-  funk: 'bar', pagode: 'bar', sertanejo: 'bar',
-  eletronico: 'balada', rock: 'bar', mpb: 'cultura', reggae: 'bar',
+  funk:       'balada',  // funk em Floripa = pista de dança
+  eletronico: 'balada',
+  sertanejo:  'balada',
+  pop:        'balada',
+  pagode:     'bar',
+  rock:       'bar',
+  mpb:        'cultura',
+  reggae:     'cultura',
 };
 const VIBE_TO_CATEGORY = {
-  rooftop: 'bar', 'happy-hour': 'bar', chopp: 'bar', 'comer-beber': 'bar',
+  'universitário': 'balada',
+  'rooftop':       'bar',
+  'happy-hour':    'bar',
+  'chopp':         'bar',
+  'comer-beber':   'bar',
+  'litrão':        'bar',
+  'pet-friendly':  'bar',
+  'tv-esportes':   'bar',
 };
 
 function scoreVenue(venue, prefMusic, prefVibes) {
@@ -75,15 +88,17 @@ function SkeletonCard() {
   );
 }
 
-function VenueCard({ venue, index }) {
+function VenueCard({ venue, index, score }) {
   const navigate = useNavigate();
   const isHot = (venue.checkin_count || 0) >= 5;
+  const isMatch = !isHot && (score || 0) >= 2;
   return (
     <div className="venue-grid-card" onClick={() => navigate(`/venue/${venue.id}`)} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && navigate(`/venue/${venue.id}`)}>
       <div className="venue-grid-card-cover" style={{ background: VENUE_BG[index % VENUE_BG.length] }}>
         <span className="venue-grid-card-emoji">{VENUE_EMOJIS[index % VENUE_EMOJIS.length]}</span>
         {isHot && <span className="venue-grid-hot">🔥 Hot</span>}
         {venue.is_new && !isHot && <span className="venue-grid-new">Novo</span>}
+        {isMatch && <span className="venue-grid-match">✨ Match</span>}
         {venue.wheelchair && <span className="venue-grid-access">♿</span>}
       </div>
       <div className="venue-grid-card-info">
@@ -453,7 +468,7 @@ export default function Feed() {
       ) : (
         <div className="venue-grid">
           {venues.map((venue, i) => (
-            <VenueCard key={venue.id} venue={venue} index={i} />
+            <VenueCard key={venue.id} venue={venue} index={i} score={scoreVenue(venue, prefMusic, prefVibes)} />
           ))}
         </div>
       )}
