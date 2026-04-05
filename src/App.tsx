@@ -1,5 +1,7 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, useParams } from 'react-router-dom';
+import { useNotifications } from './hooks/useNotifications';
+import { useInstallPrompt } from './hooks/useInstallPrompt';
 import { usePageTitle } from './hooks/usePageTitle';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -137,6 +139,24 @@ interface LayoutProps {
 function Layout({ children, onAuthOpen }: LayoutProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { unread, items, fetchAll, markAllRead } = useNotifications(!!user);
+  const { show: showInstall, install, dismiss: dismissInstall } = useInstallPrompt();
+  const [bellOpen, setBellOpen] = useState(false);
+  const bellRef = useRef<HTMLDivElement>(null);
+
+  // Close bell dropdown on outside click
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (bellRef.current && !bellRef.current.contains(e.target as Node)) setBellOpen(false);
+    }
+    if (bellOpen) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [bellOpen]);
+
+  function handleBellClick() {
+    if (!bellOpen) { fetchAll(); markAllRead(); }
+    setBellOpen(o => !o);
+  }
 
   return (
     <>
@@ -149,6 +169,45 @@ function Layout({ children, onAuthOpen }: LayoutProps) {
             aria-label="Buscar"
             title="Buscar"
           >🔍</button>
+          {user && (
+            <div className="bell-wrap" ref={bellRef}>
+              <button
+                className="topbar-bell-btn"
+                onClick={handleBellClick}
+                aria-label="Notificações"
+                title="Notificações"
+              >
+                🔔
+                {unread > 0 && (
+                  <span className="bell-badge">{unread > 9 ? '9+' : unread}</span>
+                )}
+              </button>
+              {bellOpen && (
+                <div className="bell-dropdown" role="dialog" aria-label="Notificações">
+                  <div className="bell-dropdown-header">
+                    <span>Notificações</span>
+                    <button className="bell-read-all" onClick={markAllRead}>Marcar lidas</button>
+                  </div>
+                  {items.length === 0 ? (
+                    <div className="bell-empty">Nenhuma notificação</div>
+                  ) : (
+                    <div className="bell-list">
+                      {items.map(n => (
+                        <button
+                          key={n.id}
+                          className={`bell-item${n.read ? '' : ' unread'}`}
+                          onClick={() => { setBellOpen(false); if (n.url) navigate(n.url); }}
+                        >
+                          <div className="bell-item-title">{n.title}</div>
+                          <div className="bell-item-body">{n.body}</div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
           {user ? (
             <button className="topbar-user" onClick={logout} title="Sair">
               👤 {user.name.split(' ')[0]}
@@ -165,6 +224,15 @@ function Layout({ children, onAuthOpen }: LayoutProps) {
         <Sidebar onAuthOpen={onAuthOpen} />
         <main className="main-content" id="main">
           <ErrorBoundary>{children}</ErrorBoundary>
+          {showInstall && (
+            <div className="pwa-install-banner">
+              <span>📲 Adicionar Bora Floripa à tela inicial</span>
+              <div className="pwa-install-actions">
+                <button className="pwa-install-btn" onClick={install}>Instalar</button>
+                <button className="pwa-dismiss-btn" onClick={dismissInstall}>✕</button>
+              </div>
+            </div>
+          )}
         </main>
       </div>
       <BottomNav />
@@ -210,13 +278,50 @@ function EventPage() {
       .catch(() => setNotFound(true));
   }, [id]);
 
+  // Inject og meta tags for social sharing
+  useEffect(() => {
+    if (!event) return;
+    const url = window.location.href;
+    const desc = event.description
+      ? event.description.slice(0, 160)
+      : `${event.title} em ${event.venue.name} — ${new Date(event.date).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}`;
+
+    const metas: Record<string, string> = {
+      'og:title': `${event.title} — Bora Floripa`,
+      'og:description': desc,
+      'og:url': url,
+      'og:type': 'event',
+      'og:site_name': 'Bora Floripa',
+      ...(event.cover_url ? { 'og:image': event.cover_url } : {}),
+      'twitter:card': 'summary_large_image',
+      'twitter:title': `${event.title} — Bora Floripa`,
+      'twitter:description': desc,
+    };
+
+    const inserted: HTMLMetaElement[] = [];
+    for (const [prop, content] of Object.entries(metas)) {
+      let el = document.querySelector<HTMLMetaElement>(`meta[property="${prop}"]`);
+      if (!el) {
+        el = document.createElement('meta');
+        el.setAttribute('property', prop);
+        document.head.appendChild(el);
+        inserted.push(el);
+      }
+      el.setAttribute('content', content);
+    }
+
+    return () => {
+      inserted.forEach(el => el.remove());
+    };
+  }, [event]);
+
   if (notFound) return <NotFound />;
   if (!event) return <div className="loading loading-page">Carregando...</div>;
 
   return (
     <EventDetail
       event={event}
-      onClose={() => navigate('/')}
+      onClose={() => navigate(-1)}
       boraCount={0}
       boraReacted={false}
       onBora={() => {}}
