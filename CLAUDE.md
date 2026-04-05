@@ -158,6 +158,14 @@ Fontes: **Syne** (headings) + **DM Sans** (body) — carregadas via Google Fonts
 - Desktop layout: 2 colunas ≥1100px, 3 colunas ≥1400px no venue grid
 - manifest.json: shortcuts, theme_color verde neon
 
+### Sessão 5 (2026-04-05) — `feat/sprint-3`
+- EventForm: campos `cover_url` (URL + preview) e `recurrence` (único/semanal/quinzenal/mensal)
+- EventCard: badges 🔁 Semanal / Quinzenal / Mensal por `event.recurrence`
+- PartnerDashboard: botão ✏️ → `VenueEditModal` (instagram, whatsapp, endereço)
+- PartnerDashboard: seção Cupons — criar, toggle ativo/inativo, lista com código/desconto/usos
+- Communities: seção "Cupons exclusivos" para membros de cada comunidade, botão copiar
+- `services/api.ts`: campo `recurrence: string | null` no tipo `EventOut`
+
 ---
 
 ## Pendências / bloqueadores de infraestrutura
