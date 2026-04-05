@@ -19,6 +19,8 @@ const Communities     = lazy(() => import('./pages/Communities'));
 const NotFound        = lazy(() => import('./pages/NotFound'));
 const ResetPassword   = lazy(() => import('./pages/ResetPassword'));
 const VenueDetail     = lazy(() => import('./pages/VenueDetail'));
+const Search          = lazy(() => import('./pages/Search'));
+const Agenda          = lazy(() => import('./pages/Agenda'));
 
 function RouteLoader() {
   return <div className="loading loading-page">Carregando...</div>;
@@ -26,6 +28,7 @@ function RouteLoader() {
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { api } from './services/api';
+import type { EventOut } from './services/api';
 import './App.css';
 
 function BottomNav() {
@@ -36,13 +39,13 @@ function BottomNav() {
 
   const items = user ? [
     { icon: '🏠', label: 'Início',       to: '/' },
-    { icon: '🍸', label: 'Locais',       to: '/locais' },
+    { icon: '📅', label: 'Agenda',       to: '/agenda' },
     { icon: '🗺️', label: 'Mapa',        to: '/mapa' },
     { icon: '🤝', label: 'Comunidades',  to: '/comunidades' },
     { icon: '👤', label: user.name.split(' ')[0], to: '/perfil' },
   ] : [
     { icon: '🏠', label: 'Início',  to: '/' },
-    { icon: '🍸', label: 'Locais',  to: '/locais' },
+    { icon: '📅', label: 'Agenda',  to: '/agenda' },
     { icon: '🗺️', label: 'Mapa',   to: '/mapa' },
     { icon: '✈️', label: 'Turista', to: '/turista' },
     { icon: '💼', label: 'Parceiro', to: '/parceiro' },
@@ -66,7 +69,11 @@ function BottomNav() {
   );
 }
 
-function Sidebar({ onAuthOpen }) {
+interface SidebarProps {
+  onAuthOpen: () => void;
+}
+
+function Sidebar({ onAuthOpen }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
@@ -74,6 +81,8 @@ function Sidebar({ onAuthOpen }) {
 
   const items = [
     { icon: '🏠', label: 'Início',       to: '/' },
+    { icon: '🔍', label: 'Busca',        to: '/busca' },
+    { icon: '📅', label: 'Agenda',       to: '/agenda' },
     { icon: '🍸', label: 'Locais',       to: '/locais' },
     { icon: '🗺️', label: 'Mapa',        to: '/mapa' },
     { icon: '✈️', label: 'Turista',      to: '/turista' },
@@ -108,11 +117,11 @@ function Sidebar({ onAuthOpen }) {
             <span className="sidebar-user-out">Sair</span>
           </button>
         ) : (
-          
+
           <button className="btn-primary sidebar-login" onClick={onAuthOpen}>
             Entrar 2
           </button>
-          
+
         )}
         <div className="sidebar-city">📍 Floripa</div>
       </div>
@@ -120,14 +129,26 @@ function Sidebar({ onAuthOpen }) {
   );
 }
 
-function Layout({ children, onAuthOpen }) {
+interface LayoutProps {
+  children: React.ReactNode;
+  onAuthOpen: () => void;
+}
+
+function Layout({ children, onAuthOpen }: LayoutProps) {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <>
       <header className="topbar">
         <div className="topbar-brand">Bora <span>Floripa</span></div>
         <div className="topbar-actions">
+          <button
+            className="topbar-search-btn"
+            onClick={() => navigate('/busca')}
+            aria-label="Buscar"
+            title="Buscar"
+          >🔍</button>
           {user ? (
             <button className="topbar-user" onClick={logout} title="Sair">
               👤 {user.name.split(' ')[0]}
@@ -178,7 +199,7 @@ function BackToTopBtn() {
 function EventPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [event, setEvent] = useState(null);
+  const [event, setEvent] = useState<EventOut | null>(null);
   const [notFound, setNotFound] = useState(false);
   usePageTitle(event ? `${event.title} — ${event.venue.name}` : null);
 
@@ -206,9 +227,9 @@ function EventPage() {
 function AppInner() {
   const [onboarded, setOnboarded] = useState(() => !!localStorage.getItem('bf_onboarded'));
   const [showAuth, setShowAuth] = useState(false);
-  const [onboardPrefs, setOnboardPrefs] = useState(null);
+  const [onboardPrefs, setOnboardPrefs] = useState<{ music: string[]; vibes: string[] } | null>(null);
 
-  function handleOnboardComplete(prefs) {
+  function handleOnboardComplete(prefs?: { music: string[]; vibes: string[] }) {
     localStorage.setItem('bf_onboarded', '1');
     setOnboarded(true);
     if (prefs) {
@@ -237,6 +258,8 @@ function AppInner() {
             <Route path="/evento/:id" element={<EventPage />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/venue/:id" element={<VenueDetail />} />
+            <Route path="/busca" element={<Search />} />
+            <Route path="/agenda" element={<Agenda />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>

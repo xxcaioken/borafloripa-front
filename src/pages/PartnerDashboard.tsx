@@ -1,6 +1,7 @@
 import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useEffect, useState, useCallback } from 'react';
 import { api } from '../services/api';
+import type { VenueOut, TagOut, EventOut } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const CATEGORIES = [
@@ -9,8 +10,29 @@ const CATEGORIES = [
 ];
 const VIBES = ['Normal', 'Animado', 'Lotado', 'Quente 🔥'];
 
-function EventForm({ venues, tags, onSave, onCancel, initial }) {
-  const [form, setForm] = useState(initial || {
+interface EventFormData {
+  venue_id: number | string;
+  title: string;
+  description: string;
+  date: string;
+  vibe_status: string;
+  category: string;
+  is_temporary: boolean;
+  organizers: string;
+  price_info: string;
+  tag_ids: number[];
+}
+
+interface EventFormProps {
+  venues: VenueOut[];
+  tags: TagOut[];
+  onSave: (form: EventFormData) => Promise<void>;
+  onCancel: () => void;
+  initial: EventFormData | null;
+}
+
+function EventForm({ venues, tags, onSave, onCancel, initial }: EventFormProps) {
+  const [form, setForm] = useState<EventFormData>(initial || {
     venue_id: venues[0]?.id || '',
     title: '', description: '', date: '',
     vibe_status: 'Normal', category: 'bar',
@@ -18,15 +40,17 @@ function EventForm({ venues, tags, onSave, onCancel, initial }) {
   });
   const [saving, setSaving] = useState(false);
 
-  function set(k, v) { setForm(f => ({ ...f, [k]: v })); }
+  function set<K extends keyof EventFormData>(k: K, v: EventFormData[K]) {
+    setForm(f => ({ ...f, [k]: v }));
+  }
 
-  function toggleTag(id) {
+  function toggleTag(id: number) {
     set('tag_ids', form.tag_ids.includes(id)
       ? form.tag_ids.filter(t => t !== id)
       : [...form.tag_ids, id]);
   }
 
-  async function submit(e) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.title || !form.date || !form.venue_id) return;
     setSaving(true);
@@ -104,9 +128,14 @@ function EventForm({ venues, tags, onSave, onCancel, initial }) {
   );
 }
 
-function ClaimVenueModal({ onClaim, onClose }) {
+interface ClaimVenueModalProps {
+  onClaim: (venue: VenueOut) => void;
+  onClose: () => void;
+}
+
+function ClaimVenueModal({ onClaim, onClose }: ClaimVenueModalProps) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
+  const [results, setResults] = useState<VenueOut[]>([]);
   const [searching, setSearching] = useState(false);
 
   useEffect(() => {
@@ -170,18 +199,79 @@ function ClaimVenueModal({ onClaim, onClose }) {
   );
 }
 
-export default function PartnerDashboard({ onAuthOpen }) {
+interface PartnerStats {
+  total_events: number;
+  featured_events: number;
+  venues: VenueOut[];
+}
+
+interface AnalyticsItem {
+  event_id: number;
+  title: string;
+  date: string;
+  view_count: number;
+  bora_count: number;
+}
+
+function AnalyticsChart({ analytics, mode }: { analytics: AnalyticsItem[]; mode: 'views' | 'boras' }) {
+  const sorted = [...analytics]
+    .sort((a, b) => (mode === 'views' ? b.view_count - a.view_count : b.bora_count - a.bora_count))
+    .slice(0, 8);
+  const max = sorted.reduce((m, a) => Math.max(m, mode === 'views' ? a.view_count : a.bora_count), 1);
+
+  if (sorted.length === 0) {
+    return (
+      <div className="analytics-chart">
+        <div className="analytics-chart-empty">Sem dados para exibir</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="analytics-chart">
+      <div className="analytics-chart-title">
+        {mode === 'views' ? '👁 Views por evento' : '🚀 Boras por evento'}
+      </div>
+      <div className="analytics-bar-list">
+        {sorted.map(a => {
+          const val = mode === 'views' ? a.view_count : a.bora_count;
+          const pct = Math.round((val / max) * 100);
+          const shortTitle = a.title.length > 18 ? a.title.slice(0, 17) + '…' : a.title;
+          return (
+            <div key={a.event_id} className="analytics-bar-row">
+              <div className="analytics-bar-label" title={a.title}>{shortTitle}</div>
+              <div className="analytics-bar-track">
+                <div
+                  className={`analytics-bar-fill ${mode === 'views' ? 'views' : 'boras'}`}
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <div className="analytics-bar-val">{val}</div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+interface PartnerDashboardProps {
+  onAuthOpen: () => void;
+}
+
+export default function PartnerDashboard({ onAuthOpen }: PartnerDashboardProps) {
   usePageTitle('Área do Parceiro');
   const { user } = useAuth();
-  const [stats, setStats] = useState(null);
-  const [events, setEvents] = useState([]);
-  const [analytics, setAnalytics] = useState([]);
-  const [analyticsDays, setAnalyticsDays] = useState(null); // null=all, 7, 30
-  const [tags, setTags] = useState([]);
+  const [stats, setStats] = useState<PartnerStats | null>(null);
+  const [events, setEvents] = useState<EventOut[]>([]);
+  const [analytics, setAnalytics] = useState<AnalyticsItem[]>([]);
+  const [analyticsDays, setAnalyticsDays] = useState<number | null>(null); // null=all, 7, 30
+  const [chartMode, setChartMode] = useState<'views' | 'boras'>('views');
+  const [tags, setTags] = useState<TagOut[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [editEvent, setEditEvent] = useState(null);
+  const [editEvent, setEditEvent] = useState<EventOut | null>(null);
   const [showClaim, setShowClaim] = useState(false);
 
   const load = useCallback(() => {
@@ -233,7 +323,7 @@ export default function PartnerDashboard({ onAuthOpen }) {
 
   const venues = stats?.venues || [];
 
-  async function handleSaveEvent(form) {
+  async function handleSaveEvent(form: EventFormData) {
     const payload = { ...form, date: new Date(form.date).toISOString() };
     if (editEvent) {
       await api.put(`/partners/events/${editEvent.id}`, payload);
@@ -245,20 +335,20 @@ export default function PartnerDashboard({ onAuthOpen }) {
     load();
   }
 
-  async function handleDelete(eventId) {
+  async function handleDelete(eventId: number) {
     if (!window.confirm('Remover este evento?')) return;
     await api.delete(`/partners/events/${eventId}`);
     load();
   }
 
-  async function handleToggleFeature(eventId) {
+  async function handleToggleFeature(eventId: number) {
     try {
       const { data } = await api.patch(`/partners/events/${eventId}/feature`);
       setEvents(prev => prev.map(e => e.id === eventId ? { ...e, is_featured: data.is_featured } : e));
     } catch { /* UI update only — ignore network errors */ }
   }
 
-  async function handleClaim(venue) {
+  async function handleClaim(venue: VenueOut) {
     await api.post(`/partners/claim-venue/${venue.id}`);
     setShowClaim(false);
     load();
@@ -267,7 +357,7 @@ export default function PartnerDashboard({ onAuthOpen }) {
   const analyticsMap = Object.fromEntries(analytics.map(a => [a.event_id, a]));
   const totalViews = analytics.reduce((s, a) => s + (a.view_count || 0), 0);
   const totalBoras = analytics.reduce((s, a) => s + (a.bora_count || 0), 0);
-  const initials = user.name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
+  const initials = user.name.split(' ').map((p: string) => p[0]).slice(0, 2).join('').toUpperCase();
 
   return (
     <div>
@@ -314,6 +404,21 @@ export default function PartnerDashboard({ onAuthOpen }) {
         </div>
       </div>
 
+      {analytics.length > 0 && (
+        <>
+          <div className="analytics-period-row" style={{ marginTop: 12 }}>
+            {(['views', 'boras'] as const).map(m => (
+              <button
+                key={m}
+                className={`sort-chip${chartMode === m ? ' active' : ''}`}
+                onClick={() => setChartMode(m)}
+              >{m === 'views' ? '👁 Views' : '🚀 Boras'}</button>
+            ))}
+          </div>
+          <AnalyticsChart analytics={analytics} mode={chartMode} />
+        </>
+      )}
+
       <div className="section-header section-mt">
         <div className="section-title">Meus Locais</div>
         <button className="btn-link-accent" onClick={() => setShowClaim(true)}>+ Vincular local</button>
@@ -358,7 +463,7 @@ export default function PartnerDashboard({ onAuthOpen }) {
           venues={venues}
           tags={tags}
           initial={editEvent ? {
-            venue_id: editEvent.venue_id,
+            venue_id: editEvent.venue.id,
             title: editEvent.title,
             description: editEvent.description || '',
             date: editEvent.date?.slice(0, 16) || '',

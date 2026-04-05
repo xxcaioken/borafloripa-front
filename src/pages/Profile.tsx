@@ -1,12 +1,14 @@
 import { usePageTitle } from '../hooks/usePageTitle';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import type { EventOut, VenueOut } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import EventCard from '../components/EventCard';
-import EventDetail from '../components/EventDetail';
+const EventDetail = lazy(() => import('../components/EventDetail'));
 import { useBora } from '../hooks/useBora';
 import { useFollowVenue } from '../hooks/useFollowVenue';
+import { usePushNotifications } from '../hooks/usePushNotifications';
 
 const MUSIC_STYLES = [
   { id: 'funk',       label: 'Funk',       emoji: '🎤' },
@@ -29,25 +31,27 @@ const VIBES = [
   { id: 'comer-beber',   label: 'Comer e Beber',   emoji: '🍔' },
 ];
 
-const MUSIC_LABELS = Object.fromEntries(MUSIC_STYLES.map(m => [m.id, m.label]));
-const VIBE_LABELS  = Object.fromEntries(VIBES.map(v => [v.id, v.label]));
+const MUSIC_LABELS: Record<string, string> = Object.fromEntries(MUSIC_STYLES.map(m => [m.id, m.label]));
+const VIBE_LABELS: Record<string, string>  = Object.fromEntries(VIBES.map(v => [v.id, v.label]));
 
 export default function Profile() {
   usePageTitle('Meu Perfil');
   const { user, logout, refreshUser } = useAuth();
   const navigate = useNavigate();
-  const [saved, setSaved] = useState([]);
+  const [saved, setSaved] = useState<EventOut[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState<EventOut | null>(null);
   const [showEditPrefs, setShowEditPrefs] = useState(false);
-  const [editMusic, setEditMusic] = useState([]);
-  const [editVibes, setEditVibes] = useState([]);
+  const [editMusic, setEditMusic] = useState<string[]>([]);
+  const [editVibes, setEditVibes] = useState<string[]>([]);
   const [savingPrefs, setSavingPrefs] = useState(false);
 
-  const [followed, setFollowed] = useState([]);
+  const [followed, setFollowed] = useState<VenueOut[]>([]);
+  const [followedFeed, setFollowedFeed] = useState<EventOut[]>([]);
   const { toggle: toggleFollow } = useFollowVenue(!!user);
+  const push = usePushNotifications(!!user);
 
-  const eventIds = saved.map(e => e.id);
+  const eventIds = [...saved.map(e => e.id), ...followedFeed.map(e => e.id)];
   const { counts: boraCounts, toggle: toggleBora } = useBora(eventIds);
 
   useEffect(() => {
@@ -59,12 +63,15 @@ export default function Profile() {
     api.get('/follows/venues')
       .then(r => setFollowed(r.data))
       .catch(() => setFollowed([]));
+    api.get('/follows/venues/feed')
+      .then(r => setFollowedFeed(r.data))
+      .catch(() => setFollowedFeed([]));
   }, [user, navigate]);
 
   if (!user) return null;
 
-  const prefMusic = (() => { try { return JSON.parse(user.pref_music || '[]'); } catch { return []; } })();
-  const prefVibes = (() => { try { return JSON.parse(user.pref_vibes || '[]'); } catch { return []; } })();
+  const prefMusic: string[] = (() => { try { return JSON.parse(user.pref_music || '[]'); } catch { return []; } })();
+  const prefVibes: string[] = (() => { try { return JSON.parse(user.pref_vibes || '[]'); } catch { return []; } })();
 
   function handleLogout() {
     logout();
@@ -77,7 +84,7 @@ export default function Profile() {
     setShowEditPrefs(true);
   }
 
-  function toggleChip(id, list, setter) {
+  function toggleChip(id: string, list: string[], setter: React.Dispatch<React.SetStateAction<string[]>>) {
     setter(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   }
 
@@ -101,7 +108,7 @@ export default function Profile() {
     }
   }
 
-  function handleUnsave(eventId) {
+  function handleUnsave(eventId: number) {
     api.delete(`/saved/${eventId}`).catch(() => {});
     setSaved(prev => prev.filter(e => e.id !== eventId));
     if (selected?.id === eventId) setSelected(null);
@@ -210,12 +217,25 @@ export default function Profile() {
         </div>
       )}
 
-      {/* Locais seguidos */}
+      {/* Locais seguidos + push */}
       {followed.length > 0 && (
         <>
-          <div className="profile-section-title profile-section-title-mt">
-            Locais que você segue <span className="profile-count">{followed.length}</span>
+          <div className="profile-section-header profile-section-title-mt">
+            <div className="profile-section-title">
+              Locais que você segue <span className="profile-count">{followed.length}</span>
+            </div>
+            {push.supported && push.permission !== 'denied' && (
+              <button
+                className={`push-toggle-btn${push.subscribed ? ' active' : ''}`}
+                onClick={push.subscribed ? push.unsubscribe : push.subscribe}
+                disabled={push.loading}
+                title={push.subscribed ? 'Desativar notificações' : 'Ativar notificações de novos eventos'}
+              >
+                {push.loading ? '...' : push.subscribed ? '🔔 Ativo' : '🔔 Ativar'}
+              </button>
+            )}
           </div>
+
           <div className="followed-venues-list">
             {followed.map(venue => (
               <div key={venue.id} className="followed-venue-row">
@@ -233,6 +253,27 @@ export default function Profile() {
               </div>
             ))}
           </div>
+
+          {followedFeed.length > 0 && (
+            <>
+              <div className="profile-section-title profile-section-title-mt">
+                Próximos eventos dos seus favoritos
+                <span className="profile-count">{followedFeed.length}</span>
+              </div>
+              <div className="events-list">
+                {followedFeed.slice(0, 6).map(event => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    onClick={() => setSelected(event)}
+                    boraCount={boraCounts[event.id]?.count || 0}
+                    boraReacted={boraCounts[event.id]?.reacted || false}
+                    onBora={toggleBora}
+                  />
+                ))}
+              </div>
+            </>
+          )}
         </>
       )}
 
@@ -243,13 +284,15 @@ export default function Profile() {
       </div>
 
       {selected && (
-        <EventDetail
-          event={selected}
-          onClose={() => setSelected(null)}
-          boraCount={boraCounts[selected.id]?.count || 0}
-          boraReacted={boraCounts[selected.id]?.reacted || false}
-          onBora={toggleBora}
-        />
+        <Suspense fallback={null}>
+          <EventDetail
+            event={selected}
+            onClose={() => setSelected(null)}
+            boraCount={boraCounts[selected.id]?.count || 0}
+            boraReacted={boraCounts[selected.id]?.reacted || false}
+            onBora={toggleBora}
+          />
+        </Suspense>
       )}
     </div>
   );

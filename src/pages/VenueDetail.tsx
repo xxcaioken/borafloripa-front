@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
+import type { VenueOut, EventOut } from '../services/api';
 import { usePageTitle } from '../hooks/usePageTitle';
 import EventCard from '../components/EventCard';
 import { useBora } from '../hooks/useBora';
 import { useAuth } from '../context/AuthContext';
 import { useSaved } from '../hooks/useSaved';
+import { useSessionId } from '../hooks/useSessionId';
+import { useToast } from '../context/ToastContext';
+import { useFollowVenue } from '../hooks/useFollowVenue';
+
+interface VibeTag {
+  tag_name: string;
+  count: number;
+  voted: boolean;
+}
 
 const VENUE_BG = [
   'radial-gradient(circle at 30% 30%, #0d2e1a 0%, #061008 100%)',
@@ -16,7 +26,7 @@ const VENUE_BG = [
   'radial-gradient(circle at 20% 80%, #081a2e 0%, #040810 100%)',
 ];
 const VENUE_EMOJIS = ['🍸', '🎵', '🏖️', '🌆', '🎉', '🍻'];
-const CATEGORY_LABEL = {
+const CATEGORY_LABEL: Record<string, string> = {
   bar: 'Bar', balada: 'Balada', cultura: 'Cultura', rua: 'Rolê na Rua', temporario: 'Especial'
 };
 const DAYS_ORDER = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
@@ -25,12 +35,12 @@ function getTodayKey() {
   return ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][new Date().getDay()];
 }
 
-function parseHours(hoursJson) {
+function parseHours(hoursJson: string | null | undefined): Record<string, string> | null {
   if (!hoursJson) return null;
-  try { return JSON.parse(hoursJson); } catch { return null; }
+  try { return JSON.parse(hoursJson) as Record<string, string>; } catch { return null; }
 }
 
-function openMaps(lat, lng, name) {
+function openMaps(lat: number, lng: number, name: string) {
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const url = isIOS
     ? `https://maps.apple.com/?q=${lat},${lng}`
@@ -43,10 +53,17 @@ export default function VenueDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { savedIds, toggle: toggleSaved } = useSaved(!!user);
+  const sessionId = useSessionId();
+  const toast = useToast();
+  const { followedIds, toggle: toggleFollow } = useFollowVenue(!!user);
 
-  const [venue, setVenue] = useState(null);
-  const [events, setEvents] = useState([]);
+  const [venue, setVenue] = useState<VenueOut | null>(null);
+  const [events, setEvents] = useState<EventOut[]>([]);
   const [notFound, setNotFound] = useState(false);
+  const [checkinDone, setCheckinDone] = useState(false);
+  const [vibeTags, setVibeTags] = useState<VibeTag[]>([]);
+  const [allVibeTags, setAllVibeTags] = useState<string[]>([]);
+  const [showVibeAll, setShowVibeAll] = useState(false);
 
   usePageTitle(venue ? venue.name : null);
 
@@ -59,8 +76,54 @@ export default function VenueDetail() {
       .catch(() => {});
   }, [id]);
 
+  useEffect(() => {
+    if (!id) return;
+    api.get(`/vibes/venue/${id}?session_id=${sessionId}`).then(r => setVibeTags(r.data)).catch(() => {});
+    api.get('/vibes/tags').then(r => setAllVibeTags(r.data)).catch(() => {});
+  }, [id, sessionId]);
+
+  async function handleVibeVote(tagName: string) {
+    if (!id) return;
+    const res = await api.post(`/vibes/venue/${id}/${encodeURIComponent(tagName)}?session_id=${sessionId}`);
+    const voted = res.data.voted as boolean;
+    setVibeTags(prev => {
+      const existing = prev.find(t => t.tag_name === tagName);
+      if (existing) {
+        return prev.map(t => t.tag_name === tagName
+          ? { ...t, count: t.count + (voted ? 1 : -1), voted }
+          : t
+        ).filter(t => t.count > 0).sort((a, b) => b.count - a.count);
+      }
+      return [...prev, { tag_name: tagName, count: 1, voted: true }].sort((a, b) => b.count - a.count);
+    });
+  }
+
+  async function handleFollow() {
+    if (!user) { navigate('/perfil'); return; }
+    const wasFollowing = followedIds.has(Number(id));
+    await toggleFollow(Number(id));
+    toast?.show(wasFollowing ? `Deixou de seguir ${venue?.name}` : `Seguindo ${venue?.name}! 🔔`, wasFollowing ? 'info' : 'success');
+  }
+
   const eventIds = events.map(e => e.id);
   const { counts: boraCounts, toggle: toggleBora } = useBora(eventIds);
+
+  async function handleCheckin() {
+    try {
+      const { data } = await api.post('/checkins', { venue_id: Number(id), session_id: sessionId });
+      setVenue(prev => prev ? { ...prev, checkin_count: data.checkin_count } : prev);
+      setCheckinDone(true);
+      toast?.show(`Check-in em ${venue?.name ?? 'local'}! 📍`, 'success');
+    } catch (err: unknown) {
+      if (err && typeof err === 'object' && 'response' in err) {
+        const axiosErr = err as { response?: { status?: number } };
+        if (axiosErr.response?.status === 429) {
+          toast?.show('Você já fez check-in recentemente aqui', 'info');
+          setCheckinDone(true);
+        }
+      }
+    }
+  }
 
   if (notFound) {
     return (
@@ -82,12 +145,13 @@ export default function VenueDetail() {
   const bgIdx = venue.id % VENUE_BG.length;
   const emoji = VENUE_EMOJIS[venue.id % VENUE_EMOJIS.length];
 
+  type AccessKey = keyof VenueOut;
   const accessItems = [
-    { key: 'wheelchair', label: 'Cadeirantes', icon: '♿' },
-    { key: 'hearing_loop', label: 'Loop auditivo', icon: '🦻' },
-    { key: 'visual_aid', label: 'Aux. visual', icon: '👁' },
-    { key: 'adapted_wc', label: 'WC adaptado', icon: '🚻' },
-    { key: 'parking', label: 'Vaga especial', icon: '🅿️' },
+    { key: 'wheelchair' as AccessKey, label: 'Cadeirantes', icon: '♿' },
+    { key: 'hearing_loop' as AccessKey, label: 'Loop auditivo', icon: '🦻' },
+    { key: 'visual_aid' as AccessKey, label: 'Aux. visual', icon: '👁' },
+    { key: 'adapted_wc' as AccessKey, label: 'WC adaptado', icon: '🚻' },
+    { key: 'parking' as AccessKey, label: 'Vaga especial', icon: '🅿️' },
   ].filter(a => venue[a.key]);
 
   return (
@@ -107,6 +171,80 @@ export default function VenueDetail() {
             <span className="vd-cat-badge">{CATEGORY_LABEL[venue.category] || venue.category}</span>
           )}
         </div>
+
+        {/* Check-in + Follow */}
+        <div className="checkin-zone">
+          <div className="checkin-info">
+            <div className="checkin-count">{venue.checkin_count || 0}</div>
+            <div className="checkin-label">
+              {(venue.checkin_count || 0) === 1 ? 'pessoa aqui agora' : 'pessoas aqui agora'}
+            </div>
+          </div>
+          <div className="vd-action-btns">
+            <button
+              className="btn-checkin"
+              onClick={handleCheckin}
+              disabled={checkinDone}
+            >
+              {checkinDone ? '✓ Check-in feito' : '📍 Estou aqui!'}
+            </button>
+            <button
+              className={`vd-follow-btn${followedIds.has(venue.id) ? ' following' : ''}`}
+              onClick={handleFollow}
+              aria-pressed={followedIds.has(venue.id)}
+            >
+              {followedIds.has(venue.id) ? '🔔 Seguindo' : '+ Seguir'}
+            </button>
+          </div>
+        </div>
+
+        {/* Vibe pulse */}
+        {(vibeTags.length > 0 || showVibeAll) && (
+          <div className="vd-section vibe-vote-area">
+            <div className="vd-section-title">A galera diz que é...</div>
+            <div className="vibe-chips">
+              {vibeTags.slice(0, showVibeAll ? undefined : 5).map(t => (
+                <button
+                  key={t.tag_name}
+                  className={`vibe-chip${t.voted ? ' voted' : ''}`}
+                  onClick={() => handleVibeVote(t.tag_name)}
+                >
+                  {t.tag_name} <span className="vibe-chip-count">{t.count}</span>
+                </button>
+              ))}
+              {!showVibeAll && allVibeTags.filter(tag => !vibeTags.find(t => t.tag_name === tag)).slice(0, 3).map(tag => (
+                <button
+                  key={tag}
+                  className="vibe-chip add"
+                  onClick={() => handleVibeVote(tag)}
+                >
+                  + {tag}
+                </button>
+              ))}
+            </div>
+            {!showVibeAll && (allVibeTags.length > 5) && (
+              <button className="vibe-show-more" onClick={() => setShowVibeAll(true)}>
+                Ver todos os vibes
+              </button>
+            )}
+          </div>
+        )}
+        {vibeTags.length === 0 && !showVibeAll && allVibeTags.length > 0 && (
+          <div className="vd-section vibe-vote-area">
+            <div className="vd-section-title">Como é esse lugar?</div>
+            <div className="vibe-chips">
+              {allVibeTags.slice(0, 4).map(tag => (
+                <button
+                  key={tag}
+                  className="vibe-chip add"
+                  onClick={() => handleVibeVote(tag)}
+                >
+                  + {tag}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Endereço + Como chegar */}
         {venue.address && (
@@ -173,7 +311,7 @@ export default function VenueDetail() {
             <div className="vd-section-title">Acessibilidade</div>
             <div className="vd-access-pills">
               {accessItems.map(a => (
-                <span key={a.key} className="vd-access-pill">
+                <span key={String(a.key)} className="vd-access-pill">
                   {a.icon} {a.label}
                 </span>
               ))}

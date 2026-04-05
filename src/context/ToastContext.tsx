@@ -1,11 +1,15 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
-const ToastContext = createContext(null);
+interface ToastContextType {
+  show: (message: string, type?: string, duration?: number) => void;
+}
 
-export function ToastProvider({ children }) {
-  const [toasts, setToasts] = useState([]);
+const ToastContext = createContext<ToastContextType | null>(null);
 
-  const show = useCallback((message, type = 'info', duration = 2500) => {
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [toasts, setToasts] = useState<Array<{ id: number; message: string; type: string }>>([]);
+
+  const show = useCallback((message: string, type = 'info', duration = 2500) => {
     const id = Date.now();
     setToasts(prev => [...prev, { id, message, type }]);
     setTimeout(() => {
@@ -27,4 +31,4 @@ export function ToastProvider({ children }) {
   );
 }
 
-export const useToast = () => useContext(ToastContext);
+export const useToast = () => useContext(ToastContext) as ToastContextType;

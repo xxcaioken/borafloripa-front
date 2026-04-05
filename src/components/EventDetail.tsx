@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
+import type { EventOut } from '../services/api';
 import { useSessionId } from '../hooks/useSessionId';
 import { useToast } from '../context/ToastContext';
 
@@ -11,7 +12,7 @@ const COVERS = [
   'linear-gradient(135deg, #2e1a0a 0%, #0a2e2a 100%)',
 ];
 
-const TAG_ICONS = {
+const TAG_ICONS: Record<string, string> = {
   'Eletrônico': '🎧', 'Funk': '🎤', 'Pagode': '🥁', 'MPB': '🎵',
   'Reggae': '🌿', 'Sertanejo': '🤠', 'Rock': '🎸', 'Rooftop': '🌆',
   'Pet Friendly': '🐾', 'Instagramável': '📸', 'Dance Floor': '💃',
@@ -19,16 +20,36 @@ const TAG_ICONS = {
   'Comer e Beber': '🍔', 'TV com Esportes': '⚽',
 };
 
-function parseHours(hoursJson) {
+interface VibeTag {
+  tag_name: string;
+  count: number;
+  voted: boolean;
+}
+
+interface EventStats {
+  view_count: number;
+  bora_count: number;
+  checkin_count: number;
+}
+
+interface EventDetailProps {
+  event: EventOut;
+  onClose: () => void;
+  boraCount?: number;
+  boraReacted?: boolean;
+  onBora?: (id: number) => void;
+}
+
+function parseHours(hoursJson: string | null | undefined): Record<string, string> | null {
   if (!hoursJson) return null;
-  try { return JSON.parse(hoursJson); } catch { return null; }
+  try { return JSON.parse(hoursJson) as Record<string, string>; } catch { return null; }
 }
 
 function getTodayKey() {
   return ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][new Date().getDay()];
 }
 
-export default function EventDetail({ event, onClose, boraCount = 0, boraReacted = false, onBora }) {
+export default function EventDetail({ event, onClose, boraCount = 0, boraReacted = false, onBora }: EventDetailProps) {
   const gradient = COVERS[event.id % COVERS.length];
   const date = new Date(event.date);
   const dateStr = date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -38,11 +59,11 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
   const sessionId = useSessionId();
   const toast = useToast();
 
-  const [vibeTags, setVibeTags] = useState([]);
-  const [allVibeTags, setAllVibeTags] = useState([]);
+  const [vibeTags, setVibeTags] = useState<VibeTag[]>([]);
+  const [allVibeTags, setAllVibeTags] = useState<string[]>([]);
   const [showVibeAll, setShowVibeAll] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState<EventStats | null>(null);
   const DESC_LIMIT = 150;
 
   useEffect(() => {
@@ -51,7 +72,7 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
     api.get(`/events/${event.id}/stats`).then(r => setStats(r.data)).catch(() => {});
   }, [event.id, event.venue.id, sessionId]);
 
-  async function handleVibeVote(tagName) {
+  async function handleVibeVote(tagName: string) {
     const res = await api.post(`/vibes/venue/${event.venue.id}/${encodeURIComponent(tagName)}?session_id=${sessionId}`);
     const voted = res.data.voted;
     setVibeTags(prev => {
@@ -68,10 +89,12 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
 
   function handleShare() {
     const url = `${window.location.origin}/evento/${event.id}`;
+    const dateLabel = new Date(event.date).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    const text = `${event.title} em ${event.venue.name} — ${dateLabel}${event.price_info ? ` (${event.price_info})` : ''}`;
     if (navigator.share) {
-      navigator.share({ title: event.title, text: `${event.title} — ${event.venue.name}`, url });
+      navigator.share({ title: event.title, text, url }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(url).then(() => toast?.show('Link copiado! 📋', 'success'));
+      navigator.clipboard.writeText(`${text}\n${url}`).then(() => toast?.show('Link copiado! 📋', 'success'));
     }
   }
 

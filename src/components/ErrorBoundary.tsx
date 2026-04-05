@@ -1,9 +1,9 @@
 import React from 'react';
 
-export default class ErrorBoundary extends React.Component {
-  state = { error: null };
+export default class ErrorBoundary extends React.Component<{ children: React.ReactNode }> {
+  state = { error: null as unknown };
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: unknown) {
     return { error };
   }
 
