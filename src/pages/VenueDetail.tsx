@@ -17,6 +17,14 @@ interface VibeTag {
   voted: boolean;
 }
 
+interface ReviewOut {
+  id: number;
+  rating: number;
+  text: string | null;
+  created_at: string;
+  user_name: string;
+}
+
 const VENUE_BG = [
   'radial-gradient(circle at 30% 30%, #0d2e1a 0%, #061008 100%)',
   'radial-gradient(circle at 70% 30%, #13082e 0%, #070410 100%)',
@@ -64,6 +72,12 @@ export default function VenueDetail() {
   const [vibeTags, setVibeTags] = useState<VibeTag[]>([]);
   const [allVibeTags, setAllVibeTags] = useState<string[]>([]);
   const [showVibeAll, setShowVibeAll] = useState(false);
+  const [reviews, setReviews] = useState<ReviewOut[]>([]);
+  const [reviewSummary, setReviewSummary] = useState<{ count: number; avg: number | null } | null>(null);
+  const [myRating, setMyRating] = useState(0);
+  const [myText, setMyText] = useState('');
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
 
   usePageTitle(venue ? venue.name : null);
 
@@ -80,7 +94,30 @@ export default function VenueDetail() {
     if (!id) return;
     api.get(`/vibes/venue/${id}?session_id=${sessionId}`).then(r => setVibeTags(r.data)).catch(() => {});
     api.get('/vibes/tags').then(r => setAllVibeTags(r.data)).catch(() => {});
+    api.get(`/reviews/venues/${id}`).then(r => setReviews(r.data)).catch(() => {});
+    api.get(`/reviews/venues/${id}/summary`).then(r => setReviewSummary(r.data)).catch(() => {});
   }, [id, sessionId]);
+
+  async function handleReviewSubmit() {
+    if (!user) { navigate('/perfil'); return; }
+    if (!myRating) return;
+    setReviewSubmitting(true);
+    try {
+      const { data } = await api.post(`/reviews/venues/${id}`, { rating: myRating, text: myText.trim() || null });
+      setReviews(prev => {
+        const existing = prev.findIndex(r => r.user_name === user.name.split(' ')[0]);
+        if (existing >= 0) { const copy = [...prev]; copy[existing] = data; return copy; }
+        return [data, ...prev];
+      });
+      setReviewSummary(prev => prev ? { count: prev.count + 1, avg: prev.avg } : { count: 1, avg: myRating });
+      setShowReviewForm(false);
+      toast?.show('Avaliação enviada! ⭐', 'success');
+    } catch {
+      toast?.show('Erro ao enviar avaliação', 'info');
+    } finally {
+      setReviewSubmitting(false);
+    }
+  }
 
   async function handleVibeVote(tagName: string) {
     if (!id) return;
@@ -318,6 +355,74 @@ export default function VenueDetail() {
             </div>
           </div>
         )}
+
+        {/* Avaliações */}
+        <div className="vd-section">
+          <div className="vd-section-title-row">
+            <div className="vd-section-title">
+              Avaliações
+              {reviewSummary && reviewSummary.count > 0 && (
+                <span className="review-avg">⭐ {reviewSummary.avg?.toFixed(1)} <span className="review-count">({reviewSummary.count})</span></span>
+              )}
+            </div>
+            {user && !showReviewForm && (
+              <button className="vd-review-open-btn" onClick={() => setShowReviewForm(true)}>
+                + Avaliar
+              </button>
+            )}
+          </div>
+
+          {showReviewForm && (
+            <div className="review-form">
+              <div className="review-stars">
+                {[1,2,3,4,5].map(s => (
+                  <button
+                    key={s}
+                    className={`review-star${s <= myRating ? ' active' : ''}`}
+                    onClick={() => setMyRating(s)}
+                    aria-label={`${s} estrela${s > 1 ? 's' : ''}`}
+                  >★</button>
+                ))}
+              </div>
+              <textarea
+                className="review-textarea"
+                placeholder="O que achou? (opcional, máx. 280 chars)"
+                maxLength={280}
+                value={myText}
+                onChange={e => setMyText(e.target.value)}
+                rows={3}
+              />
+              <div className="review-form-actions">
+                <button className="btn-ghost" onClick={() => setShowReviewForm(false)}>Cancelar</button>
+                <button
+                  className="btn-primary"
+                  onClick={handleReviewSubmit}
+                  disabled={!myRating || reviewSubmitting}
+                >
+                  {reviewSubmitting ? 'Enviando...' : 'Enviar'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {reviews.length === 0 && !showReviewForm ? (
+            <p className="vd-events-empty" style={{ fontSize: '13px' }}>
+              Nenhuma avaliação ainda. Seja o primeiro! 🌟
+            </p>
+          ) : (
+            <div className="reviews-list">
+              {reviews.slice(0, 5).map(r => (
+                <div key={r.id} className="review-item">
+                  <div className="review-item-header">
+                    <span className="review-item-name">{r.user_name}</span>
+                    <span className="review-item-stars">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
+                  </div>
+                  {r.text && <p className="review-item-text">{r.text}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Eventos */}
         <div className="vd-section">
