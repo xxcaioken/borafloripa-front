@@ -1,20 +1,31 @@
 {
   "name": "Bora Floripa",
-  "short_name": "BoraFloripa",
-  "description": "Guia de rolês em Florianópolis",
+  "short_name": "Bora",
+  "description": "Descubra os melhores bares, baladas e eventos em Florianópolis",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#121212",
-  "theme_color": "#121212",
+  "theme_color": "#00e676",
   "lang": "pt-BR",
   "icons": [
     {
       "src": "/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ],
   "categories": ["lifestyle", "entertainment"],
-  "screenshots": []
+  "shortcuts": [
+    { "name": "Feed", "url": "/", "description": "Ver rolês de hoje" },
+    { "name": "Agenda", "url": "/agenda", "description": "Agenda da semana" },
+    { "name": "Mapa", "url": "/mapa", "description": "Mapa de venues" }
+  ]
 }
