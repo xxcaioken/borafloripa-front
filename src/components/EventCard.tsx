@@ -120,6 +120,9 @@ const EventCard = memo(function EventCard({ event, onClick, boraCount = 0, boraR
           <div>
             {isTemp && <span className="badge-temporary">⚡ Especial</span>}
             {event.is_featured && !isTemp && <span className="badge-featured">★ Destaque</span>}
+            {event.recurrence === 'weekly' && <span className="badge-recurrence">🔁 Semanal</span>}
+            {event.recurrence === 'biweekly' && <span className="badge-recurrence">🔁 Quinzenal</span>}
+            {event.recurrence === 'monthly' && <span className="badge-recurrence">🔁 Mensal</span>}
           </div>
           <div className="card-top-right">
             {checkinCount > 0 && (

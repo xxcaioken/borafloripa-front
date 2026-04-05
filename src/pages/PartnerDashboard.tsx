@@ -20,8 +20,30 @@ interface EventFormData {
   is_temporary: boolean;
   organizers: string;
   price_info: string;
+  cover_url: string;
+  recurrence: string;
   tag_ids: number[];
 }
+
+interface CouponItem {
+  id: number;
+  code: string;
+  description: string;
+  discount_pct: number;
+  max_uses: number;
+  used_count: number;
+  active: boolean;
+  community_id: number | null;
+  expires_at: string | null;
+  venue_id: number;
+}
+
+const RECURRENCE_OPTIONS = [
+  { value: '', label: 'Evento único' },
+  { value: 'weekly', label: 'Toda semana' },
+  { value: 'biweekly', label: 'A cada 2 semanas' },
+  { value: 'monthly', label: 'Mensal' },
+];
 
 interface EventFormProps {
   venues: VenueOut[];
@@ -36,7 +58,8 @@ function EventForm({ venues, tags, onSave, onCancel, initial }: EventFormProps) 
     venue_id: venues[0]?.id || '',
     title: '', description: '', date: '',
     vibe_status: 'Normal', category: 'bar',
-    is_temporary: false, organizers: '', price_info: '', tag_ids: [],
+    is_temporary: false, organizers: '', price_info: '',
+    cover_url: '', recurrence: '', tag_ids: [],
   });
   const [saving, setSaving] = useState(false);
 
@@ -101,9 +124,24 @@ function EventForm({ venues, tags, onSave, onCancel, initial }: EventFormProps) 
         <label>Entrada / Preço (opcional)</label>
         <input value={form.price_info || ''} onChange={e => set('price_info', e.target.value)} placeholder="Ex: Entrada: R$25 / Open bar: R$60" />
       </div>
-      <div className="form-check">
-        <input type="checkbox" id="is_temp" checked={form.is_temporary} onChange={e => set('is_temporary', e.target.checked)} />
-        <label htmlFor="is_temp">Evento especial / temporário</label>
+      <div className="form-group">
+        <label>URL da imagem de capa (opcional)</label>
+        <input value={form.cover_url || ''} onChange={e => set('cover_url', e.target.value)} placeholder="https://..." type="url" />
+        {form.cover_url && <img src={form.cover_url} alt="preview" className="cover-preview" onError={e => (e.currentTarget.style.display = 'none')} />}
+      </div>
+      <div className="form-row">
+        <div className="form-group">
+          <label>Recorrência</label>
+          <select value={form.recurrence || ''} onChange={e => set('recurrence', e.target.value)}>
+            {RECURRENCE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+        <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '2px' }}>
+          <label style={{ display: 'flex', gap: '8px', alignItems: 'center', cursor: 'pointer' }}>
+            <input type="checkbox" id="is_temp" checked={form.is_temporary} onChange={e => set('is_temporary', e.target.checked)} />
+            Evento especial
+          </label>
+        </div>
       </div>
       {tags.length > 0 && (
         <div className="form-group">
@@ -273,6 +311,10 @@ export default function PartnerDashboard({ onAuthOpen }: PartnerDashboardProps) 
   const [showForm, setShowForm] = useState(false);
   const [editEvent, setEditEvent] = useState<EventOut | null>(null);
   const [showClaim, setShowClaim] = useState(false);
+  const [editVenue, setEditVenue] = useState<VenueOut | null>(null);
+  const [coupons, setCoupons] = useState<CouponItem[]>([]);
+  const [showCouponForm, setShowCouponForm] = useState(false);
+  const [couponForm, setCouponForm] = useState({ code: '', description: '', discount_pct: 10, max_uses: 100, community_id: '' });
 
   const load = useCallback(() => {
     if (!user) return;
@@ -306,7 +348,8 @@ export default function PartnerDashboard({ onAuthOpen }: PartnerDashboardProps) 
 
   useEffect(() => {
     api.get('/events/tags-full').then(r => setTags(r.data)).catch(() => {});
-  }, []);
+    if (user) api.get('/coupons/my').then(r => setCoupons(r.data)).catch(() => {});
+  }, [user]);
 
   if (!user) {
     return (
@@ -352,6 +395,28 @@ export default function PartnerDashboard({ onAuthOpen }: PartnerDashboardProps) 
     await api.post(`/partners/claim-venue/${venue.id}`);
     setShowClaim(false);
     load();
+  }
+
+  async function handleSaveVenue(v: VenueOut, patch: Partial<VenueOut>) {
+    await api.put(`/partners/venues/${v.id}`, { ...v, ...patch });
+    setEditVenue(null);
+    load();
+  }
+
+  async function handleCreateCoupon() {
+    if (!couponForm.code || !couponForm.description || !venues[0]) return;
+    await api.post(`/coupons/venues/${venues[0].id}`, {
+      ...couponForm,
+      community_id: couponForm.community_id ? Number(couponForm.community_id) : null,
+    });
+    setShowCouponForm(false);
+    setCouponForm({ code: '', description: '', discount_pct: 10, max_uses: 100, community_id: '' });
+    api.get('/coupons/my').then(r => setCoupons(r.data)).catch(() => {});
+  }
+
+  async function handleToggleCoupon(c: CouponItem) {
+    await api.patch(`/coupons/venues/${c.venue_id}/${c.id}/toggle`);
+    setCoupons(prev => prev.map(x => x.id === c.id ? { ...x, active: !x.active } : x));
   }
 
   const analyticsMap = Object.fromEntries(analytics.map(a => [a.event_id, a]));
@@ -444,6 +509,7 @@ export default function PartnerDashboard({ onAuthOpen }: PartnerDashboardProps) 
                   {v.instagram && <span className="venue-row-ig">{v.instagram}</span>}
                 </div>
               </div>
+              <button className="pev-edit-btn" onClick={() => setEditVenue(v)} title="Editar local">✏️</button>
             </div>
           ))}
         </div>
@@ -472,6 +538,8 @@ export default function PartnerDashboard({ onAuthOpen }: PartnerDashboardProps) 
             is_temporary: editEvent.is_temporary,
             organizers: editEvent.organizers || '',
             price_info: editEvent.price_info || '',
+            cover_url: (editEvent as EventOut & { cover_url?: string }).cover_url || '',
+            recurrence: (editEvent as EventOut & { recurrence?: string }).recurrence || '',
             tag_ids: editEvent.tags?.map(t => t.id) || [],
           } : null}
           onSave={handleSaveEvent}
@@ -536,7 +604,128 @@ export default function PartnerDashboard({ onAuthOpen }: PartnerDashboardProps) 
         )}
       </div>
 
+      {/* Cupons */}
+      {venues.length > 0 && (
+        <>
+          <div className="section-header section-mt">
+            <div className="section-title">🎟️ Cupons</div>
+            <button className="btn-link-accent" onClick={() => setShowCouponForm(v => !v)}>
+              {showCouponForm ? 'Fechar' : '+ Novo cupom'}
+            </button>
+          </div>
+
+          {showCouponForm && (
+            <div className="coupon-form">
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Código</label>
+                  <input value={couponForm.code} onChange={e => setCouponForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="SAMBA20" maxLength={20} />
+                </div>
+                <div className="form-group">
+                  <label>Desconto %</label>
+                  <input type="number" min={1} max={100} value={couponForm.discount_pct} onChange={e => setCouponForm(f => ({ ...f, discount_pct: Number(e.target.value) }))} />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Descrição</label>
+                <input value={couponForm.description} onChange={e => setCouponForm(f => ({ ...f, description: e.target.value }))} placeholder="Ex: 20% off pra galera do pagode" />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Máx. usos</label>
+                  <input type="number" min={1} value={couponForm.max_uses} onChange={e => setCouponForm(f => ({ ...f, max_uses: Number(e.target.value) }))} />
+                </div>
+                <div className="form-group">
+                  <label>ID da comunidade (opcional)</label>
+                  <input value={couponForm.community_id} onChange={e => setCouponForm(f => ({ ...f, community_id: e.target.value }))} placeholder="deixar vazio = geral" />
+                </div>
+              </div>
+              <div className="form-actions">
+                <button type="button" className="btn-secondary" onClick={() => setShowCouponForm(false)}>Cancelar</button>
+                <button type="button" className="btn-primary" onClick={handleCreateCoupon} disabled={!couponForm.code || !couponForm.description}>Criar cupom</button>
+              </div>
+            </div>
+          )}
+
+          {coupons.length > 0 ? (
+            <div className="coupon-list">
+              {coupons.map(c => (
+                <div key={c.id} className={`coupon-row${c.active ? '' : ' inactive'}`}>
+                  <div className="coupon-code">{c.code}</div>
+                  <div className="coupon-desc">{c.description}</div>
+                  <div className="coupon-meta">
+                    <span className="coupon-pct">-{c.discount_pct}%</span>
+                    <span className="coupon-uses">{c.used_count}/{c.max_uses} usos</span>
+                    {c.community_id && <span className="coupon-community">comunidade #{c.community_id}</span>}
+                  </div>
+                  <button className={`coupon-toggle${c.active ? '' : ' off'}`} onClick={() => handleToggleCoupon(c)}>
+                    {c.active ? 'Ativo' : 'Inativo'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state empty-sm"><p>Nenhum cupom criado ainda.</p></div>
+          )}
+        </>
+      )}
+
       {showClaim && <ClaimVenueModal onClaim={handleClaim} onClose={() => setShowClaim(false)} />}
+
+      {/* Modal edição de venue */}
+      {editVenue && (
+        <VenueEditModal venue={editVenue} onSave={handleSaveVenue} onClose={() => setEditVenue(null)} />
+      )}
+    </div>
+  );
+}
+
+interface VenueEditModalProps {
+  venue: VenueOut;
+  onSave: (v: VenueOut, patch: Partial<VenueOut>) => Promise<void>;
+  onClose: () => void;
+}
+
+function VenueEditModal({ venue, onSave, onClose }: VenueEditModalProps) {
+  const [form, setForm] = useState({
+    instagram: venue.instagram || '',
+    whatsapp: venue.whatsapp || '',
+    address: venue.address || '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    try { await onSave(venue, form); } finally { setSaving(false); }
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-sheet" onClick={e => e.stopPropagation()}>
+        <div className="modal-handle" />
+        <div className="modal-body">
+          <div className="claim-modal-title">Editar {venue.name}</div>
+          <form onSubmit={submit}>
+            <div className="form-group">
+              <label>Instagram</label>
+              <input value={form.instagram} onChange={e => setForm(f => ({ ...f, instagram: e.target.value }))} placeholder="@nomedoperfil" />
+            </div>
+            <div className="form-group">
+              <label>WhatsApp</label>
+              <input value={form.whatsapp} onChange={e => setForm(f => ({ ...f, whatsapp: e.target.value }))} placeholder="48999999999" />
+            </div>
+            <div className="form-group">
+              <label>Endereço</label>
+              <input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Rua, número — Bairro" />
+            </div>
+            <div className="form-actions">
+              <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
+              <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

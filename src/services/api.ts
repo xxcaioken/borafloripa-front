@@ -44,6 +44,7 @@ export interface EventOut {
   cover_url: string | null;
   price_info: string | null;
   view_count: number;
+  recurrence: string | null;
   venue: VenueOut;
   tags: TagOut[];
 }
