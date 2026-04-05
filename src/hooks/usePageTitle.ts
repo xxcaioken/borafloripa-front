@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-export function usePageTitle(title) {
+export function usePageTitle(title: string | null) {
   useEffect(() => {
     const base = 'Bora Floripa';
     document.title = title ? `${title} — ${base}` : base;

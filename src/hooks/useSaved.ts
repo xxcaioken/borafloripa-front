@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../services/api';
 
-export function useSaved(isLoggedIn) {
-  const [savedIds, setSavedIds] = useState(new Set());
+export function useSaved(isLoggedIn: boolean) {
+  const [savedIds, setSavedIds] = useState(new Set<number>());
 
   useEffect(() => {
-    if (!isLoggedIn) { setSavedIds(new Set()); return; }
-    api.get('/saved').then(r => setSavedIds(new Set(r.data.map(e => e.id)))).catch(() => {});
+    if (!isLoggedIn) return;
+    api.get('/saved').then(r => setSavedIds(new Set(r.data.map((e: { id: number }) => e.id)))).catch(() => {});
   }, [isLoggedIn]);
 
-  const toggle = useCallback(async (eventId) => {
+  const toggle = useCallback(async (eventId: number) => {
     if (!isLoggedIn) return;
     const isSaved = savedIds.has(eventId);
     setSavedIds(prev => {

@@ -10,5 +10,5 @@ function getOrCreateSessionId() {
 }
 
 export function useSessionId() {
-  return useMemo(getOrCreateSessionId, []);
+  return useMemo(() => getOrCreateSessionId(), []);
 }
