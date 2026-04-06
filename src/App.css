@@ -1584,6 +1584,60 @@ body::before {
   transition: background 0.3s;
 }
 .onboard-dot.active { background: var(--accent); }
+.onboard-dot.done  { background: var(--accent); opacity: 0.45; }
+
+/* Step 3 — localização */
+.onboard-location {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+.onboard-field { display: flex; flex-direction: column; gap: 8px; }
+.onboard-field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.onboard-select {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text1);
+  font-family: inherit;
+  font-size: 15px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  width: 100%;
+  cursor: pointer;
+}
+.onboard-select:focus { outline: none; border-color: var(--accent); }
+.onboard-age-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.onboard-age-btn {
+  flex: 1;
+  min-width: 64px;
+  padding: 10px 0;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.onboard-age-btn.selected {
+  background: rgba(0, 230, 118, 0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
 
 /* ══════════════════════════════════════
    MAP VIEW
