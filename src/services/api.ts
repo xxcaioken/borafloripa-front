@@ -56,6 +56,10 @@ export interface UserOut {
   role: string;
   pref_music: string | null;   // JSON serializado: '["funk","mpb"]'
   pref_vibes: string | null;   // JSON serializado: '["rooftop"]'
+  onboarding_completed: boolean;
+  display_name: string | null;
+  neighborhood: string | null;
+  age_range: string | null;
 }
 
 // ---------------------------------------------------------------------------

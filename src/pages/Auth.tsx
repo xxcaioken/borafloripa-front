@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -16,6 +17,14 @@ declare global {
   }
 }
 
+const NEIGHBORHOODS = [
+  'Centro', 'Trindade', 'Lagoa da Conceição', 'Campeche',
+  'Ingleses', 'Jurerê', 'Barra da Lagoa', 'Canasvieiras',
+  'Florianópolis (outro bairro)',
+];
+
+const AGE_RANGES = ['18-24', '25-34', '35-44', '45+'];
+
 interface AuthProps {
   onClose?: () => void;
   initialTab?: string;
@@ -28,6 +37,8 @@ export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVib
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [neighborhood, setNeighborhood] = useState('');
+  const [ageRange, setAgeRange] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
@@ -35,8 +46,17 @@ export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVib
   const [googleLoading, setGoogleLoading] = useState(false);
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const { login } = useAuth();
+  const navigate = useNavigate();
 
   const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+
+  function handlePostLogin(token: string, user: { onboarding_completed: boolean }) {
+    if (!user.onboarding_completed) {
+      // Primeiro login — vai para onboarding antes de entrar no app
+      navigate('/onboarding');
+    }
+    onClose?.();
+  }
 
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
@@ -49,7 +69,7 @@ export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVib
           try {
             const { data } = await api.post('/auth/google', { credential });
             login(data.access_token, data.user);
-            onClose?.();
+            handlePostLogin(data.access_token, data.user);
           } catch {
             // handled silently — user stays on form
           } finally {
@@ -98,10 +118,18 @@ export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVib
       const endpoint = tab === 'login' ? '/auth/login' : '/auth/register';
       const body = tab === 'login'
         ? { email, password }
-        : { name, email, password, pref_music: prefMusic, pref_vibes: prefVibes };
+        : {
+            name,
+            email,
+            password,
+            pref_music: prefMusic,
+            pref_vibes: prefVibes,
+            neighborhood: neighborhood || null,
+            age_range: ageRange || null,
+          };
       const { data } = await api.post(endpoint, body);
       login(data.access_token, data.user);
-      onClose?.();
+      handlePostLogin(data.access_token, data.user);
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { detail?: string } } };
       setError(axiosErr.response?.data?.detail || 'Erro. Tente novamente.');
@@ -149,7 +177,7 @@ export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVib
               {tab === 'register' && (
                 <div className="auth-field">
                   <label>Nome</label>
-                  <input value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome" required />
+                  <input value={name} onChange={e => setName(e.target.value)} placeholder="Seu nome completo" required />
                 </div>
               )}
               <div className="auth-field">
@@ -174,6 +202,35 @@ export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVib
                     </button>
                   </div>
                 </div>
+              )}
+
+              {tab === 'register' && (
+                <>
+                  <div className="auth-field">
+                    <label>Bairro que você frequenta</label>
+                    <select value={neighborhood} onChange={e => setNeighborhood(e.target.value)} className="auth-select">
+                      <option value="">Selecionar (opcional)</option>
+                      {NEIGHBORHOODS.map(n => (
+                        <option key={n} value={n}>{n}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="auth-field">
+                    <label>Faixa etária</label>
+                    <div className="auth-age-row">
+                      {AGE_RANGES.map(r => (
+                        <button
+                          key={r}
+                          type="button"
+                          className={`auth-age-btn${ageRange === r ? ' selected' : ''}`}
+                          onClick={() => setAgeRange(prev => prev === r ? '' : r)}
+                        >
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
 
               {error && <div className="auth-error">{error}</div>}

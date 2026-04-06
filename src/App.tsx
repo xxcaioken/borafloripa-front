@@ -7,7 +7,6 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 // Critical path — loaded eagerly
 import Feed from './pages/Feed';
-import Onboarding from './pages/Onboarding';
 
 // Lazy-loaded routes — code split by route
 const MapView         = lazy(() => import('./pages/MapView'));
@@ -23,6 +22,7 @@ const ResetPassword   = lazy(() => import('./pages/ResetPassword'));
 const VenueDetail     = lazy(() => import('./pages/VenueDetail'));
 const Search          = lazy(() => import('./pages/Search'));
 const Agenda          = lazy(() => import('./pages/Agenda'));
+const Onboarding      = lazy(() => import('./pages/Onboarding'));
 
 function RouteLoader() {
   return <div className="loading loading-page">Carregando...</div>;
@@ -330,22 +330,7 @@ function EventPage() {
 }
 
 function AppInner() {
-  const [onboarded, setOnboarded] = useState(() => !!localStorage.getItem('bf_onboarded'));
   const [showAuth, setShowAuth] = useState(false);
-  const [onboardPrefs, setOnboardPrefs] = useState<{ music: string[]; vibes: string[] } | null>(null);
-
-  function handleOnboardComplete(prefs?: { music: string[]; vibes: string[] }) {
-    localStorage.setItem('bf_onboarded', '1');
-    setOnboarded(true);
-    if (prefs) {
-      setOnboardPrefs(prefs);
-      setShowAuth(true);
-    }
-  }
-
-  if (!onboarded) {
-    return <Onboarding onComplete={handleOnboardComplete} />;
-  }
 
   return (
     <BrowserRouter>
@@ -354,6 +339,7 @@ function AppInner() {
         <Suspense fallback={<RouteLoader />}>
           <Routes>
             <Route path="/" element={<Feed />} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/locais" element={<Venues />} />
             <Route path="/mapa" element={<MapView />} />
             <Route path="/parceiro" element={<PartnerDashboard onAuthOpen={() => setShowAuth(true)} />} />
@@ -372,10 +358,8 @@ function AppInner() {
       {showAuth && (
         <Suspense fallback={null}>
           <Auth
-            onClose={() => { setShowAuth(false); setOnboardPrefs(null); }}
-            initialTab={onboardPrefs ? 'register' : 'login'}
-            prefMusic={onboardPrefs?.music ? JSON.stringify(onboardPrefs.music) : null}
-            prefVibes={onboardPrefs?.vibes ? JSON.stringify(onboardPrefs.vibes) : null}
+            onClose={() => setShowAuth(false)}
+            initialTab="login"
           />
         </Suspense>
       )}

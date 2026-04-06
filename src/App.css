@@ -288,7 +288,8 @@ body::before {
   align-items: center;
   justify-content: space-around;
   z-index: 200;
-  padding: 0 8px 4px;
+  padding: 0 8px env(safe-area-inset-bottom, 4px);
+  padding-bottom: max(4px, env(safe-area-inset-bottom));
 }
 
 @media (min-width: 900px) {
@@ -2037,6 +2038,48 @@ body::before {
 }
 .auth-forgot-desc { font-size: 14px; color: var(--text2); margin: 0; }
 
+/* Auth: select + age buttons */
+.auth-select {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-xs);
+  color: var(--text1);
+  font-size: 14px;
+  font-family: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238fa892' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  cursor: pointer;
+}
+.auth-select:focus { outline: none; border-color: var(--accent); }
+.auth-select option { background: #1a231b; }
+
+.auth-age-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.auth-age-btn {
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.auth-age-btn.selected {
+  background: rgba(0,230,118,0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .auth-sent {
   display: flex;
   flex-direction: column;
@@ -2929,6 +2972,16 @@ body::before {
 }
 .profile-name { font-size: 18px; font-weight: 700; }
 .profile-email { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.profile-meta-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.profile-meta-chip {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface2);
+  color: var(--text2);
+  border: 1px solid var(--border2);
+}
+.prefs-select { margin-bottom: 4px; }
 .profile-prefs { margin-bottom: 20px; }
 .profile-section-title {
   font-size: 13px;
@@ -4232,4 +4285,65 @@ body::before {
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
+}
+
+/* ────────────────────────────────────────────────────────────────
+   MOBILE FIXES — 2026-04-06
+   Target: 375px (iPhone SE) e 390px (iPhone 14)
+──────────────────────────────────────────────────────────────── */
+
+/* 1. iOS touch scroll em listas horizontais */
+.filter-chips,
+.neighborhood-chips,
+.week-strip {
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+
+/* 2. Chips de bairro: não vazar fora do viewport */
+.neighborhood-chips {
+  /* garante que o scroll contém o overflow em vez de vazar */
+  padding-right: 16px;
+}
+.filter-chips {
+  padding-right: 16px;
+}
+
+/* 3. Conteúdo principal: safe-area-inset no padding inferior (iOS Safari) */
+.main-content {
+  padding-bottom: calc(var(--bottom-nav-h) + 24px + env(safe-area-inset-bottom, 0px));
+}
+
+/* 4. VenueDetail hero: garante que o nome nunca sobreponha a imagem em telas <390px */
+@media (max-width: 390px) {
+  .vd-hero { height: 180px; }
+  .vd-hero-emoji { font-size: 56px; }
+}
+
+/* 5. PartnerDashboard: form-row vira 1 coluna em telas pequenas */
+@media (max-width: 480px) {
+  .form-row { grid-template-columns: 1fr; }
+  .form-actions { flex-direction: column; }
+  .form-actions button { width: 100%; }
+  .event-form { padding: 16px 14px; }
+}
+
+/* 6. Agenda: week-day-btn menor em telas muito estreitas */
+@media (max-width: 375px) {
+  .week-day-btn { width: 48px; height: 58px; }
+  .week-day-num { font-size: 17px; }
+}
+
+/* 7. Auth form: inputs full-width no mobile garantido */
+@media (max-width: 480px) {
+  .auth-sheet { border-radius: var(--radius-md) var(--radius-md) 0 0; }
+  .auth-body { padding: 0 16px 24px; }
+  .auth-age-row { gap: 6px; }
+  .auth-age-btn { padding: 7px 10px; font-size: 12px; }
+}
+
+/* 8. Profile header: avatar menor em telas estreitas */
+@media (max-width: 375px) {
+  .profile-avatar { width: 46px; height: 46px; font-size: 20px; }
+  .profile-name { font-size: 16px; }
 }
