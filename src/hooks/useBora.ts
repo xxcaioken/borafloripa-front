@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { api } from '../services/api';
 import { useSessionId } from './useSessionId';
 
-export function useBora(eventIds) {
-  const [counts, setCounts] = useState({});
+export function useBora(eventIds: number[]) {
+  const [counts, setCounts] = useState<Record<number, { count: number; reacted: boolean }>>({});
   const sessionId = useSessionId();
 
   useEffect(() => {
@@ -13,9 +13,10 @@ export function useBora(eventIds) {
     })
       .then(r => setCounts(r.data))
       .catch(() => {});
-  }, [eventIds?.join(',')]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventIds?.join(','), sessionId]);
 
-  const toggle = useCallback(async (eventId) => {
+  const toggle = useCallback(async (eventId: number) => {
     // Optimistic update
     setCounts(prev => {
       const cur = prev[eventId] || { count: 0, reacted: false };

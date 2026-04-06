@@ -1,15 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../services/api';
 
-export function useFollowVenue(isLoggedIn) {
-  const [followedIds, setFollowedIds] = useState(new Set());
+export function useFollowVenue(isLoggedIn: boolean) {
+  const [followedIds, setFollowedIds] = useState(new Set<number>());
 
   useEffect(() => {
-    if (!isLoggedIn) { setFollowedIds(new Set()); return; }
-    api.get('/follows/venues').then(r => setFollowedIds(new Set(r.data.map(v => v.id)))).catch(() => {});
+    if (!isLoggedIn) return;
+    api.get('/follows/venues').then(r => setFollowedIds(new Set(r.data.map((v: { id: number }) => v.id)))).catch(() => {});
   }, [isLoggedIn]);
 
-  const toggle = useCallback(async (venueId) => {
+  const toggle = useCallback(async (venueId: number) => {
     if (!isLoggedIn) return;
     const isFollowed = followedIds.has(venueId);
     setFollowedIds(prev => {

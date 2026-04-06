@@ -4,23 +4,48 @@ import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
-const TAG_EMOJI = {
+const TAG_EMOJI: Record<string, string> = {
   'Funk': '🎤', 'Eletrônico': '🎧', 'Pagode': '🥁', 'Sertanejo': '🤠',
   'Rock': '🎸', 'MPB': '🎵', 'Reggae': '🌿',
   'Rooftop': '🌆', 'Pet Friendly': '🐾', 'Happy Hour': '🥂',
   'Chopp Artesanal': '🍻', 'Comer e Beber': '🍔', 'TV com Esportes': '⚽',
 };
 
-export default function Communities({ onAuthOpen }) {
+interface Community {
+  id: number;
+  name: string;
+  tag_name: string;
+  description?: string;
+  member_count: number;
+  is_member: boolean;
+  discount_code?: string;
+}
+
+interface CommunitiesProps {
+  onAuthOpen: () => void;
+}
+
+interface CouponItem {
+  id: number;
+  code: string;
+  description: string;
+  discount_pct: number;
+  used_count: number;
+  max_uses: number;
+}
+
+export default function Communities({ onAuthOpen }: CommunitiesProps) {
   usePageTitle('Comunidades');
   const { user } = useAuth();
   const toast = useToast();
-  const [communities, setCommunities] = useState([]);
+  const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);
-  const [joining, setJoining] = useState(null);
-  const [copied, setCopied] = useState(null);
+  const [joining, setJoining] = useState<number | null>(null);
+  const [copied, setCopied] = useState<number | null>(null);
+  const [communityCoupons, setCommunityCoupons] = useState<Record<number, CouponItem[]>>({});
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     api.get('/communities')
       .then(r => setCommunities(r.data))
@@ -28,7 +53,7 @@ export default function Communities({ onAuthOpen }) {
       .finally(() => setLoading(false));
   }, [user]);
 
-  async function handleJoin(id) {
+  async function handleJoin(id: number) {
     if (!user) { onAuthOpen?.(); return; }
     setJoining(id);
     try {
@@ -36,11 +61,11 @@ export default function Communities({ onAuthOpen }) {
       setCommunities(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
       const community = communities.find(c => c.id === id);
       toast?.show(`Bem-vindo(a) ao ${community?.name}! 🎉`, 'success');
-    } catch {}
+    } catch { /* join failed — UI stays unchanged */ }
     setJoining(null);
   }
 
-  function copyCode(code, id) {
+  function copyCode(code: string, id: number) {
     navigator.clipboard.writeText(code).then(() => {
       setCopied(id);
       setTimeout(() => setCopied(null), 2000);
@@ -50,6 +75,17 @@ export default function Communities({ onAuthOpen }) {
 
   const myCommunities = communities.filter(c => c.is_member);
   const others = communities.filter(c => !c.is_member);
+
+  // Fetch coupons for communities the user is member of
+  useEffect(() => {
+    if (!user || myCommunities.length === 0) return;
+    myCommunities.forEach(c => {
+      api.get(`/coupons/community/${c.id}`)
+        .then(r => setCommunityCoupons(prev => ({ ...prev, [c.id]: r.data })))
+        .catch(() => {});
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, myCommunities.length]);
 
   return (
     <div className="communities-page">
@@ -80,14 +116,35 @@ export default function Communities({ onAuthOpen }) {
               <div className="communities-section-label">Você faz parte</div>
               <div className="community-list">
                 {myCommunities.map(c => (
+                  <React.Fragment key={c.id}>
                   <CommunityCard
-                    key={c.id}
                     community={c}
                     joining={joining === c.id}
                     copied={copied === c.id}
                     onJoin={handleJoin}
                     onCopy={copyCode}
                   />
+                  {communityCoupons[c.id]?.length > 0 && (
+                    <div className="community-coupons">
+                      <div className="community-coupons-title">🎟️ Cupons exclusivos</div>
+                      {communityCoupons[c.id].map(cp => (
+                        <div key={cp.id} className="community-coupon-row">
+                          <div className="community-coupon-info">
+                            <span className="community-coupon-code">{cp.code}</span>
+                            <span className="community-coupon-desc">{cp.description}</span>
+                          </div>
+                          <div className="community-coupon-right">
+                            <span className="community-coupon-pct">-{cp.discount_pct}%</span>
+                            <button
+                              className="community-coupon-copy"
+                              onClick={() => { navigator.clipboard.writeText(cp.code); toast?.show(`Código ${cp.code} copiado! 🎟️`, 'success'); }}
+                            >Copiar</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  </React.Fragment>
                 ))}
               </div>
             </>
@@ -119,13 +176,21 @@ export default function Communities({ onAuthOpen }) {
 }
 
 const MEMBER_MILESTONES = [10, 50, 100, 500, 1000];
-function memberProgress(count) {
+function memberProgress(count: number) {
   const next = MEMBER_MILESTONES.find(m => m > count) || count * 2;
   const prev = MEMBER_MILESTONES.slice().reverse().find(m => m <= count) || 0;
   return { pct: Math.min(100, Math.round(((count - prev) / (next - prev)) * 100)), next };
 }
 
-function CommunityCard({ community: c, joining, copied, onJoin, onCopy }) {
+interface CommunityCardProps {
+  community: Community;
+  joining: boolean;
+  copied: boolean;
+  onJoin: (id: number) => void;
+  onCopy: (code: string, id: number) => void;
+}
+
+function CommunityCard({ community: c, joining, copied, onJoin, onCopy }: CommunityCardProps) {
   const { pct, next } = memberProgress(c.member_count || 0);
   return (
     <div className={`community-card${c.is_member ? ' member' : ''}`}>
@@ -142,7 +207,7 @@ function CommunityCard({ community: c, joining, copied, onJoin, onCopy }) {
           {c.is_member && c.discount_code && (
             <button
               className={`community-code${copied ? ' copied' : ''}`}
-              onClick={() => onCopy(c.discount_code, c.id)}
+              onClick={() => onCopy(c.discount_code!, c.id)}
               aria-label="Copiar código de desconto"
             >
               {copied ? '✓ Copiado!' : `🎁 ${c.discount_code}`}
