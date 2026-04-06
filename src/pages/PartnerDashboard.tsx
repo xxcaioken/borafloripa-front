@@ -1,5 +1,6 @@
 import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useEffect, useState, useCallback } from 'react';
+import { Tabs } from '@mantine/core';
 import { api } from '../services/api';
 import type { VenueOut, TagOut, EventOut } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -448,231 +449,266 @@ export default function PartnerDashboard({ onAuthOpen }: PartnerDashboardProps) 
           <div className="stat-label">Locais</div>
         </div>
       </div>
-      <div className="analytics-period-row">
-        {[null, 7, 30].map(d => (
-          <button
-            key={String(d)}
-            className={`sort-chip${analyticsDays === d ? ' active' : ''}`}
-            onClick={() => setAnalyticsDays(d)}
-          >{d ? `${d}d` : 'Total'}</button>
-        ))}
-        {loadingAnalytics && <span className="analytics-loading">…</span>}
-      </div>
-      <div className="stats-row stats-row-mt">
-        <div className="stat-card stat-card-accent">
-          <div className="stat-value">👁 {totalViews}</div>
-          <div className="stat-label">Visualizações</div>
+      <div className="stats-row" style={{ marginBottom: 8 }}>
+        <div className="stat-card">
+          <div className="stat-value">{stats?.total_events ?? 0}</div>
+          <div className="stat-label">Eventos</div>
         </div>
-        <div className="stat-card stat-card-secondary">
-          <div className="stat-value">🚀 {totalBoras}</div>
-          <div className="stat-label">Boras{analyticsDays ? ` (${analyticsDays}d)` : ''}</div>
+        <div className="stat-card">
+          <div className="stat-value">{stats?.featured_events ?? 0}</div>
+          <div className="stat-label">Destaques</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-value">{venues.length}</div>
+          <div className="stat-label">Locais</div>
         </div>
       </div>
 
-      {analytics.length > 0 && (
-        <>
-          <div className="analytics-period-row" style={{ marginTop: 12 }}>
-            {(['views', 'boras'] as const).map(m => (
-              <button
-                key={m}
-                className={`sort-chip${chartMode === m ? ' active' : ''}`}
-                onClick={() => setChartMode(m)}
-              >{m === 'views' ? '👁 Views' : '🚀 Boras'}</button>
-            ))}
-          </div>
-          <AnalyticsChart analytics={analytics} mode={chartMode} />
-        </>
-      )}
+      <Tabs defaultValue="eventos" classNames={{ root: 'pd-tabs', list: 'pd-tabs-list', tab: 'pd-tab', panel: 'pd-tab-panel' }}>
+        <Tabs.List>
+          <Tabs.Tab value="eventos">Eventos</Tabs.Tab>
+          <Tabs.Tab value="locais">Locais</Tabs.Tab>
+          <Tabs.Tab value="analytics">Analytics</Tabs.Tab>
+          {venues.length > 0 && <Tabs.Tab value="cupons">Cupons</Tabs.Tab>}
+        </Tabs.List>
 
-      <div className="section-header section-mt">
-        <div className="section-title">Meus Locais</div>
-        <button className="btn-link-accent" onClick={() => setShowClaim(true)}>+ Vincular local</button>
-      </div>
-
-      {venues.length === 0 ? (
-        <div className="empty-state empty-sm">
-          <p>Nenhum local vinculado ainda.</p>
-          <button className="btn-secondary mt-sm" onClick={() => setShowClaim(true)}>
-            Buscar meu estabelecimento
-          </button>
-        </div>
-      ) : (
-        <div className="venue-list venue-list-mb">
-          {venues.map(v => (
-            <div key={v.id} className="venue-row">
-              <div className="venue-row-info">
-                <div className="venue-row-name">{v.name}</div>
-                {v.address && v.address !== 'Florianópolis, SC' && (
-                  <div className="venue-row-addr">{v.address.replace(', Florianópolis', '').replace(', SC', '')}</div>
-                )}
-                <div className="venue-row-meta">
-                  {v.instagram && <span className="venue-row-ig">{v.instagram}</span>}
-                </div>
-              </div>
-              <button className="pev-edit-btn" onClick={() => setEditVenue(v)} title="Editar local">✏️</button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="section-header">
-        <div className="section-title">Meus Eventos</div>
-        {venues.length > 0 && !showForm && (
-          <button className="btn-primary btn-primary-sm" onClick={() => { setEditEvent(null); setShowForm(true); }}>
-            + Novo evento
-          </button>
-        )}
-      </div>
-
-      {(showForm || editEvent) && (
-        <EventForm
-          venues={venues}
-          tags={tags}
-          initial={editEvent ? {
-            venue_id: editEvent.venue.id,
-            title: editEvent.title,
-            description: editEvent.description || '',
-            date: editEvent.date?.slice(0, 16) || '',
-            vibe_status: editEvent.vibe_status,
-            category: editEvent.category,
-            is_temporary: editEvent.is_temporary,
-            organizers: editEvent.organizers || '',
-            price_info: editEvent.price_info || '',
-            cover_url: (editEvent as EventOut & { cover_url?: string }).cover_url || '',
-            recurrence: (editEvent as EventOut & { recurrence?: string }).recurrence || '',
-            tag_ids: editEvent.tags?.map(t => t.id) || [],
-          } : null}
-          onSave={handleSaveEvent}
-          onCancel={() => { setShowForm(false); setEditEvent(null); }}
-        />
-      )}
-
-      <div className="partner-events-list">
-        {events.map(event => (
-          <div key={event.id} className="partner-event-row">
-            <div className="pev-info">
-              <div className="pev-title">{event.title}</div>
-              <div className="pev-meta">
-                {event.venue.name} · {new Date(event.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-              </div>
-              <select
-                className="pev-vibe-select"
-                value={event.vibe_status}
-                onChange={async e => {
-                  const newVibe = e.target.value;
-                  try {
-                    await api.patch(`/partners/events/${event.id}/vibe`, { vibe_status: newVibe });
-                    setEvents(prev => prev.map(ev => ev.id === event.id ? { ...ev, vibe_status: newVibe } : ev));
-                  } catch { /* UI update only — ignore network errors */ }
-                }}
-                aria-label="Vibe do evento"
-              >
-                {['Normal', 'Animado', 'Lotado', 'Quente 🔥'].map(v => (
-                  <option key={v} value={v}>{v}</option>
-                ))}
-              </select>
-              {analyticsMap[event.id] && (
-                <div className="pev-analytics">
-                  <span>👁 {analyticsMap[event.id].view_count}</span>
-                  <span>🚀 {analyticsMap[event.id].bora_count}</span>
-                </div>
-              )}
-            </div>
-            <div className="pev-actions">
-              <button
-                className={`pev-feature-btn${event.is_featured ? ' active' : ''}`}
-                onClick={() => handleToggleFeature(event.id)}
-                title={event.is_featured ? 'Remover destaque' : 'Destacar evento'}
-              >
-                {event.is_featured ? '★' : '☆'}
-              </button>
-              <button className="btn-secondary btn-secondary-xs"
-                onClick={() => { setEditEvent(event); setShowForm(false); }}>
-                Editar
-              </button>
-              <button className="btn-danger"
-                onClick={() => handleDelete(event.id)}>
-                Remover
-              </button>
-            </div>
-          </div>
-        ))}
-        {events.length === 0 && !showForm && (
-          <div className="empty-state">
-            <p>{venues.length > 0 ? 'Nenhum evento publicado ainda.' : 'Vincule um local para começar a criar eventos.'}</p>
-          </div>
-        )}
-      </div>
-
-      {/* Cupons */}
-      {venues.length > 0 && (
-        <>
+        {/* ── Eventos ── */}
+        <Tabs.Panel value="eventos">
           <div className="section-header section-mt">
-            <div className="section-title">🎟️ Cupons</div>
-            <button className="btn-link-accent" onClick={() => setShowCouponForm(v => !v)}>
-              {showCouponForm ? 'Fechar' : '+ Novo cupom'}
-            </button>
+            <div className="section-title">Meus Eventos</div>
+            {venues.length > 0 && !showForm && (
+              <button className="btn-primary btn-primary-sm" onClick={() => { setEditEvent(null); setShowForm(true); }}>
+                + Novo
+              </button>
+            )}
           </div>
 
-          {showCouponForm && (
-            <div className="coupon-form">
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Código</label>
-                  <input value={couponForm.code} onChange={e => setCouponForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="SAMBA20" maxLength={20} />
-                </div>
-                <div className="form-group">
-                  <label>Desconto %</label>
-                  <input type="number" min={1} max={100} value={couponForm.discount_pct} onChange={e => setCouponForm(f => ({ ...f, discount_pct: Number(e.target.value) }))} />
-                </div>
-              </div>
-              <div className="form-group">
-                <label>Descrição</label>
-                <input value={couponForm.description} onChange={e => setCouponForm(f => ({ ...f, description: e.target.value }))} placeholder="Ex: 20% off pra galera do pagode" />
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Máx. usos</label>
-                  <input type="number" min={1} value={couponForm.max_uses} onChange={e => setCouponForm(f => ({ ...f, max_uses: Number(e.target.value) }))} />
-                </div>
-                <div className="form-group">
-                  <label>ID da comunidade (opcional)</label>
-                  <input value={couponForm.community_id} onChange={e => setCouponForm(f => ({ ...f, community_id: e.target.value }))} placeholder="deixar vazio = geral" />
-                </div>
-              </div>
-              <div className="form-actions">
-                <button type="button" className="btn-secondary" onClick={() => setShowCouponForm(false)}>Cancelar</button>
-                <button type="button" className="btn-primary" onClick={handleCreateCoupon} disabled={!couponForm.code || !couponForm.description}>Criar cupom</button>
-              </div>
+          {venues.length === 0 && (
+            <div className="empty-state empty-sm">
+              <p>Vincule um local na aba Locais para criar eventos.</p>
             </div>
           )}
 
-          {coupons.length > 0 ? (
-            <div className="coupon-list">
-              {coupons.map(c => (
-                <div key={c.id} className={`coupon-row${c.active ? '' : ' inactive'}`}>
-                  <div className="coupon-code">{c.code}</div>
-                  <div className="coupon-desc">{c.description}</div>
-                  <div className="coupon-meta">
-                    <span className="coupon-pct">-{c.discount_pct}%</span>
-                    <span className="coupon-uses">{c.used_count}/{c.max_uses} usos</span>
-                    {c.community_id && <span className="coupon-community">comunidade #{c.community_id}</span>}
+          {(showForm || editEvent) && (
+            <EventForm
+              venues={venues}
+              tags={tags}
+              initial={editEvent ? {
+                venue_id: editEvent.venue.id,
+                title: editEvent.title,
+                description: editEvent.description || '',
+                date: editEvent.date?.slice(0, 16) || '',
+                vibe_status: editEvent.vibe_status,
+                category: editEvent.category,
+                is_temporary: editEvent.is_temporary,
+                organizers: editEvent.organizers || '',
+                price_info: editEvent.price_info || '',
+                cover_url: (editEvent as EventOut & { cover_url?: string }).cover_url || '',
+                recurrence: (editEvent as EventOut & { recurrence?: string }).recurrence || '',
+                tag_ids: editEvent.tags?.map(t => t.id) || [],
+              } : null}
+              onSave={handleSaveEvent}
+              onCancel={() => { setShowForm(false); setEditEvent(null); }}
+            />
+          )}
+
+          <div className="partner-events-list">
+            {events.map(event => (
+              <div key={event.id} className="partner-event-row">
+                <div className="pev-info">
+                  <div className="pev-title">{event.title}</div>
+                  <div className="pev-meta">
+                    {event.venue.name} · {new Date(event.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   </div>
-                  <button className={`coupon-toggle${c.active ? '' : ' off'}`} onClick={() => handleToggleCoupon(c)}>
-                    {c.active ? 'Ativo' : 'Inativo'}
+                  <select
+                    className="pev-vibe-select"
+                    value={event.vibe_status}
+                    onChange={async e => {
+                      const newVibe = e.target.value;
+                      try {
+                        await api.patch(`/partners/events/${event.id}/vibe`, { vibe_status: newVibe });
+                        setEvents(prev => prev.map(ev => ev.id === event.id ? { ...ev, vibe_status: newVibe } : ev));
+                      } catch { /* UI update only */ }
+                    }}
+                    aria-label="Vibe do evento"
+                  >
+                    {['Normal', 'Animado', 'Lotado', 'Quente 🔥'].map(v => (
+                      <option key={v} value={v}>{v}</option>
+                    ))}
+                  </select>
+                  {analyticsMap[event.id] && (
+                    <div className="pev-analytics">
+                      <span>Views {analyticsMap[event.id].view_count}</span>
+                      <span>Boras {analyticsMap[event.id].bora_count}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="pev-actions">
+                  <button
+                    className={`pev-feature-btn${event.is_featured ? ' active' : ''}`}
+                    onClick={() => handleToggleFeature(event.id)}
+                    title={event.is_featured ? 'Remover destaque' : 'Destacar evento'}
+                  >
+                    {event.is_featured ? '★' : '☆'}
                   </button>
+                  <button className="btn-secondary btn-secondary-xs"
+                    onClick={() => { setEditEvent(event); setShowForm(false); }}>
+                    Editar
+                  </button>
+                  <button className="btn-danger" onClick={() => handleDelete(event.id)}>
+                    Remover
+                  </button>
+                </div>
+              </div>
+            ))}
+            {events.length === 0 && !showForm && venues.length > 0 && (
+              <div className="empty-state">
+                <p>Nenhum evento publicado ainda.</p>
+              </div>
+            )}
+          </div>
+        </Tabs.Panel>
+
+        {/* ── Locais ── */}
+        <Tabs.Panel value="locais">
+          <div className="section-header section-mt">
+            <div className="section-title">Meus Locais</div>
+            <button className="btn-link-accent" onClick={() => setShowClaim(true)}>+ Vincular</button>
+          </div>
+          {venues.length === 0 ? (
+            <div className="empty-state empty-sm">
+              <p>Nenhum local vinculado ainda.</p>
+              <button className="btn-secondary mt-sm" onClick={() => setShowClaim(true)}>
+                Buscar meu estabelecimento
+              </button>
+            </div>
+          ) : (
+            <div className="venue-list venue-list-mb">
+              {venues.map(v => (
+                <div key={v.id} className="venue-row">
+                  <div className="venue-row-info">
+                    <div className="venue-row-name">{v.name}</div>
+                    {v.address && v.address !== 'Florianópolis, SC' && (
+                      <div className="venue-row-addr">{v.address.replace(', Florianópolis', '').replace(', SC', '')}</div>
+                    )}
+                    {v.instagram && <span className="venue-row-ig">{v.instagram}</span>}
+                  </div>
+                  <button className="pev-edit-btn" onClick={() => setEditVenue(v)} title="Editar local">Editar</button>
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="empty-state empty-sm"><p>Nenhum cupom criado ainda.</p></div>
           )}
-        </>
-      )}
+        </Tabs.Panel>
+
+        {/* ── Analytics ── */}
+        <Tabs.Panel value="analytics">
+          <div className="analytics-period-row" style={{ marginTop: 16 }}>
+            {[null, 7, 30].map(d => (
+              <button
+                key={String(d)}
+                className={`sort-chip${analyticsDays === d ? ' active' : ''}`}
+                onClick={() => setAnalyticsDays(d)}
+              >{d ? `${d}d` : 'Total'}</button>
+            ))}
+            {loadingAnalytics && <span className="analytics-loading">…</span>}
+          </div>
+          <div className="stats-row stats-row-mt">
+            <div className="stat-card stat-card-accent">
+              <div className="stat-value">{totalViews}</div>
+              <div className="stat-label">Visualizações</div>
+            </div>
+            <div className="stat-card stat-card-secondary">
+              <div className="stat-value">{totalBoras}</div>
+              <div className="stat-label">Boras{analyticsDays ? ` (${analyticsDays}d)` : ''}</div>
+            </div>
+          </div>
+          {analytics.length > 0 && (
+            <>
+              <div className="analytics-period-row" style={{ marginTop: 12 }}>
+                {(['views', 'boras'] as const).map(m => (
+                  <button
+                    key={m}
+                    className={`sort-chip${chartMode === m ? ' active' : ''}`}
+                    onClick={() => setChartMode(m)}
+                  >{m === 'views' ? 'Views' : 'Boras'}</button>
+                ))}
+              </div>
+              <AnalyticsChart analytics={analytics} mode={chartMode} />
+            </>
+          )}
+          {analytics.length === 0 && (
+            <div className="empty-state empty-sm"><p>Nenhum dado de analytics ainda.</p></div>
+          )}
+        </Tabs.Panel>
+
+        {/* ── Cupons ── */}
+        {venues.length > 0 && (
+          <Tabs.Panel value="cupons">
+            <div className="section-header section-mt">
+              <div className="section-title">Cupons</div>
+              <button className="btn-link-accent" onClick={() => setShowCouponForm(v => !v)}>
+                {showCouponForm ? 'Fechar' : '+ Novo'}
+              </button>
+            </div>
+
+            {showCouponForm && (
+              <div className="coupon-form">
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Código</label>
+                    <input value={couponForm.code} onChange={e => setCouponForm(f => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="SAMBA20" maxLength={20} />
+                  </div>
+                  <div className="form-group">
+                    <label>Desconto %</label>
+                    <input type="number" min={1} max={100} value={couponForm.discount_pct} onChange={e => setCouponForm(f => ({ ...f, discount_pct: Number(e.target.value) }))} />
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label>Descrição</label>
+                  <input value={couponForm.description} onChange={e => setCouponForm(f => ({ ...f, description: e.target.value }))} placeholder="Ex: 20% off pra galera do pagode" />
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Máx. usos</label>
+                    <input type="number" min={1} value={couponForm.max_uses} onChange={e => setCouponForm(f => ({ ...f, max_uses: Number(e.target.value) }))} />
+                  </div>
+                  <div className="form-group">
+                    <label>ID da comunidade (opcional)</label>
+                    <input value={couponForm.community_id} onChange={e => setCouponForm(f => ({ ...f, community_id: e.target.value }))} placeholder="vazio = geral" />
+                  </div>
+                </div>
+                <div className="form-actions">
+                  <button type="button" className="btn-secondary" onClick={() => setShowCouponForm(false)}>Cancelar</button>
+                  <button type="button" className="btn-primary" onClick={handleCreateCoupon} disabled={!couponForm.code || !couponForm.description}>Criar cupom</button>
+                </div>
+              </div>
+            )}
+
+            {coupons.length > 0 ? (
+              <div className="coupon-list">
+                {coupons.map(c => (
+                  <div key={c.id} className={`coupon-row${c.active ? '' : ' inactive'}`}>
+                    <div className="coupon-code">{c.code}</div>
+                    <div className="coupon-desc">{c.description}</div>
+                    <div className="coupon-meta">
+                      <span className="coupon-pct">-{c.discount_pct}%</span>
+                      <span className="coupon-uses">{c.used_count}/{c.max_uses} usos</span>
+                      {c.community_id && <span className="coupon-community">com. #{c.community_id}</span>}
+                    </div>
+                    <button className={`coupon-toggle${c.active ? '' : ' off'}`} onClick={() => handleToggleCoupon(c)}>
+                      {c.active ? 'Ativo' : 'Inativo'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state empty-sm"><p>Nenhum cupom criado ainda.</p></div>
+            )}
+          </Tabs.Panel>
+        )}
+      </Tabs>
 
       {showClaim && <ClaimVenueModal onClaim={handleClaim} onClose={() => setShowClaim(false)} />}
-
-      {/* Modal edição de venue */}
       {editVenue && (
         <VenueEditModal venue={editVenue} onSave={handleSaveVenue} onClose={() => setEditVenue(null)} />
       )}
