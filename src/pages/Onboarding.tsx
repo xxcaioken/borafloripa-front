@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { api } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const MUSIC_STYLES = [
   { id: 'funk',      label: 'Funk',       emoji: '🎤', bg: '#1a0a0a' },
@@ -22,27 +25,41 @@ const VIBES = [
   { id: 'comer-beber',   label: 'Comer e Beber',    emoji: '🍔', bg: '#1a0a0a' },
 ];
 
-interface OnboardingProps {
-  onComplete: (prefs?: { music: string[]; vibes: string[] }) => void;
-}
-
-export default function Onboarding({ onComplete }: OnboardingProps) {
+// Usado como standalone page (rota /onboarding) — disparado no 1º login
+export default function OnboardingPage() {
+  const { refreshUser } = useAuth();
+  const navigate = useNavigate();
   const [step, setStep] = useState(0); // 0 = música, 1 = vibe
   const [selectedMusic, setSelectedMusic] = useState<string[]>([]);
   const [selectedVibes, setSelectedVibes] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
 
   function toggle(id: string, list: string[], setList: React.Dispatch<React.SetStateAction<string[]>>) {
     setList(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   }
 
-  function next() {
-    if (step === 0) setStep(1);
-    else {
-      // Salva prefs no localStorage para uso local (recomendação)
-      localStorage.setItem('bf_pref_music', JSON.stringify(selectedMusic));
-      localStorage.setItem('bf_pref_vibes', JSON.stringify(selectedVibes));
-      // Passa prefs para o App oferecer cadastro
-      onComplete({ music: selectedMusic, vibes: selectedVibes });
+  async function finish(skipped = false) {
+    setSaving(true);
+    try {
+      const body = skipped ? {} : {
+        pref_music: JSON.stringify(selectedMusic),
+        pref_vibes: JSON.stringify(selectedVibes),
+      };
+      await api.post('/auth/me/onboarding', body);
+      await refreshUser();
+    } catch {
+      // se falhar, ainda deixa entrar — onboarding pode ser refeito
+    } finally {
+      setSaving(false);
+      navigate('/', { replace: true });
+    }
+  }
+
+  async function next() {
+    if (step === 0) {
+      setStep(1);
+    } else {
+      await finish(false);
     }
   }
 
@@ -71,10 +88,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             className={`onboard-item${selected.includes(item.id) ? ' selected' : ''}`}
             onClick={() => toggle(item.id, selected, setSelected)}
           >
-            <div
-              className="onboard-item-img"
-              style={{ background: item.bg }}
-            >
+            <div className="onboard-item-img" style={{ background: item.bg }}>
               {item.emoji}
             </div>
             <span className="onboard-item-label">{item.label}</span>
@@ -87,10 +101,12 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           <div className={`onboard-dot${step === 0 ? ' active' : ''}`} />
           <div className={`onboard-dot${step === 1 ? ' active' : ''}`} />
         </div>
-        <button className="btn-primary" onClick={next}>
-          {step === 0 ? 'Próxima →' : 'Entrar no app 🎉'}
+        <button className="btn-primary" onClick={next} disabled={saving}>
+          {saving ? 'Salvando...' : step === 0 ? 'Próxima →' : 'Entrar no app 🎉'}
         </button>
-        <button className="btn-skip" onClick={() => onComplete()}>Pular</button>
+        <button className="btn-skip" onClick={() => finish(true)} disabled={saving}>
+          Pular
+        </button>
       </div>
     </div>
   );

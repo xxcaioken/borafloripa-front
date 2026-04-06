@@ -44,6 +44,8 @@ export default function Profile() {
   const [showEditPrefs, setShowEditPrefs] = useState(false);
   const [editMusic, setEditMusic] = useState<string[]>([]);
   const [editVibes, setEditVibes] = useState<string[]>([]);
+  const [editNeighborhood, setEditNeighborhood] = useState('');
+  const [editAgeRange, setEditAgeRange] = useState('');
   const [savingPrefs, setSavingPrefs] = useState(false);
 
   const [followed, setFollowed] = useState<VenueOut[]>([]);
@@ -81,6 +83,8 @@ export default function Profile() {
   function openEditPrefs() {
     setEditMusic(prefMusic);
     setEditVibes(prefVibes);
+    setEditNeighborhood(user?.neighborhood || '');
+    setEditAgeRange(user?.age_range || '');
     setShowEditPrefs(true);
   }
 
@@ -91,14 +95,12 @@ export default function Profile() {
   async function handleSavePrefs() {
     setSavingPrefs(true);
     try {
-      await api.put('/auth/me/preferences', null, {
-        params: {
-          pref_music: JSON.stringify(editMusic),
-          pref_vibes: JSON.stringify(editVibes),
-        },
+      await api.patch('/auth/me/profile', {
+        pref_music: JSON.stringify(editMusic),
+        pref_vibes: JSON.stringify(editVibes),
+        neighborhood: editNeighborhood || null,
+        age_range: editAgeRange || null,
       });
-      localStorage.setItem('bf_pref_music', JSON.stringify(editMusic));
-      localStorage.setItem('bf_pref_vibes', JSON.stringify(editVibes));
       await refreshUser();
       setShowEditPrefs(false);
     } catch {
@@ -118,10 +120,14 @@ export default function Profile() {
     <div className="profile-page">
       {/* Avatar + nome */}
       <div className="profile-header">
-        <div className="profile-avatar">{user.name[0].toUpperCase()}</div>
+        <div className="profile-avatar">{(user.display_name || user.name)[0].toUpperCase()}</div>
         <div className="profile-info">
-          <div className="profile-name">{user.name}</div>
+          <div className="profile-name">{user.display_name || user.name}</div>
           <div className="profile-email">{user.email}</div>
+          <div className="profile-meta-row">
+            {user.neighborhood && <span className="profile-meta-chip">📍 {user.neighborhood}</span>}
+            {user.age_range && <span className="profile-meta-chip">{user.age_range} anos</span>}
+          </div>
         </div>
       </div>
 
@@ -153,7 +159,34 @@ export default function Profile() {
       {showEditPrefs && (
         <div className="prefs-modal-overlay" onClick={() => setShowEditPrefs(false)}>
           <div className="prefs-modal-card" onClick={e => e.stopPropagation()}>
-            <div className="prefs-modal-title">Editar preferências</div>
+            <div className="prefs-modal-title">Editar perfil</div>
+
+            <div className="prefs-modal-section">Bairro que você frequenta</div>
+            <select
+              className="auth-select prefs-select"
+              value={editNeighborhood}
+              onChange={e => setEditNeighborhood(e.target.value)}
+            >
+              <option value="">Nenhum</option>
+              {['Centro','Trindade','Lagoa da Conceição','Campeche','Ingleses','Jurerê','Barra da Lagoa','Canasvieiras','Florianópolis (outro bairro)'].map(n => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+
+            <div className="prefs-modal-section">Faixa etária</div>
+            <div className="auth-age-row">
+              {['18-24','25-34','35-44','45+'].map(r => (
+                <button
+                  key={r}
+                  type="button"
+                  className={`auth-age-btn${editAgeRange === r ? ' selected' : ''}`}
+                  onClick={() => setEditAgeRange(prev => prev === r ? '' : r)}
+                >
+                  {r}
+                </button>
+              ))}
+            </div>
+
             <div className="prefs-modal-section">Música</div>
             <div className="prefs-chips-grid">
               {MUSIC_STYLES.map(m => (
