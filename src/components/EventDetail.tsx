@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Drawer } from '@mantine/core';
 import { api } from '../services/api';
 import type { EventOut } from '../services/api';
 import { useSessionId } from '../hooks/useSessionId';
@@ -39,6 +40,8 @@ interface EventDetailProps {
   boraCount?: number;
   boraReacted?: boolean;
   onBora?: (id: number) => void;
+  /** Renderiza como página standalone (sem Drawer). Usar em /evento/:id */
+  asPage?: boolean;
 }
 
 function parseHours(hoursJson: string | null | undefined): Record<string, string> | null {
@@ -50,7 +53,7 @@ function getTodayKey() {
   return ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][new Date().getDay()];
 }
 
-export default function EventDetail({ event, onClose, boraCount = 0, boraReacted = false, onBora }: EventDetailProps) {
+export default function EventDetail({ event, onClose, boraCount = 0, boraReacted = false, onBora, asPage = false }: EventDetailProps) {
   const gradient = COVERS[event.id % COVERS.length];
   const date = new Date(event.date);
   const dateStr = date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -99,10 +102,9 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
     }
   }
 
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-sheet" onClick={e => e.stopPropagation()}>
-        <div className="modal-handle" />
+  const content = (
+    <>
+      <div className="modal-handle" />
 
         <div className="modal-cover" style={event.cover_url ? {} : { background: gradient }}>
           {event.cover_url && (
@@ -312,7 +314,37 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
             )}
           </div>
         </div>
+    </>
+  );
+
+  if (asPage) {
+    return <div className="event-page-standalone">{content}</div>;
+  }
+
+  return (
+    <Drawer
+      opened
+      onClose={onClose}
+      position="bottom"
+      size="auto"
+      withCloseButton={false}
+      padding={0}
+      styles={{
+        content: {
+          borderRadius: '20px 20px 0 0',
+          background: 'var(--surface1)',
+          maxHeight: '92dvh',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+        },
+        body: { padding: 0, flex: 1, overflow: 'hidden' },
+        overlay: { backdropFilter: 'blur(4px)' },
+      }}
+    >
+      <div className="modal-sheet-inner">
+        {content}
       </div>
-    </div>
+    </Drawer>
   );
 }

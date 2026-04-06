@@ -23,6 +23,7 @@ export interface VenueOut {
   category: string | null;
   is_new: boolean;
   logo_url: string | null;
+  pet_friendly: boolean;
   wheelchair: boolean;
   hearing_loop: boolean;
   visual_aid: boolean;

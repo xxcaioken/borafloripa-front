@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import {
+  IconMapPin, IconBrandInstagram, IconBrandWhatsapp, IconNavigation,
+  IconFlame, IconCheck, IconBell, IconBellRinging, IconAccessible,
+  IconEar, IconEye, IconParking, IconPaw, IconStar,
+} from '@tabler/icons-react';
 import { api } from '../services/api';
 import type { VenueOut, EventOut } from '../services/api';
 import { usePageTitle } from '../hooks/usePageTitle';
@@ -33,7 +38,7 @@ const VENUE_BG = [
   'radial-gradient(circle at 50% 20%, #2e1408 0%, #100804 100%)',
   'radial-gradient(circle at 20% 80%, #081a2e 0%, #040810 100%)',
 ];
-const VENUE_EMOJIS = ['🍸', '🎵', '🏖️', '🌆', '🎉', '🍻'];
+const VENUE_EMOJIS = ['🍸', '🎵', '🏖️', '🌆', '🎉', '🍻']; // decorativo — mantém emojis culturais
 const CATEGORY_LABEL: Record<string, string> = {
   bar: 'Bar', balada: 'Balada', cultura: 'Cultura', rua: 'Rolê na Rua', temporario: 'Especial'
 };
@@ -184,11 +189,12 @@ export default function VenueDetail() {
 
   type AccessKey = keyof VenueOut;
   const accessItems = [
-    { key: 'wheelchair' as AccessKey, label: 'Cadeirantes', icon: '♿' },
-    { key: 'hearing_loop' as AccessKey, label: 'Loop auditivo', icon: '🦻' },
-    { key: 'visual_aid' as AccessKey, label: 'Aux. visual', icon: '👁' },
-    { key: 'adapted_wc' as AccessKey, label: 'WC adaptado', icon: '🚻' },
-    { key: 'parking' as AccessKey, label: 'Vaga especial', icon: '🅿️' },
+    { key: 'pet_friendly' as AccessKey, label: 'Pet Friendly',   icon: <IconPaw size={14} /> },
+    { key: 'wheelchair' as AccessKey,   label: 'Cadeirantes',    icon: <IconAccessible size={14} /> },
+    { key: 'hearing_loop' as AccessKey, label: 'Loop auditivo',  icon: <IconEar size={14} /> },
+    { key: 'visual_aid' as AccessKey,   label: 'Aux. visual',    icon: <IconEye size={14} /> },
+    { key: 'adapted_wc' as AccessKey,   label: 'WC adaptado',    icon: '🚻' },
+    { key: 'parking' as AccessKey,      label: 'Vaga especial',  icon: <IconParking size={14} /> },
   ].filter(a => venue[a.key]);
 
   return (
@@ -197,7 +203,7 @@ export default function VenueDetail() {
       <div className="vd-hero" style={{ background: VENUE_BG[bgIdx] }}>
         <button className="vd-back" onClick={() => navigate(-1)} aria-label="Voltar">←</button>
         <div className="vd-hero-emoji">{emoji}</div>
-        {isHot && <div className="vd-hot-badge">🔥 Hot Zone</div>}
+        {isHot && <div className="vd-hot-badge"><IconFlame size={14} /> Hot Zone</div>}
       </div>
 
       <div className="vd-body">
@@ -223,14 +229,16 @@ export default function VenueDetail() {
               onClick={handleCheckin}
               disabled={checkinDone}
             >
-              {checkinDone ? '✓ Check-in feito' : '📍 Estou aqui!'}
+              {checkinDone ? <><IconCheck size={14} /> Check-in feito</> : <><IconMapPin size={14} /> Estou aqui!</>}
             </button>
             <button
               className={`vd-follow-btn${followedIds.has(venue.id) ? ' following' : ''}`}
               onClick={handleFollow}
               aria-pressed={followedIds.has(venue.id)}
             >
-              {followedIds.has(venue.id) ? '🔔 Seguindo' : '+ Seguir'}
+              {followedIds.has(venue.id)
+                ? <><IconBellRinging size={14} /> Seguindo</>
+                : <><IconBell size={14} /> Seguir</>}
             </button>
           </div>
         </div>
@@ -286,12 +294,12 @@ export default function VenueDetail() {
         {/* Endereço + Como chegar */}
         {venue.address && (
           <div className="vd-address-row">
-            <span className="vd-address">📍 {venue.address}</span>
+            <span className="vd-address"><IconMapPin size={14} /> {venue.address}</span>
             <button
               className="vd-maps-btn"
               onClick={() => openMaps(venue.lat, venue.lng, venue.name)}
             >
-              Como chegar
+              <IconNavigation size={14} /> Como chegar
             </button>
           </div>
         )}
@@ -306,7 +314,7 @@ export default function VenueDetail() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                📸 {venue.instagram.startsWith('@') ? venue.instagram : `@${venue.instagram}`}
+                <IconBrandInstagram size={14} /> {venue.instagram.startsWith('@') ? venue.instagram : `@${venue.instagram}`}
               </a>
             )}
             {venue.whatsapp && (
@@ -316,7 +324,7 @@ export default function VenueDetail() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                💬 WhatsApp
+                <IconBrandWhatsapp size={14} /> WhatsApp
               </a>
             )}
           </div>
@@ -362,7 +370,7 @@ export default function VenueDetail() {
             <div className="vd-section-title">
               Avaliações
               {reviewSummary && reviewSummary.count > 0 && (
-                <span className="review-avg">⭐ {reviewSummary.avg?.toFixed(1)} <span className="review-count">({reviewSummary.count})</span></span>
+                <span className="review-avg"><IconStar size={13} /> {reviewSummary.avg?.toFixed(1)} <span className="review-count">({reviewSummary.count})</span></span>
               )}
             </div>
             {user && !showReviewForm && (

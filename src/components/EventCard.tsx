@@ -1,4 +1,9 @@
 import React, { memo } from 'react';
+import {
+  IconMapPin, IconCalendar, IconCoin, IconBookmark, IconBookmarkFilled,
+  IconRocket, IconCheck, IconFlame, IconRepeat, IconBolt, IconStar,
+  IconAccessible, IconPaw,
+} from '@tabler/icons-react';
 import type { EventOut, VenueOut } from '../services/api';
 
 interface EventCardProps {
@@ -27,6 +32,7 @@ const COVERS = [
   'linear-gradient(135deg, #0a1f1a 0%, #0f2a25 100%)',
 ];
 
+// Emojis mantidos para conteúdo cultural/musical gerado por curadoria
 const TAG_ICONS: Record<string, { icon: string; label: string }> = {
   'Eletrônico':      { icon: '🎧', label: 'Eletrônico' },
   'Funk':            { icon: '🎤', label: 'Funk' },
@@ -58,10 +64,8 @@ function isOpenToday(hoursJson: string | null | undefined): boolean {
 
 function AccessBadges({ venue }: { venue: VenueOut }) {
   const badges = [];
-  if (venue.wheelchair) badges.push({ icon: '♿', label: 'Acessível' });
-  if (venue.hearing_loop) badges.push({ icon: '🦻', label: 'Loop magnético' });
-  if (venue.visual_aid)  badges.push({ icon: '👁️', label: 'Braille' });
-  if (venue.adapted_wc)  badges.push({ icon: '🚻', label: 'WC adaptado' });
+  if (venue.wheelchair) badges.push({ icon: <IconAccessible size={12} />, label: 'Acessível' });
+  if (venue.pet_friendly) badges.push({ icon: <IconPaw size={12} />, label: 'Pet OK' });
   if (!badges.length) return null;
   return (
     <div className="access-badges">
@@ -118,11 +122,11 @@ const EventCard = memo(function EventCard({ event, onClick, boraCount = 0, boraR
         {/* Top badges */}
         <div className="card-top-badges">
           <div>
-            {isTemp && <span className="badge-temporary">⚡ Especial</span>}
-            {event.is_featured && !isTemp && <span className="badge-featured">★ Destaque</span>}
-            {event.recurrence === 'weekly' && <span className="badge-recurrence">🔁 Semanal</span>}
-            {event.recurrence === 'biweekly' && <span className="badge-recurrence">🔁 Quinzenal</span>}
-            {event.recurrence === 'monthly' && <span className="badge-recurrence">🔁 Mensal</span>}
+            {isTemp && <span className="badge-temporary"><IconBolt size={11} /> Especial</span>}
+            {event.is_featured && !isTemp && <span className="badge-featured"><IconStar size={11} /> Destaque</span>}
+            {event.recurrence === 'weekly'   && <span className="badge-recurrence"><IconRepeat size={11} /> Semanal</span>}
+            {event.recurrence === 'biweekly' && <span className="badge-recurrence"><IconRepeat size={11} /> Quinzenal</span>}
+            {event.recurrence === 'monthly'  && <span className="badge-recurrence"><IconRepeat size={11} /> Mensal</span>}
           </div>
           <div className="card-top-right">
             {checkinCount > 0 && (
@@ -137,7 +141,7 @@ const EventCard = memo(function EventCard({ event, onClick, boraCount = 0, boraR
                 onClick={handleSave}
                 aria-label={isSaved ? 'Remover dos favoritos' : 'Salvar evento'}
               >
-                {isSaved ? '🔖' : '🏷️'}
+                {isSaved ? <IconBookmarkFilled size={16} /> : <IconBookmark size={16} />}
               </button>
             )}
           </div>
@@ -160,13 +164,17 @@ const EventCard = memo(function EventCard({ event, onClick, boraCount = 0, boraR
       <div className="card-body">
         <div className="card-title">{event.title}</div>
         <div className="card-venue">
-          📍 {event.venue.name}
+          <IconMapPin size={12} style={{ flexShrink: 0 }} /> {event.venue.name}
           {openToday && <span className="opens-today">Abre hoje</span>}
         </div>
-        <div className="card-date">📅 {dateStr} às {timeStr}</div>
+        <div className="card-date">
+          <IconCalendar size={12} style={{ flexShrink: 0 }} /> {dateStr} às {timeStr}
+        </div>
 
         {event.price_info && (
-          <div className="card-price">💰 {event.price_info}</div>
+          <div className="card-price">
+            <IconCoin size={12} style={{ flexShrink: 0 }} /> {event.price_info}
+          </div>
         )}
 
         {badges.length > 0 && (
@@ -190,7 +198,9 @@ const EventCard = memo(function EventCard({ event, onClick, boraCount = 0, boraR
             aria-label={boraReacted ? 'Você confirmou presença' : `Confirmar presença em ${event.title}`}
             aria-pressed={boraReacted}
           >
-            {boraReacted ? '✓ Tô dentro!' : '🚀 Bora!'}
+            {boraReacted
+              ? <><IconCheck size={14} /> Tô dentro!</>
+              : <><IconRocket size={14} /> Bora!</>}
           </button>
           {boraCount > 0 && (
             <span className="bora-count">

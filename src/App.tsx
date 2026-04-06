@@ -342,6 +342,7 @@ function EventPage() {
       boraCount={0}
       boraReacted={false}
       onBora={() => {}}
+      asPage
     />
   );
 }
