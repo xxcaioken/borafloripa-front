@@ -13,6 +13,7 @@ const MapView         = lazy(() => import('./pages/MapView'));
 const PartnerDashboard= lazy(() => import('./pages/PartnerDashboard'));
 const Venues          = lazy(() => import('./pages/Venues'));
 const Auth            = lazy(() => import('./pages/Auth'));
+const OnboardingTour  = lazy(() => import('./components/OnboardingTour'));
 const EventDetail     = lazy(() => import('./components/EventDetail'));
 const Tourist         = lazy(() => import('./pages/Tourist'));
 const Profile         = lazy(() => import('./pages/Profile'));
@@ -31,7 +32,18 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext';
 import { api } from './services/api';
 import type { EventOut } from './services/api';
+import { MantineProvider, createTheme } from '@mantine/core';
+import {
+  IconHome, IconCalendar, IconMap2, IconUsers, IconUser,
+  IconSearch, IconBriefcase, IconPlane, IconBellRinging,
+  IconLogout, IconMapPin,
+} from '@tabler/icons-react';
 import './App.css';
+
+const mantineTheme = createTheme({
+  primaryColor: 'teal',
+  fontFamily: 'DM Sans, sans-serif',
+});
 
 function BottomNav() {
   const navigate = useNavigate();
@@ -40,17 +52,17 @@ function BottomNav() {
   const path = location.pathname;
 
   const items = user ? [
-    { icon: '🏠', label: 'Início',       to: '/' },
-    { icon: '📅', label: 'Agenda',       to: '/agenda' },
-    { icon: '🗺️', label: 'Mapa',        to: '/mapa' },
-    { icon: '🤝', label: 'Comunidades',  to: '/comunidades' },
-    { icon: '👤', label: user.name.split(' ')[0], to: '/perfil' },
+    { icon: <IconHome size={22} />,     label: 'Início',      to: '/' },
+    { icon: <IconCalendar size={22} />, label: 'Agenda',      to: '/agenda' },
+    { icon: <IconMap2 size={22} />,     label: 'Mapa',        to: '/mapa' },
+    { icon: <IconUsers size={22} />,    label: 'Comunidades', to: '/comunidades' },
+    { icon: <IconUser size={22} />,     label: user.name.split(' ')[0], to: '/perfil' },
   ] : [
-    { icon: '🏠', label: 'Início',  to: '/' },
-    { icon: '📅', label: 'Agenda',  to: '/agenda' },
-    { icon: '🗺️', label: 'Mapa',   to: '/mapa' },
-    { icon: '✈️', label: 'Turista', to: '/turista' },
-    { icon: '💼', label: 'Parceiro', to: '/parceiro' },
+    { icon: <IconHome size={22} />,       label: 'Início',  to: '/' },
+    { icon: <IconCalendar size={22} />,   label: 'Agenda',  to: '/agenda' },
+    { icon: <IconMap2 size={22} />,       label: 'Mapa',    to: '/mapa' },
+    { icon: <IconPlane size={22} />,      label: 'Turista', to: '/turista' },
+    { icon: <IconBriefcase size={22} />,  label: 'Parceiro', to: '/parceiro' },
   ];
 
   return (
@@ -82,15 +94,15 @@ function Sidebar({ onAuthOpen }: SidebarProps) {
   const path = location.pathname;
 
   const items = [
-    { icon: '🏠', label: 'Início',       to: '/' },
-    { icon: '🔍', label: 'Busca',        to: '/busca' },
-    { icon: '📅', label: 'Agenda',       to: '/agenda' },
-    { icon: '🍸', label: 'Locais',       to: '/locais' },
-    { icon: '🗺️', label: 'Mapa',        to: '/mapa' },
-    { icon: '✈️', label: 'Turista',      to: '/turista' },
-    { icon: '🤝', label: 'Comunidades',  to: '/comunidades' },
-    { icon: '💼', label: 'Parceiros',    to: '/parceiro' },
-    ...(user ? [{ icon: '👤', label: user.name.split(' ')[0], to: '/perfil' }] : []),
+    { icon: <IconHome size={18} />,       label: 'Início',       to: '/' },
+    { icon: <IconSearch size={18} />,     label: 'Busca',        to: '/busca' },
+    { icon: <IconCalendar size={18} />,   label: 'Agenda',       to: '/agenda' },
+    { icon: <IconMapPin size={18} />,     label: 'Locais',       to: '/locais' },
+    { icon: <IconMap2 size={18} />,       label: 'Mapa',         to: '/mapa' },
+    { icon: <IconPlane size={18} />,      label: 'Turista',      to: '/turista' },
+    { icon: <IconUsers size={18} />,      label: 'Comunidades',  to: '/comunidades' },
+    { icon: <IconBriefcase size={18} />,  label: 'Parceiros',    to: '/parceiro' },
+    ...(user ? [{ icon: <IconUser size={18} />, label: user.name.split(' ')[0], to: '/perfil' }] : []),
   ];
 
   return (
@@ -114,7 +126,7 @@ function Sidebar({ onAuthOpen }: SidebarProps) {
       <div className="sidebar-footer">
         {user ? (
           <button className="sidebar-user" onClick={logout}>
-            <span>👤</span>
+            <IconLogout size={16} />
             <span className="sidebar-user-name">{user.name.split(' ')[0]}</span>
             <span className="sidebar-user-out">Sair</span>
           </button>
@@ -168,7 +180,7 @@ function Layout({ children, onAuthOpen }: LayoutProps) {
             onClick={() => navigate('/busca')}
             aria-label="Buscar"
             title="Buscar"
-          >🔍</button>
+          ><IconSearch size={18} /></button>
           {user && (
             <div className="bell-wrap" ref={bellRef}>
               <button
@@ -177,7 +189,7 @@ function Layout({ children, onAuthOpen }: LayoutProps) {
                 aria-label="Notificações"
                 title="Notificações"
               >
-                🔔
+                <IconBellRinging size={18} />
                 {unread > 0 && (
                   <span className="bell-badge">{unread > 9 ? '9+' : unread}</span>
                 )}
@@ -237,6 +249,11 @@ function Layout({ children, onAuthOpen }: LayoutProps) {
       </div>
       <BottomNav />
       <BackToTopBtn />
+      {user && (
+        <Suspense fallback={null}>
+          <OnboardingTour user={user} />
+        </Suspense>
+      )}
     </>
   );
 }
@@ -369,12 +386,14 @@ function AppInner() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <ErrorBoundary>
-          <AppInner />
-        </ErrorBoundary>
-      </ToastProvider>
-    </AuthProvider>
+    <MantineProvider theme={mantineTheme} defaultColorScheme="dark">
+      <AuthProvider>
+        <ToastProvider>
+          <ErrorBoundary>
+            <AppInner />
+          </ErrorBoundary>
+        </ToastProvider>
+      </AuthProvider>
+    </MantineProvider>
   );
 }

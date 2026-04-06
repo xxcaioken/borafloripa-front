@@ -3,6 +3,7 @@ import { api } from '../services/api';
 import type { EventOut } from '../services/api';
 import { useSessionId } from '../hooks/useSessionId';
 import { useToast } from '../context/ToastContext';
+import { IconNavigation, IconShare2, IconBrandWhatsapp, IconMapPin, IconBrandInstagram, IconClock } from '@tabler/icons-react';
 
 const COVERS = [
   'linear-gradient(135deg, #1a0a2e 0%, #2e0a1a 100%)',
@@ -118,7 +119,7 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
               <span className="opens-today">Abre hoje</span>
             )}
           </div>
-          <div className="modal-date">📅 {dateStr} às {timeStr}</div>
+          <div className="modal-date"><IconClock size={14} style={{ verticalAlign: 'middle', marginRight: 4 }} />{dateStr} às {timeStr}</div>
 
           {stats && (
             <div className="modal-stats-row">
@@ -224,7 +225,7 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
 
           {event.venue.address && (
             <div className="venue-info-row">
-              <div className="venue-info-icon">📍</div>
+              <div className="venue-info-icon"><IconMapPin size={16} /></div>
               <div className="venue-info-text">
                 <strong>Endereço</strong>
                 {event.venue.address}
@@ -233,7 +234,7 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
           )}
           {event.venue.instagram && (
             <div className="venue-info-row">
-              <div className="venue-info-icon">📸</div>
+              <div className="venue-info-icon"><IconBrandInstagram size={16} /></div>
               <div className="venue-info-text">
                 <strong>Instagram</strong>
                 {event.venue.instagram}
@@ -242,7 +243,7 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
           )}
           {event.venue.whatsapp && (
             <div className="venue-info-row">
-              <div className="venue-info-icon">💬</div>
+              <div className="venue-info-icon"><IconBrandWhatsapp size={16} /></div>
               <div className="venue-info-text">
                 <strong>WhatsApp</strong>
                 +55 {event.venue.whatsapp}
@@ -294,17 +295,19 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
                 window.open(url, '_blank');
               }}
             >
-              🗺️ Como chegar
+              <IconNavigation size={16} style={{ verticalAlign: 'middle', marginRight: 6 }} />
+              Como chegar
             </button>
             <button className="btn-secondary" onClick={handleShare} title="Compartilhar">
-              📤
+              <IconShare2 size={16} />
             </button>
             {event.venue.whatsapp && (
               <button
                 className="btn-secondary"
                 onClick={() => window.open(`https://wa.me/55${event.venue.whatsapp}`, '_blank')}
+                title="WhatsApp"
               >
-                💬
+                <IconBrandWhatsapp size={16} />
               </button>
             )}
           </div>
