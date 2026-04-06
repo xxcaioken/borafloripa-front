@@ -3739,13 +3739,30 @@ body::before {
 }
 
 @media (min-width: 900px) {
+  .venue-detail {
+    display: grid;
+    grid-template-columns: 40% 1fr;
+    grid-template-rows: auto;
+    align-items: start;
+    gap: 0 32px;
+    padding-bottom: 80px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
   .vd-hero {
-    height: 280px;
-    border-radius: 16px;
+    position: sticky;
+    top: 20px;
+    height: 520px;
+    border-radius: 20px;
     margin-bottom: 0;
+    align-self: start;
   }
   .vd-body {
-    padding: 24px 0 0;
+    padding: 0;
+    max-width: none;
+    margin: 0;
+    overflow-y: auto;
+    padding-bottom: 40px;
   }
   .vd-name {
     font-size: 28px;

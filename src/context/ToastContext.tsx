@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useCallback } from 'react';
+import { notifications } from '@mantine/notifications';
 
 interface ToastContextType {
   show: (message: string, type?: string, duration?: number) => void;
@@ -6,27 +7,30 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | null>(null);
 
-export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [toasts, setToasts] = useState<Array<{ id: number; message: string; type: string }>>([]);
+const TYPE_COLOR: Record<string, string> = {
+  success: 'teal',
+  info:    'blue',
+  error:   'red',
+  warning: 'orange',
+};
 
+export function ToastProvider({ children }: { children: React.ReactNode }) {
   const show = useCallback((message: string, type = 'info', duration = 2500) => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts(prev => prev.filter(t => t.id !== id));
-    }, duration);
+    notifications.show({
+      message,
+      color: TYPE_COLOR[type] ?? 'blue',
+      autoClose: duration,
+      position: 'bottom-center',
+      styles: {
+        root: { background: 'var(--surface2)', border: '1px solid var(--border2)' },
+        description: { color: 'var(--text1)', fontSize: '14px', fontWeight: 500 },
+      },
+    });
   }, []);
 
   return (
     <ToastContext.Provider value={{ show }}>
       {children}
-      <div className="toast-container" aria-live="polite" aria-atomic="false">
-        {toasts.map(t => (
-          <div key={t.id} className={`toast toast-${t.type}`}>
-            {t.message}
-          </div>
-        ))}
-      </div>
     </ToastContext.Provider>
   );
 }

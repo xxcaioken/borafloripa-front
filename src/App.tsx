@@ -33,6 +33,8 @@ import { ToastProvider } from './context/ToastContext';
 import { api } from './services/api';
 import type { EventOut } from './services/api';
 import { MantineProvider, createTheme } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
+import '@mantine/notifications/styles.css';
 import {
   IconHome, IconCalendar, IconMap2, IconUsers, IconUser,
   IconSearch, IconBriefcase, IconPlane, IconBellRinging,
@@ -388,6 +390,7 @@ function AppInner() {
 export default function App() {
   return (
     <MantineProvider theme={mantineTheme} defaultColorScheme="dark">
+      <Notifications />
       <AuthProvider>
         <ToastProvider>
           <ErrorBoundary>

@@ -2,7 +2,7 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useEffect, useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Skeleton } from '@mantine/core';
-import { IconSearch, IconMusic, IconCircleCheck, IconAccessible, IconTag, IconPaw } from '@tabler/icons-react';
+import { IconSearch, IconMapPin, IconMusic, IconCircleCheck, IconAccessible, IconTag, IconPaw, IconFlame, IconSparkles } from '@tabler/icons-react';
 import { api } from '../services/api';
 import type { EventOut, VenueOut } from '../services/api';
 const EventDetail = lazy(() => import('../components/EventDetail'));
@@ -110,7 +110,7 @@ function RolaHoje({ events, onSelect, boraCounts, onBora }: RolaHojeProps) {
           <div className="rola-hoje-label">Rola hoje</div>
           <div className="rola-hoje-title">{top.title}</div>
           <div className="rola-hoje-venue">
-            <span className="rola-hoje-venue-name">📍 {top.venue.name}</span>
+            <span className="rola-hoje-venue-name"><IconMapPin size={12} /> {top.venue.name}</span>
             <span className="rola-hoje-time">{time}</span>
           </div>
           {top.tags.length > 0 && (
@@ -187,10 +187,10 @@ function VenueCard({ venue, index, score }: VenueCardProps) {
     <div className="venue-grid-card" onClick={() => navigate(`/venue/${venue.id}`)} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && navigate(`/venue/${venue.id}`)}>
       <div className="venue-grid-card-cover" style={{ background: VENUE_BG[index % VENUE_BG.length] }}>
         <span className="venue-grid-card-emoji">{VENUE_EMOJIS[index % VENUE_EMOJIS.length]}</span>
-        {isHot && <span className="venue-grid-hot">🔥 Hot</span>}
+        {isHot && <span className="venue-grid-hot"><IconFlame size={11} /> Hot</span>}
         {venue.is_new && !isHot && <span className="venue-grid-new">Novo</span>}
-        {isMatch && <span className="venue-grid-match">✨ Match</span>}
-        {venue.wheelchair && <span className="venue-grid-access">♿</span>}
+        {isMatch && <span className="venue-grid-match"><IconSparkles size={11} /> Match</span>}
+        {venue.wheelchair && <span className="venue-grid-access"><IconAccessible size={12} /></span>}
       </div>
       <div className="venue-grid-card-info">
         <p className="venue-grid-name">{venue.name}</p>
@@ -485,7 +485,7 @@ export default function Feed() {
       {freeEntry && (
         <div className="free-events-section">
           <div className="section-header">
-            <div className="section-title section-title-free">💸 Entrada grátis</div>
+            <div className="section-title section-title-free"><IconTag size={15} /> Entrada grátis</div>
             {!loadingFree && <span className="section-link">{freeEvents.length} eventos</span>}
           </div>
           {loadingFree ? (
@@ -520,7 +520,7 @@ export default function Feed() {
       {todayEvents.length > 0 && !hasFilter && (
         <>
           <div className="section-header">
-            <div className="section-title today-title">🔥 Acontece Hoje</div>
+            <div className="section-title today-title"><IconFlame size={15} /> Acontece Hoje</div>
             <span className="section-link today-badge">{todayEvents.length} eventos</span>
           </div>
           <div className="today-scroll">
@@ -547,7 +547,7 @@ export default function Feed() {
       {trendingEvents.length > 0 && !hasFilter && (
         <>
           <div className="section-header">
-            <div className="section-title">🔥 Em Alta agora</div>
+            <div className="section-title"><IconFlame size={15} /> Em Alta agora</div>
             <span className="section-link">{trendingEvents.length} rolês</span>
           </div>
           <div className="today-scroll">
@@ -570,7 +570,7 @@ export default function Feed() {
       {newVenues.length > 0 && !hasFilter && (
         <>
           <div className="section-header">
-            <div className="section-title">Acabaram de chegar! 🆕</div>
+            <div className="section-title">Acabaram de chegar! <IconSparkles size={15} /></div>
           </div>
           <div className="carousel-scroll">
             {newVenues.map((venue, i) => (
@@ -629,7 +629,7 @@ export default function Feed() {
           {/* Header resultados */}
           <div className="section-header">
             <div className="section-title">
-              {hasPrefs && !hasFilter ? '⭐ Para você' : query ? `"${query}"` : activeCategory ? CATEGORIES.find(c => c.id === activeCategory)?.label : 'Lugares'}
+              {hasPrefs && !hasFilter ? <><IconSparkles size={15} /> Para você</> : query ? `"${query}"` : activeCategory ? CATEGORIES.find(c => c.id === activeCategory)?.label : 'Lugares'}
             </div>
             <div className="sort-chips sort-chips-inline">
               <button className={`sort-chip${!sortBy ? ' active' : ''}`} onClick={() => setSortBy(null)} title="Recomendados">★</button>
