@@ -305,6 +305,7 @@ export default function Feed() {
     if (activeNeighborhood) params.neighborhood = activeNeighborhood;
     if (query) params.q = query;
     if (petFriendly) params.pet_friendly = true;
+    if (openNow) params.open_now = true;
 
     const t = setTimeout(() => {
       api.get('/events/venues', { params })
