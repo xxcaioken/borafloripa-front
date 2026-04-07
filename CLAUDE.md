@@ -4,6 +4,32 @@
 
 ---
 
+## ⚠️ Regras críticas — leia antes de qualquer coisa
+
+### Azure — aprovação obrigatória
+**NUNCA criar, modificar ou deletar serviços Azure sem aprovação explícita do Pedro.**
+Isso inclui: Storage Accounts, App Services, configurações de app settings que impliquem novos recursos, novos Resource Groups, CDN, etc.
+Se uma feature precisar de novo serviço Azure, **descreva o que seria necessário e aguarde aprovação antes de executar qualquer comando Azure CLI.**
+
+### Testes — obrigatório a cada feature
+**Toda nova feature deve incluir testes.** Rode com `npm test` antes de commitar.
+
+**O que testar:**
+- Novos componentes → `src/components/NomeDoComponente.test.tsx` com ao menos: render básico, props opcionais, interações de clique
+- Novas funções em `utils/` → `src/utils/nomeDaFuncao.test.ts` cobrindo casos normais + edge cases
+- Mudanças em `services/api.ts` → atualizar `src/services/api.test.ts`
+
+**O que NÃO testar:** snapshots de UI, mocks de toda a aplicação só para testar um detalhe, testes que duplicam o que o TypeScript já garante em tempo de compilação.
+
+**Infraestrutura de testes:**
+- Runner: Vitest 4 + jsdom
+- Components: `@testing-library/react` + `@testing-library/jest-dom`
+- HTTP mock: `axios-mock-adapter` (só para testes de interceptores)
+- Setup: `src/test/setup.ts` (importa `@testing-library/jest-dom`)
+- Config: seção `test:` no `vite.config.js`
+
+---
+
 ## Stack
 
 | Tech | Versão | Obs |
