@@ -200,9 +200,14 @@ export default function VenueDetail() {
   return (
     <div className="venue-detail">
       {/* Hero */}
-      <div className="vd-hero" style={{ background: VENUE_BG[bgIdx] }}>
+      <div
+        className="vd-hero"
+        style={venue.photo_url
+          ? { backgroundImage: `url(${venue.photo_url})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+          : { background: VENUE_BG[bgIdx] }}
+      >
         <button className="vd-back" onClick={() => navigate(-1)} aria-label="Voltar">←</button>
-        <div className="vd-hero-emoji">{emoji}</div>
+        {!venue.photo_url && <div className="vd-hero-emoji">{emoji}</div>}
         {isHot && <div className="vd-hot-badge"><IconFlame size={14} /> Hot Zone</div>}
       </div>
 
