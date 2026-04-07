@@ -28,6 +28,43 @@ test.describe('Responsive layout', () => {
     });
   });
 
+  // ── Tap targets (iPhone SE + iPhone 14) ────────────────────────────────────
+  test.describe('tap targets ≥ 44px on mobile', () => {
+    for (const [label, width, height] of [
+      ['375×667 — iPhone SE', 375, 667],
+      ['390×844 — iPhone 14', 390, 844],
+    ] as [string, number, number][]) {
+      test(`${label}: chips and action buttons meet 44px minimum`, async ({ page }) => {
+        test.use({ viewport: { width, height } });
+        await page.goto('/');
+
+        const selectors = ['.chip', '.neighborhood-chip', '.sort-chip'];
+        for (const sel of selectors) {
+          const els = page.locator(sel);
+          const count = await els.count();
+          for (let i = 0; i < Math.min(count, 3); i++) {
+            const box = await els.nth(i).boundingBox();
+            if (box) {
+              expect(box.height, `${sel}[${i}] height on ${label}`).toBeGreaterThanOrEqual(44);
+            }
+          }
+        }
+
+        // Action buttons
+        for (const sel of ['.btn-checkin', '.vd-follow-btn']) {
+          const els = page.locator(sel);
+          const count = await els.count();
+          for (let i = 0; i < count; i++) {
+            const box = await els.nth(i).boundingBox();
+            if (box) {
+              expect(box.height, `${sel}[${i}] height on ${label}`).toBeGreaterThanOrEqual(44);
+            }
+          }
+        }
+      });
+    }
+  });
+
   // ── Tablet (iPad) ───────────────────────────────────────────────────────────
   test.describe('768×1024 — tablet', () => {
     test.use({ viewport: { width: 768, height: 1024 } });

@@ -4850,6 +4850,42 @@ body::before {
   .topbar-actions {
     gap: 2px;
   }
+
+  /* Tap targets: chips de filtro ≥ 44px */
+  .chip,
+  .neighborhood-chip,
+  .sort-chip {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Tap targets: chips de vibe e contato ≥ 44px */
+  .vibe-chip,
+  .vd-contact-chip {
+    min-height: 44px;
+  }
+
+  /* Tap targets: botões de ação no VenueDetail e EventCard ≥ 44px */
+  .vd-follow-btn,
+  .btn-checkin {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Bora button (versão padrão, não .large) */
+  .bora-btn:not(.large) {
+    min-height: 44px;
+  }
+
+  /* Filter icon button: 42→44px */
+  .filter-btn-icon {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 /* Telas muito estreitas (iPhone SE — 375px) */
