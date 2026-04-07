@@ -1,137 +1,194 @@
 # Bora Floripa — Frontend
 
-Interface do Bora Floripa. Construída com React 19 + Vite. Deploy automático para Azure Static Web Apps.
+Interface web do Bora Floripa. PWA em React 19 + TypeScript + Vite. Deploy automático na Azure Static Web Apps.
+
+[![CI](https://github.com/xxcaioken/borafloripa-front/actions/workflows/frontend.yml/badge.svg)](https://github.com/xxcaioken/borafloripa-front/actions/workflows/frontend.yml)
+
+**Produção:** [orange-flower-0182c6b0f.2.azurestaticapps.net](https://orange-flower-0182c6b0f.2.azurestaticapps.net)
 
 ---
 
 ## Stack
 
-- **React 19** + **React Router v7**
-- **Vite 8** (build + dev server com proxy)
-- **Axios** com interceptors (auth + city injection)
-- **Leaflet** + React Leaflet (mapa)
-- **CSS custom** — sem Tailwind, sem styled-components
+| Tech | Versão | Decisão |
+|------|--------|---------|
+| React | 19 | — |
+| TypeScript | 5 (strict) | Zero `any` implícito |
+| Vite | 8 | Build + dev server |
+| React Router | v7 | `lazy()` em todas as rotas exceto Feed |
+| Axios | — | Instância com interceptores em `src/services/api.ts` |
+| Mantine | 9 | Tabs, Drawer, Notifications |
+| Tabler Icons | — | Ícones SVG (sem emojis em UI de sistema) |
+| Leaflet | v5 | Mapa interativo |
+| CSS puro | — | Custom properties, sem Tailwind |
+| Vitest | 4 | Testes unitários e de componente |
 
 ---
 
-## Rodar localmente
+## Setup local
 
 ```bash
-# 1. Clone e entre no diretório
 git clone https://github.com/xxcaioken/borafloripa-front.git
 cd borafloripa-front
-
-# 2. Instale as dependências
 npm install
-
-# 3. (Opcional) configure o .env.local
-# O Vite já faz proxy de /api → localhost:8000 por padrão
-# Só necessário se o backend estiver em outra porta/host
-cp .env.example .env.local
-
-# 4. Inicie o dev server (backend deve estar rodando em :8000)
-npm run dev
-# Abrir: http://localhost:5173
 ```
 
-### Variáveis de ambiente
+Crie `.env.local`:
 
-| Variável | Dev | Produção |
-|----------|-----|----------|
-| `VITE_API_BASE_URL` | *(não necessário — proxy automático)* | `https://bora-floripa-api.azurewebsites.net` |
-| `VITE_DEV_BACKEND_URL` | `http://localhost:8000` | — |
+```env
+VITE_API_BASE_URL=http://localhost:8000
+# Opcional — botão Google some se ausente
+VITE_GOOGLE_CLIENT_ID=seu-client-id.apps.googleusercontent.com
+# Opcional — push notifications somem se ausente
+VITE_VAPID_PUBLIC_KEY=sua-chave-vapid-publica
+```
 
-> Em dev, o Vite faz proxy automático de `/api` para `localhost:8000` via `vite.config.js`.  
-> Em produção, `VITE_API_BASE_URL` é configurado como GitHub Secret.
+```bash
+npm run dev           # dev server em http://localhost:5173
+npm run build         # build de produção
+npm test              # roda os testes (vitest)
+npm run test:watch    # modo watch para desenvolvimento
+npm run test:coverage # relatório de cobertura HTML
+npm run lint          # ESLint
+```
 
----
-
-## Scripts disponíveis
-
-| Comando | Descrição |
-|---------|-----------|
-| `npm run dev` | Dev server com HMR |
-| `npm run build` | Build de produção (output: `dist/`) |
-| `npm run preview` | Preview do build local |
-| `npm run lint` | Verificação ESLint |
-
----
-
-## Páginas
-
-| Rota | Arquivo | Descrição |
-|------|---------|-----------|
-| `/` | `Feed.jsx` | Feed principal — busca, filtros, bairros, ordenação |
-| `/locais` | `Venues.jsx` | Lista de todos os venues |
-| `/mapa` | `MapView.jsx` | Mapa com pins de venues/eventos |
-| `/parceiro` | `PartnerDashboard.jsx` | Dashboard do parceiro (requer login) |
-| `/turista` | `Tourist.jsx` | Guia para turistas |
-| `/comunidades` | `Communities.jsx` | Comunidades por estilo musical (requer login) |
-| `/perfil` | `Profile.jsx` | Perfil do usuário |
-| `*` | `NotFound.jsx` | 404 |
+O dev server faz proxy automático de `/api/*` para `http://localhost:8000` (ou `VITE_DEV_BACKEND_URL`).
 
 ---
 
-## Estrutura do projeto
+## Estrutura
 
 ```
-borafloripa-front/
-├── index.html
-├── vite.config.js          # proxy /api → backend
-├── package.json
-├── .env.example
-└── src/
-    ├── App.jsx             # router, layout, sidebar, bottom nav
-    ├── App.css             # design tokens, grid, breakpoints
-    ├── main.jsx
-    ├── pages/
-    │   ├── Feed.jsx
-    │   ├── Venues.jsx
-    │   ├── MapView.jsx
-    │   ├── PartnerDashboard.jsx
-    │   ├── Tourist.jsx
-    │   ├── Communities.jsx
-    │   ├── Profile.jsx
-    │   ├── Auth.jsx
-    │   ├── Onboarding.jsx
-    │   └── NotFound.jsx
-    ├── components/
-    │   ├── EventCard.jsx   # card com hero mode (bento desktop)
-    │   ├── EventDetail.jsx # modal de detalhe do evento
-    │   └── ErrorBoundary.jsx
-    └── services/
-        └── api.js          # axios + interceptors
+src/
+├── App.tsx              # Layout raiz: sidebar, bottom nav, rotas, modal de evento
+├── App.css              # Todos os estilos (~4000 linhas) + design tokens :root
+├── pages/
+│   ├── Feed.tsx             # Página principal: filtros, bairros, sort, entrada grátis
+│   ├── Agenda.tsx           # Agenda semanal (7 dias)
+│   ├── VenueDetail.tsx      # Check-in, follow, vibe voting, reviews, foto hero
+│   ├── Search.tsx           # Busca global: Tudo / Eventos / Locais (debounce 300ms)
+│   ├── MapView.tsx          # Leaflet, pins SVG por categoria, pulse hot zone
+│   ├── PartnerDashboard.tsx # Analytics, eventos, cupons, edição de venue, upload foto
+│   ├── Profile.tsx          # Preferências, feed de seguidos, toggle push
+│   ├── Auth.tsx             # E-mail/senha + Google GSI
+│   ├── Onboarding.tsx       # Wizard de preferências (3 steps, primeira visita)
+│   ├── Communities.tsx      # Grupos por tag, join/leave, cupons exclusivos
+│   ├── Tourist.tsx          # Busca por período de datas
+│   └── Venues.tsx           # Grid completo de venues
+├── components/
+│   ├── EventCard.tsx        # Card com hero mode no desktop, badges de recorrência
+│   ├── EventDetail.tsx      # Modal/sheet: vibe voting, share enriquecido
+│   └── ErrorBoundary.tsx
+├── hooks/
+│   ├── useBora.ts               # Toggle reação "Bora!"
+│   ├── useFollowVenue.ts        # Toggle follow/unfollow venue
+│   ├── useNotifications.ts      # Poll unread-count a cada 60s
+│   ├── usePushNotifications.ts  # Subscribe/unsubscribe VAPID
+│   ├── useInstallPrompt.ts      # Captura beforeinstallprompt (PWA install)
+│   ├── usePageTitle.ts          # document.title dinâmico
+│   ├── useSaved.ts              # Toggle salvar evento
+│   └── useSessionId.ts          # Fingerprint anônimo (localStorage)
+├── utils/
+│   └── dateHelpers.ts       # groupByDate, formatDateLabel, addDays, toDateKey
+├── context/
+│   ├── AuthContext.tsx      # Login/logout/user, JWT em localStorage (bf_token)
+│   └── ToastContext.tsx     # Sistema de toast global
+├── services/
+│   └── api.ts               # Instância axios + tipos EventOut/VenueOut/etc.
+└── test/
+    └── setup.ts             # @testing-library/jest-dom
 ```
 
 ---
 
 ## Design system
 
-Tokens CSS em `:root` em `App.css`:
+Todas as variáveis CSS em `:root` no `App.css`:
 
-| Token | Valor | Uso |
-|-------|-------|-----|
-| `--accent` | `#00e676` | Verde neon — CTA principal |
-| `--accent2` | `#7c4dff` | Violeta — destaque secundário |
-| `--accent3` | `#00b8d4` | Cyan — filtros, banners |
+```css
+--accent:   #00e676   /* verde neon — só CTA principal */
+--accent2:  #7c4dff   /* violeta — ações secundárias */
+--accent3:  #00b8d4   /* cyan — filtro de bairro */
+--bg:       #060908
+--surface1: #0d110e
+--text1:    #f0f4f1
+--text2:    #8fa892
+```
 
-**Fontes:** Syne (headings) + DM Sans (body)  
-**Animações:** apenas `transform` e `opacity` — nunca `height`/`width`  
-**Responsivo:** mobile-first; sidebar a partir de 900px; bottom nav some a partir de 900px
+Fontes: **Syne** (headings) + **DM Sans** (body) via Google Fonts.
 
----
-
-## Autenticação
-
-- Token JWT salvo em `localStorage` (`bf_token`)
-- Injetado automaticamente em todas as requisições via interceptor do Axios
-- Em 401: token removido automaticamente
+**Regra de animação:** só `transform` e `opacity` — nunca `height`/`width` (performance).  
+**Breakpoints:** sidebar ≥ 900px, bottom nav < 900px, grid 2 colunas ≥ 1100px, 3 colunas ≥ 1400px.
 
 ---
 
-## Deploy (produção)
+## Rotas
 
-Push em `main` → GitHub Actions → Azure Static Web Apps.
+| Path | Componente | Notas |
+|------|-----------|-------|
+| `/` | Feed | Critical path — carregado eager |
+| `/agenda` | Agenda | 7 dias, week strip |
+| `/locais` | Venues | Grid completo |
+| `/mapa` | MapView | Leaflet, lazy |
+| `/busca` | Search | Tabs + debounce 300ms |
+| `/turista` | Tourist | Busca por datas |
+| `/comunidades` | Communities | Join/leave + cupons |
+| `/perfil` | Profile | Prefs + push toggle |
+| `/parceiro` | PartnerDashboard | Requer autenticação |
+| `/venue/:id` | VenueDetail | Check-in, follow, reviews |
+| `/evento/:id` | EventPage | og:meta dinâmicas |
+| `/reset-password` | ResetPassword | Token via query param |
 
-> **Importante:** o workflow usa `app_build_command: 'npm run build'`.  
+---
+
+## Testes
+
+```bash
+npm test              # roda uma vez (modo CI)
+npm run test:watch    # modo interativo (desenvolvimento)
+npm run test:coverage # relatório de cobertura HTML em coverage/
+```
+
+| Arquivo | O que cobre |
+|---------|-------------|
+| `src/utils/dateHelpers.test.ts` | `groupByDate`, `formatDateLabel` (Hoje/Amanhã/outra data), `addDays`, `toDateKey` |
+| `src/services/api.test.ts` | City injection por endpoint, auth header, limpeza de token em 401 |
+| `src/components/EventCard.test.tsx` | Render, badges (Destaque/Especial/Semanal/Mensal), preço, clique Bora!, acessibilidade teclado |
+
+**Regra:** toda feature nova exige testes. Testes falhos bloqueiam o deploy (CI gate no GitHub Actions).
+
+---
+
+## Deploy
+
+Push em `main` → GitHub Actions → testes → build → Azure Static Web Apps.
+
+**Fluxo do workflow:**
+1. `actions/checkout@v4`
+2. `actions/setup-node@v4` (Node 20, cache npm)
+3. `npm ci && npm test` — falha aqui = deploy cancelado
+4. `Azure/static-web-apps-deploy@v1` com `app_build_command: 'npm run build'`
+
 > Não usar `skip_app_build: true` — deploya o source cru sem build.
+
+### Secrets necessários no GitHub
+
+| Secret | Obrigatório |
+|--------|-------------|
+| `AZURE_STATIC_WEB_APPS_API_TOKEN` | Sim |
+| `VITE_API_BASE_URL` | Sim |
+| `VITE_GOOGLE_CLIENT_ID` | Não |
+| `VITE_VAPID_PUBLIC_KEY` | Não |
+
+---
+
+## Decisões técnicas
+
+| Decisão | Escolha | Alternativa rejeitada | Motivo |
+|---------|---------|----------------------|--------|
+| CSS | CSS puro + custom properties | Tailwind | Controle total do design system dark |
+| State | React Context | Redux/Zustand | Complexidade não justificada no escopo |
+| Auth storage | localStorage (`bf_token`) | httpOnly cookie | Compatibilidade com PWA offline |
+| Maps | Leaflet | Google Maps JS API | Sem quota, sem billing |
+| Icons | Tabler Icons SVG | Emojis | Acessibilidade, consistência visual |
+| Tests | Vitest + Testing Library | Jest + Enzyme | Zero config com Vite, testa comportamento |
