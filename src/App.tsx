@@ -33,6 +33,8 @@ import { ToastProvider } from './context/ToastContext';
 import { api } from './services/api';
 import type { EventOut } from './services/api';
 import { MantineProvider, createTheme } from '@mantine/core';
+import { Notifications } from '@mantine/notifications';
+import '@mantine/notifications/styles.css';
 import {
   IconHome, IconCalendar, IconMap2, IconUsers, IconUser,
   IconSearch, IconBriefcase, IconPlane, IconBellRinging,
@@ -264,6 +266,19 @@ function ScrollToTop() {
   return null;
 }
 
+/** Redireciona para /onboarding se o usuário está logado mas ainda não completou as preferências. */
+function OnboardingGuard() {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  useEffect(() => {
+    if (!loading && user && !user.onboarding_completed && pathname !== '/onboarding') {
+      navigate('/onboarding', { replace: true });
+    }
+  }, [user, loading, pathname, navigate]);
+  return null;
+}
+
 function BackToTopBtn() {
   const [visible, setVisible] = useState(false);
   useEffect(() => {
@@ -342,6 +357,7 @@ function EventPage() {
       boraCount={0}
       boraReacted={false}
       onBora={() => {}}
+      asPage
     />
   );
 }
@@ -352,6 +368,7 @@ function AppInner() {
   return (
     <BrowserRouter>
       <ScrollToTop />
+      <OnboardingGuard />
       <Layout onAuthOpen={() => setShowAuth(true)}>
         <Suspense fallback={<RouteLoader />}>
           <Routes>
@@ -387,6 +404,7 @@ function AppInner() {
 export default function App() {
   return (
     <MantineProvider theme={mantineTheme} defaultColorScheme="dark">
+      <Notifications />
       <AuthProvider>
         <ToastProvider>
           <ErrorBoundary>

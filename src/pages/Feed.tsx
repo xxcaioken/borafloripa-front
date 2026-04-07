@@ -1,6 +1,8 @@
 import { usePageTitle } from '../hooks/usePageTitle';
 import React, { useEffect, useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Skeleton } from '@mantine/core';
+import { IconSearch, IconMapPin, IconMusic, IconCircleCheck, IconAccessible, IconTag, IconPaw, IconFlame, IconSparkles } from '@tabler/icons-react';
 import { api } from '../services/api';
 import type { EventOut, VenueOut } from '../services/api';
 const EventDetail = lazy(() => import('../components/EventDetail'));
@@ -108,7 +110,7 @@ function RolaHoje({ events, onSelect, boraCounts, onBora }: RolaHojeProps) {
           <div className="rola-hoje-label">Rola hoje</div>
           <div className="rola-hoje-title">{top.title}</div>
           <div className="rola-hoje-venue">
-            <span className="rola-hoje-venue-name">📍 {top.venue.name}</span>
+            <span className="rola-hoje-venue-name"><IconMapPin size={12} /> {top.venue.name}</span>
             <span className="rola-hoje-time">{time}</span>
           </div>
           {top.tags.length > 0 && (
@@ -157,17 +159,15 @@ function RolaHoje({ events, onSelect, boraCounts, onBora }: RolaHojeProps) {
 
 function SkeletonCard() {
   return (
-    <div className="skeleton-card" aria-hidden="true">
-      <div className="skeleton-cover" />
-      <div className="skeleton-body">
-        <div className="skeleton-line w-70" />
-        <div className="skeleton-line w-45" />
-        <div className="skeleton-line w-55" />
-        <div className="skeleton-chips">
-          <div className="skeleton-chip" />
-          <div className="skeleton-chip" />
-          <div className="skeleton-chip" />
-        </div>
+    <div className="skeleton-card-mantine" aria-hidden="true">
+      <Skeleton height={160} radius="md" mb={10} />
+      <Skeleton height={13} radius="sm" width="72%" mb={7} />
+      <Skeleton height={11} radius="sm" width="48%" mb={7} />
+      <Skeleton height={11} radius="sm" width="58%" mb={10} />
+      <div style={{ display: 'flex', gap: 6 }}>
+        <Skeleton height={24} radius="xl" width={64} />
+        <Skeleton height={24} radius="xl" width={64} />
+        <Skeleton height={24} radius="xl" width={64} />
       </div>
     </div>
   );
@@ -187,10 +187,10 @@ function VenueCard({ venue, index, score }: VenueCardProps) {
     <div className="venue-grid-card" onClick={() => navigate(`/venue/${venue.id}`)} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && navigate(`/venue/${venue.id}`)}>
       <div className="venue-grid-card-cover" style={{ background: VENUE_BG[index % VENUE_BG.length] }}>
         <span className="venue-grid-card-emoji">{VENUE_EMOJIS[index % VENUE_EMOJIS.length]}</span>
-        {isHot && <span className="venue-grid-hot">🔥 Hot</span>}
+        {isHot && <span className="venue-grid-hot"><IconFlame size={11} /> Hot</span>}
         {venue.is_new && !isHot && <span className="venue-grid-new">Novo</span>}
-        {isMatch && <span className="venue-grid-match">✨ Match</span>}
-        {venue.wheelchair && <span className="venue-grid-access">♿</span>}
+        {isMatch && <span className="venue-grid-match"><IconSparkles size={11} /> Match</span>}
+        {venue.wheelchair && <span className="venue-grid-access"><IconAccessible size={12} /></span>}
       </div>
       <div className="venue-grid-card-info">
         <p className="venue-grid-name">{venue.name}</p>
@@ -229,6 +229,7 @@ export default function Feed() {
   const [freeEntry, setFreeEntry] = useState(false);
   const [freeEvents, setFreeEvents] = useState<EventOut[]>([]);
   const [loadingFree, setLoadingFree] = useState(false);
+  const [petFriendly, setPetFriendly] = useState(false);
   const [suggestions, setSuggestions] = useState<SearchSuggestions | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
@@ -299,10 +300,11 @@ export default function Feed() {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     setError(false);
-    const params: Record<string, string> = {};
+    const params: Record<string, string | boolean> = {};
     if (activeCategory) params.category = activeCategory;
     if (activeNeighborhood) params.neighborhood = activeNeighborhood;
     if (query) params.q = query;
+    if (petFriendly) params.pet_friendly = true;
 
     const t = setTimeout(() => {
       api.get('/events/venues', { params })
@@ -311,11 +313,13 @@ export default function Feed() {
         .finally(() => setLoading(false));
     }, query ? 300 : 0);
     return () => clearTimeout(t);
-  }, [activeCategory, activeNeighborhood, query, retryKey]);
+  }, [activeCategory, activeNeighborhood, query, petFriendly, retryKey]);
 
   // Client-side: score + sort + accessibility filter
   const venues = useMemo(() => {
     let result = accessible ? allVenues.filter(v => v.wheelchair) : allVenues;
+    // pet_friendly is filtered server-side, but also apply here for client cache consistency
+    if (petFriendly) result = result.filter(v => v.pet_friendly);
 
     if (sortBy === 'name') {
       result = [...result].sort((a, b) => a.name.localeCompare(b.name));
@@ -326,16 +330,16 @@ export default function Feed() {
     }
 
     return result;
-  }, [allVenues, accessible, sortBy, hasPrefs, prefMusic, prefVibes, activeCategory, activeNeighborhood, query]);
+  }, [allVenues, accessible, petFriendly, sortBy, hasPrefs, prefMusic, prefVibes, activeCategory, activeNeighborhood, query]);
 
-  const hasFilter = activeCategory || activeTag || activeNeighborhood || openNow || accessible || freeEntry || query;
+  const hasFilter = activeCategory || activeTag || activeNeighborhood || openNow || accessible || freeEntry || petFriendly || query;
 
   return (
-    <div>
-      {/* Search */}
+    <div className="feed-root">
+      {/* Search — full width */}
       <div className="search-bar">
         <div className="search-input-wrap">
-          <span className="search-icon" aria-hidden="true">🔍</span>
+          <IconSearch size={16} className="search-icon" aria-hidden="true" />
           <input
             className="search-input"
             placeholder="Buscar local..."
@@ -383,26 +387,36 @@ export default function Feed() {
           onClick={() => setShowTagFilter(v => !v)}
           aria-label="Filtrar por estilo musical"
           aria-pressed={showTagFilter}
-        >🎵</button>
+          title="Estilos musicais"
+        ><IconMusic size={16} /></button>
         <button
           className={`filter-btn-icon${openNow ? ' active' : ''}`}
           onClick={() => setOpenNow(v => !v)}
           aria-label="Mostrar apenas abertos agora"
           aria-pressed={openNow}
-        >🟢</button>
+          title="Aberto agora"
+        ><IconCircleCheck size={16} /></button>
         <button
           className={`filter-btn-icon${accessible ? ' active' : ''}`}
           onClick={() => setAccessible(v => !v)}
           aria-label="Mostrar apenas locais acessíveis"
           aria-pressed={accessible}
-        >♿</button>
+          title="Acessível"
+        ><IconAccessible size={16} /></button>
         <button
           className={`filter-btn-icon${freeEntry ? ' active' : ''}`}
           onClick={() => setFreeEntry(v => !v)}
           aria-label="Mostrar apenas eventos com entrada grátis"
           aria-pressed={freeEntry}
           title="Entrada grátis"
-        >💸</button>
+        ><IconTag size={16} /></button>
+        <button
+          className={`filter-btn-icon${petFriendly ? ' active' : ''}`}
+          onClick={() => setPetFriendly(v => !v)}
+          aria-label="Mostrar apenas locais pet friendly"
+          aria-pressed={petFriendly}
+          title="Pet Friendly"
+        ><IconPaw size={16} /></button>
       </div>
 
       {showTagFilter && (
@@ -416,6 +430,46 @@ export default function Feed() {
           ))}
         </div>
       )}
+
+      {/* ── Layout: sidebar (desktop) + main ── */}
+      <div className="feed-layout">
+
+        {/* Sidebar — filtros fixos no desktop */}
+        <aside className="feed-sidebar">
+          <div className="feed-sidebar-label">Categoria</div>
+          <div className="category-tabs sidebar-cats" role="tablist" aria-label="Categorias">
+            {CATEGORIES.map(cat => (
+              <button key={String(cat.id)}
+                className={`cat-tab${activeCategory === cat.id ? ' active' : ''}`}
+                onClick={() => setActiveCategory(cat.id)}
+                role="tab"
+                aria-selected={activeCategory === cat.id}
+              >
+                <span className="cat-emoji" aria-hidden="true">{cat.emoji}</span>
+                <span>{cat.label}</span>
+              </button>
+            ))}
+          </div>
+          <div className="feed-sidebar-label">Bairro</div>
+          <div className="neighborhood-chips sidebar-hoods" role="group" aria-label="Filtrar por bairro">
+            <button className={`neighborhood-chip${!activeNeighborhood ? ' active' : ''}`} onClick={() => setActiveNeighborhood(null)}>Todos</button>
+            {NEIGHBORHOODS.map(n => (
+              <button key={n.id} className={`neighborhood-chip${activeNeighborhood === n.id ? ' active' : ''}`}
+                onClick={() => setActiveNeighborhood(activeNeighborhood === n.id ? null : n.id)}
+                aria-pressed={activeNeighborhood === n.id}
+              >{n.label}</button>
+            ))}
+          </div>
+          <div className="feed-sidebar-label">Ordenar</div>
+          <div className="sort-chips sort-chips-sidebar">
+            <button className={`sort-chip sort-chip-full${!sortBy ? ' active' : ''}`} onClick={() => setSortBy(null)}>Recomendados</button>
+            <button className={`sort-chip sort-chip-full${sortBy === 'popular' ? ' active' : ''}`} onClick={() => setSortBy('popular')}>Mais movimentados</button>
+            <button className={`sort-chip sort-chip-full${sortBy === 'name' ? ' active' : ''}`} onClick={() => setSortBy('name')}>A–Z</button>
+          </div>
+        </aside>
+
+        {/* Main — conteúdo principal */}
+        <div className="feed-main">
 
       {/* Rola hoje? — curador diário */}
       {todayEvents.length > 0 && !hasFilter && (
@@ -431,7 +485,7 @@ export default function Feed() {
       {freeEntry && (
         <div className="free-events-section">
           <div className="section-header">
-            <div className="section-title section-title-free">💸 Entrada grátis</div>
+            <div className="section-title section-title-free"><IconTag size={15} /> Entrada grátis</div>
             {!loadingFree && <span className="section-link">{freeEvents.length} eventos</span>}
           </div>
           {loadingFree ? (
@@ -466,7 +520,7 @@ export default function Feed() {
       {todayEvents.length > 0 && !hasFilter && (
         <>
           <div className="section-header">
-            <div className="section-title today-title">🔥 Acontece Hoje</div>
+            <div className="section-title today-title"><IconFlame size={15} /> Acontece Hoje</div>
             <span className="section-link today-badge">{todayEvents.length} eventos</span>
           </div>
           <div className="today-scroll">
@@ -493,7 +547,7 @@ export default function Feed() {
       {trendingEvents.length > 0 && !hasFilter && (
         <>
           <div className="section-header">
-            <div className="section-title">🔥 Em Alta agora</div>
+            <div className="section-title"><IconFlame size={15} /> Em Alta agora</div>
             <span className="section-link">{trendingEvents.length} rolês</span>
           </div>
           <div className="today-scroll">
@@ -516,7 +570,7 @@ export default function Feed() {
       {newVenues.length > 0 && !hasFilter && (
         <>
           <div className="section-header">
-            <div className="section-title">Acabaram de chegar! 🆕</div>
+            <div className="section-title">Acabaram de chegar! <IconSparkles size={15} /></div>
           </div>
           <div className="carousel-scroll">
             {newVenues.map((venue, i) => (
@@ -536,83 +590,58 @@ export default function Feed() {
         </>
       )}
 
-      {/* Categorias */}
-      <div className="category-tabs" role="tablist" aria-label="Categorias">
-        {CATEGORIES.map(cat => (
-          <button key={String(cat.id)}
-            className={`cat-tab${activeCategory === cat.id ? ' active' : ''}`}
-            onClick={() => setActiveCategory(cat.id)}
-            role="tab"
-            aria-selected={activeCategory === cat.id}
-          >
-            <span className="cat-emoji" aria-hidden="true">{cat.emoji}</span>
-            <span>{cat.label}</span>
-          </button>
-        ))}
-      </div>
+          {/* Banners de filtros ativos */}
+          {(openNow || accessible || activeNeighborhood || freeEntry || petFriendly) && (
+            <div className="active-filter-banners">
+              {activeNeighborhood && (
+                <div className="filter-banner filter-banner-cyan">
+                  📍 {NEIGHBORHOODS.find(n => n.id === activeNeighborhood)?.label || activeNeighborhood}
+                  <button onClick={() => setActiveNeighborhood(null)} aria-label="Remover filtro de bairro">✕</button>
+                </div>
+              )}
+              {openNow && (
+                <div className="filter-banner filter-banner-green">
+                  <IconCircleCheck size={13} /> Aberto agora
+                  <button onClick={() => setOpenNow(false)} aria-label="Remover filtro aberto agora">✕</button>
+                </div>
+              )}
+              {accessible && (
+                <div className="filter-banner filter-banner-blue">
+                  <IconAccessible size={13} /> Acessível
+                  <button onClick={() => setAccessible(false)} aria-label="Remover filtro acessível">✕</button>
+                </div>
+              )}
+              {freeEntry && (
+                <div className="filter-banner filter-banner-free">
+                  <IconTag size={13} /> Entrada grátis
+                  <button onClick={() => setFreeEntry(false)} aria-label="Remover filtro entrada grátis">✕</button>
+                </div>
+              )}
+              {petFriendly && (
+                <div className="filter-banner filter-banner-pet">
+                  <IconPaw size={13} /> Pet Friendly
+                  <button onClick={() => setPetFriendly(false)} aria-label="Remover filtro pet friendly">✕</button>
+                </div>
+              )}
+            </div>
+          )}
 
-      {/* Bairros */}
-      <div className="neighborhood-chips" role="group" aria-label="Filtrar por bairro">
-        <button
-          className={`neighborhood-chip${!activeNeighborhood ? ' active' : ''}`}
-          onClick={() => setActiveNeighborhood(null)}
-        >📍 Todos</button>
-        {NEIGHBORHOODS.map(n => (
-          <button
-            key={n.id}
-            className={`neighborhood-chip${activeNeighborhood === n.id ? ' active' : ''}`}
-            onClick={() => setActiveNeighborhood(activeNeighborhood === n.id ? null : n.id)}
-            aria-pressed={activeNeighborhood === n.id}
-          >{n.label}</button>
-        ))}
-      </div>
-
-      {/* Banners de filtros ativos */}
-      {(openNow || accessible || activeNeighborhood || freeEntry) && (
-        <div className="active-filter-banners">
-          {activeNeighborhood && (
-            <div className="filter-banner filter-banner-cyan">
-              📍 {NEIGHBORHOODS.find(n => n.id === activeNeighborhood)?.label || activeNeighborhood}
-              <button onClick={() => setActiveNeighborhood(null)} aria-label="Remover filtro de bairro">✕</button>
+          {/* Header resultados */}
+          <div className="section-header">
+            <div className="section-title">
+              {hasPrefs && !hasFilter ? <><IconSparkles size={15} /> Para você</> : query ? `"${query}"` : activeCategory ? CATEGORIES.find(c => c.id === activeCategory)?.label : 'Lugares'}
             </div>
-          )}
-          {openNow && (
-            <div className="filter-banner filter-banner-green">
-              🟢 Aberto agora
-              <button onClick={() => setOpenNow(false)} aria-label="Remover filtro aberto agora">✕</button>
+            <div className="sort-chips sort-chips-inline">
+              <button className={`sort-chip${!sortBy ? ' active' : ''}`} onClick={() => setSortBy(null)} title="Recomendados">★</button>
+              <button className={`sort-chip${sortBy === 'popular' ? ' active' : ''}`} onClick={() => setSortBy('popular')} title="Mais movimentados">🔥</button>
+              <button className={`sort-chip${sortBy === 'name' ? ' active' : ''}`} onClick={() => setSortBy('name')} title="A-Z">A-Z</button>
             </div>
-          )}
-          {accessible && (
-            <div className="filter-banner filter-banner-blue">
-              ♿ Acessível
-              <button onClick={() => setAccessible(false)} aria-label="Remover filtro acessível">✕</button>
-            </div>
-          )}
-          {freeEntry && (
-            <div className="filter-banner filter-banner-free">
-              💸 Entrada grátis
-              <button onClick={() => setFreeEntry(false)} aria-label="Remover filtro entrada grátis">✕</button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Header resultados */}
-      <div className="section-header">
-        <div className="section-title">
-          {hasPrefs && !hasFilter ? '⭐ Para você' : query ? `"${query}"` : activeCategory ? CATEGORIES.find(c => c.id === activeCategory)?.label : 'Lugares'}
-        </div>
-        <div className="sort-chips">
-          <button className={`sort-chip${!sortBy ? ' active' : ''}`} onClick={() => setSortBy(null)} title="Recomendados">★</button>
-          <button className={`sort-chip${sortBy === 'popular' ? ' active' : ''}`} onClick={() => setSortBy('popular')} title="Mais movimentados">🔥</button>
-          <button className={`sort-chip${sortBy === 'name' ? ' active' : ''}`} onClick={() => setSortBy('name')} title="A-Z">🔤</button>
-        </div>
-      </div>
+          </div>
 
       {/* Lista de venues */}
       {loading ? (
-        <div className="events-list">
-          <SkeletonCard /><SkeletonCard /><SkeletonCard />
+        <div className="venue-grid">
+          <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
         </div>
       ) : error ? (
         <div className="feed-error">
@@ -670,6 +699,9 @@ export default function Feed() {
           ))}
         </div>
       )}
+
+        </div>{/* feed-main */}
+      </div>{/* feed-layout */}
 
       {selected && (
         <Suspense fallback={null}>

@@ -125,7 +125,8 @@ body::before {
   max-width: 480px;
   margin: 0 auto;
   width: 100%;
-  min-width: 89%;
+  box-sizing: border-box;
+  min-width: 0; /* previne overflow em flex containers */
 }
 
 /* ── Sidebar (desktop only) ── */
@@ -1584,6 +1585,60 @@ body::before {
   transition: background 0.3s;
 }
 .onboard-dot.active { background: var(--accent); }
+.onboard-dot.done  { background: var(--accent); opacity: 0.45; }
+
+/* Step 3 — localização */
+.onboard-location {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+.onboard-field { display: flex; flex-direction: column; gap: 8px; }
+.onboard-field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.onboard-select {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text1);
+  font-family: inherit;
+  font-size: 15px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  width: 100%;
+  cursor: pointer;
+}
+.onboard-select:focus { outline: none; border-color: var(--accent); }
+.onboard-age-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.onboard-age-btn {
+  flex: 1;
+  min-width: 64px;
+  padding: 10px 0;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text2);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.onboard-age-btn.selected {
+  background: rgba(0, 230, 118, 0.12);
+  border-color: var(--accent);
+  color: var(--accent);
+}
 
 /* ══════════════════════════════════════
    MAP VIEW
@@ -2186,10 +2241,15 @@ body::before {
   border: none;
   font-size: 18px;
   cursor: pointer;
-  padding: 4px 6px;
+  padding: 10px;
   border-radius: 8px;
   transition: background 0.15s;
   line-height: 1;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .topbar-search-btn:hover { background: var(--surface2); }
 
@@ -3739,13 +3799,30 @@ body::before {
 }
 
 @media (min-width: 900px) {
+  .venue-detail {
+    display: grid;
+    grid-template-columns: 40% 1fr;
+    grid-template-rows: auto;
+    align-items: start;
+    gap: 0 32px;
+    padding-bottom: 80px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
   .vd-hero {
-    height: 280px;
-    border-radius: 16px;
+    position: sticky;
+    top: 20px;
+    height: 520px;
+    border-radius: 20px;
     margin-bottom: 0;
+    align-self: start;
   }
   .vd-body {
-    padding: 24px 0 0;
+    padding: 0;
+    max-width: none;
+    margin: 0;
+    overflow-y: auto;
+    padding-bottom: 40px;
   }
   .vd-name {
     font-size: 28px;
@@ -4460,4 +4537,273 @@ body::before {
 @media (max-width: 375px) {
   .profile-avatar { width: 46px; height: 46px; font-size: 20px; }
   .profile-name { font-size: 16px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SPRINT POLISH — ícones, pet friendly, sidebar desktop, Mantine overrides
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── Icon alignment helpers ── */
+.card-venue, .card-date, .card-price {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.vd-address { display: flex; align-items: center; gap: 5px; }
+.vd-address-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.vd-maps-btn  { display: flex; align-items: center; gap: 5px; }
+.vd-contact-chip { display: flex; align-items: center; gap: 5px; }
+.btn-checkin, .vd-follow-btn { display: flex; align-items: center; gap: 5px; }
+.bora-btn { display: flex; align-items: center; gap: 5px; }
+.review-avg { display: flex; align-items: center; gap: 4px; }
+.access-pill { display: flex; align-items: center; gap: 4px; }
+.vd-hot-badge { display: flex; align-items: center; gap: 4px; }
+
+/* ── Search icon (SVG instead of emoji) ── */
+.search-icon { display: flex; align-items: center; }
+
+/* ── Mantine Skeleton card placeholder ── */
+.skeleton-card-mantine { padding: 4px 0 8px; }
+
+/* ── Pet friendly filter banner ── */
+.filter-banner-pet {
+  background: rgba(255, 167, 38, 0.08);
+  border: 1px solid rgba(255, 167, 38, 0.25);
+  color: #ffa726;
+}
+.filter-banner-free {
+  background: rgba(124, 77, 255, 0.08);
+  border-color: rgba(124, 77, 255, 0.25);
+  color: var(--accent2);
+}
+
+/* ── Feed layout: mobile default (single col) ── */
+.feed-root { padding-bottom: 16px; }
+.feed-layout { display: block; }
+.feed-sidebar {
+  /* Mobile: category tabs + neighborhood chips show inline (existing styles apply) */
+}
+.feed-sidebar-label {
+  display: none; /* hidden on mobile — labels redundant with visual context */
+}
+.feed-main { /* no extra styles on mobile */ }
+
+/* Sidebar sort chips: hidden on mobile (uses inline sort-chips-inline instead) */
+.sort-chips-sidebar { display: none; }
+.sort-chips-inline { display: flex; }
+
+/* ── Feed layout: desktop sidebar ── */
+@media (min-width: 1200px) {
+  .feed-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 28px;
+    align-items: start;
+    margin-top: 4px;
+  }
+
+  .feed-sidebar {
+    position: sticky;
+    top: calc(var(--topbar-h, 56px) + 16px);
+    background: var(--surface1);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius-md);
+    padding: 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .feed-sidebar-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 10px 0 6px;
+  }
+  .feed-sidebar-label:first-child { margin-top: 0; }
+
+  /* Category tabs vertical in sidebar */
+  .category-tabs.sidebar-cats {
+    flex-direction: column;
+    overflow: visible;
+    gap: 2px;
+    padding-bottom: 0;
+    margin-bottom: 0;
+  }
+  .category-tabs.sidebar-cats .cat-tab {
+    border-radius: var(--radius-xs);
+    justify-content: flex-start;
+    padding: 7px 10px;
+    font-size: 13px;
+    white-space: nowrap;
+    min-width: unset;
+  }
+  .category-tabs.sidebar-cats .cat-tab.active {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  /* Neighborhood chips vertical in sidebar */
+  .neighborhood-chips.sidebar-hoods {
+    flex-direction: column;
+    overflow: visible;
+    gap: 2px;
+    padding-bottom: 0;
+  }
+  .neighborhood-chips.sidebar-hoods .neighborhood-chip {
+    text-align: left;
+    border-radius: var(--radius-xs);
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  /* Sort chips in sidebar: full-width buttons */
+  .sort-chips-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .sort-chip.sort-chip-full {
+    width: 100%;
+    text-align: left;
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: var(--radius-xs);
+    justify-content: flex-start;
+  }
+
+  /* Hide the inline sort chips on desktop (sidebar has them) */
+  .sort-chips-inline { display: none; }
+
+  /* Categories/neighborhoods hidden in main content area on desktop */
+  .feed-root > .category-tabs,
+  .feed-root > .neighborhood-chips { display: none; }
+}
+
+/* ── EventDetail: Mantine Drawer overrides ── */
+.modal-sheet-inner {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+.modal-sheet-inner .modal-handle {
+  margin: 10px auto 0;
+}
+
+/* Standalone EventDetail (EventPage) */
+.event-page-standalone {
+  max-width: 640px;
+  margin: 0 auto;
+  padding-bottom: 40px;
+}
+.event-page-standalone .modal-handle { display: none; }
+.event-page-standalone .modal-body { padding: 0 20px 20px; }
+.event-page-standalone .modal-cover { border-radius: var(--radius-md) var(--radius-md) 0 0; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MOBILE POLISH — correções de layout, tap targets e overflow
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Tap targets mínimos 44px para todos os botões interativos no mobile */
+@media (max-width: 899px) {
+  .topbar-bell-btn,
+  .topbar-search-btn,
+  .topbar-city,
+  .topbar-user {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bnav-item {
+    min-height: 52px;
+    flex: 1;
+    padding: 6px 4px;
+  }
+
+  /* Drawer do EventDetail: scroll com momentum no iOS */
+  .modal-sheet-inner {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Auth modal: ocupa tela toda em telas muito estreitas */
+  .auth-sheet {
+    max-height: 95dvh;
+  }
+
+  /* VenueDetail body: não deixa conteúdo sumir atrás do bottom nav */
+  .venue-detail {
+    padding-bottom: calc(var(--bottom-nav-h) + 20px);
+  }
+
+  /* Feed: seções sem overflow lateral */
+  .feed-root {
+    overflow-x: hidden;
+  }
+
+  /* Rola hoje: título não ultrapassa viewport */
+  .rola-hoje-title {
+    font-size: clamp(16px, 5vw, 22px);
+  }
+
+  /* Cards de evento: sem overflow horizontal */
+  .event-card {
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  /* Carousel: altura do scroll não colapsa em iOS */
+  .carousel-scroll {
+    padding-bottom: 4px; /* evita corte da sombra dos cards */
+  }
+
+  /* Filtros: garantir que chips não criem scroll horizontal na página */
+  .filter-chips,
+  .neighborhood-chips,
+  .category-tabs {
+    max-width: 100%;
+  }
+
+  /* Bora button no EventDetail: altura adequada */
+  .bora-btn.large {
+    min-height: 48px;
+    padding: 12px 24px;
+  }
+
+  /* Search input: sem zoom no iOS (font-size >= 16px previne zoom) */
+  .search-input,
+  .auth-form input,
+  .auth-form select,
+  .review-textarea,
+  .onboard-select {
+    font-size: 16px;
+  }
+
+  /* Topbar: garantir que não ultrapasse viewport */
+  .topbar {
+    overflow: hidden;
+  }
+  .topbar-actions {
+    gap: 2px;
+  }
+}
+
+/* Telas muito estreitas (iPhone SE — 375px) */
+@media (max-width: 375px) {
+  .main-content {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .card-body {
+    padding: 12px 12px 14px;
+  }
+  .rola-hoje {
+    padding: 16px 14px;
+  }
 }
