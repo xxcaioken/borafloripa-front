@@ -729,11 +729,39 @@ function VenueEditModal({ venue, onSave, onClose }: VenueEditModalProps) {
     address: venue.address || '',
   });
   const [saving, setSaving] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(venue.photo_url || null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setPhotoFile(f);
+    setPhotoPreview(URL.createObjectURL(f));
+  }
+
+  async function handleUploadPhoto() {
+    if (!photoFile) return;
+    setUploadingPhoto(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', photoFile);
+      await api.post(`/partners/venues/${venue.id}/photo`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+    } finally {
+      setUploadingPhoto(false);
+      setPhotoFile(null);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    try { await onSave(venue, form); } finally { setSaving(false); }
+    try {
+      if (photoFile) await handleUploadPhoto();
+      await onSave(venue, form);
+    } finally { setSaving(false); }
   }
 
   return (
@@ -743,6 +771,24 @@ function VenueEditModal({ venue, onSave, onClose }: VenueEditModalProps) {
         <div className="modal-body">
           <div className="claim-modal-title">Editar {venue.name}</div>
           <form onSubmit={submit}>
+            <div className="form-group">
+              <label>Foto do local</label>
+              <div className="venue-photo-upload">
+                {photoPreview && (
+                  <img src={photoPreview} alt="preview" className="venue-photo-preview" />
+                )}
+                <label className="btn-secondary venue-photo-btn" htmlFor={`photo-input-${venue.id}`}>
+                  {photoPreview ? 'Trocar foto' : 'Enviar foto'}
+                </label>
+                <input
+                  id={`photo-input-${venue.id}`}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  style={{ display: 'none' }}
+                  onChange={handlePhotoChange}
+                />
+              </div>
+            </div>
             <div className="form-group">
               <label>Instagram</label>
               <input value={form.instagram} onChange={e => setForm(f => ({ ...f, instagram: e.target.value }))} placeholder="@nomedoperfil" />
@@ -757,7 +803,9 @@ function VenueEditModal({ venue, onSave, onClose }: VenueEditModalProps) {
             </div>
             <div className="form-actions">
               <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
-              <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Salvando...' : 'Salvar'}</button>
+              <button type="submit" className="btn-primary" disabled={saving || uploadingPhoto}>
+                {saving || uploadingPhoto ? 'Salvando...' : 'Salvar'}
+              </button>
             </div>
           </form>
         </div>
