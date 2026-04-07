@@ -17,28 +17,16 @@ declare global {
   }
 }
 
-const NEIGHBORHOODS = [
-  'Centro', 'Trindade', 'Lagoa da Conceição', 'Campeche',
-  'Ingleses', 'Jurerê', 'Barra da Lagoa', 'Canasvieiras',
-  'Florianópolis (outro bairro)',
-];
-
-const AGE_RANGES = ['18-24', '25-34', '35-44', '45+'];
-
 interface AuthProps {
   onClose?: () => void;
   initialTab?: string;
-  prefMusic?: string | null;
-  prefVibes?: string | null;
 }
 
-export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVibes }: AuthProps) {
+export default function Auth({ onClose, initialTab = 'login' }: AuthProps) {
   const [tab, setTab] = useState(initialTab);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [neighborhood, setNeighborhood] = useState('');
-  const [ageRange, setAgeRange] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
@@ -118,15 +106,7 @@ export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVib
       const endpoint = tab === 'login' ? '/auth/login' : '/auth/register';
       const body = tab === 'login'
         ? { email, password }
-        : {
-            name,
-            email,
-            password,
-            pref_music: prefMusic,
-            pref_vibes: prefVibes,
-            neighborhood: neighborhood || null,
-            age_range: ageRange || null,
-          };
+        : { name, email, password };
       const { data } = await api.post(endpoint, body);
       login(data.access_token, data.user);
       handlePostLogin(data.access_token, data.user);
@@ -204,40 +184,7 @@ export default function Auth({ onClose, initialTab = 'login', prefMusic, prefVib
                 </div>
               )}
 
-              {tab === 'register' && (
-                <>
-                  <div className="auth-field">
-                    <label>Bairro que você frequenta</label>
-                    <select value={neighborhood} onChange={e => setNeighborhood(e.target.value)} className="auth-select">
-                      <option value="">Selecionar (opcional)</option>
-                      {NEIGHBORHOODS.map(n => (
-                        <option key={n} value={n}>{n}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="auth-field">
-                    <label>Faixa etária</label>
-                    <div className="auth-age-row">
-                      {AGE_RANGES.map(r => (
-                        <button
-                          key={r}
-                          type="button"
-                          className={`auth-age-btn${ageRange === r ? ' selected' : ''}`}
-                          onClick={() => setAgeRange(prev => prev === r ? '' : r)}
-                        >
-                          {r}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-
               {error && <div className="auth-error">{error}</div>}
-
-              {tab === 'register' && prefMusic && (
-                <div className="auth-prefs-notice">✅ Suas preferências do onboarding serão salvas no perfil</div>
-              )}
 
               <button className="btn-primary" type="submit" disabled={loading}>
                 {loading ? 'Aguarde...' : tab === 'login' ? 'Entrar' : tab === 'register' ? 'Criar conta' : 'Enviar link'}
