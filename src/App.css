@@ -557,6 +557,7 @@ body::before {
 .venue-grid-card-cover {
   width: 100%;
   aspect-ratio: 1;
+  max-height: 200px;
   border-radius: var(--radius-sm);
   overflow: hidden;
   display: flex;
@@ -1123,6 +1124,15 @@ body::before {
 }
 .modal-sheet::-webkit-scrollbar { display: none; }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+@media (min-width: 900px) {
+  .modal-overlay { align-items: center; }
+  .modal-sheet {
+    max-width: 640px;
+    border-radius: var(--radius-md);
+    max-height: 85svh;
+  }
+}
 
 .modal-handle {
   width: 36px; height: 4px;
@@ -2621,7 +2631,7 @@ body::before {
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-sm);
-  max-height: 85%;
+  min-height: 0;
 }
 .map-loading, .map-error {
   height: 100%;
@@ -4237,21 +4247,15 @@ body::before {
 .review-item-stars { font-size: 13px; color: #ffc107; letter-spacing: 1px; }
 .review-item-text { font-size: 13px; color: var(--text2); margin: 0; line-height: 1.5; }
 
-/* ── Desktop layout: Feed grid ───────────────────────────────────── */
-@media (min-width: 1100px) {
+/* ── Desktop layout: wide screens ───────────────────────────────── */
+@media (min-width: 1440px) {
   .main-content {
-    max-width: 900px;
-  }
-  .venue-grid {
-    grid-template-columns: repeat(2, 1fr);
+    max-width: 1440px;
   }
 }
-@media (min-width: 1400px) {
+@media (min-width: 1920px) {
   .main-content {
-    max-width: 1100px;
-  }
-  .venue-grid {
-    grid-template-columns: repeat(3, 1fr);
+    max-width: 1800px;
   }
 }
 
@@ -4532,7 +4536,7 @@ body::before {
 }
 
 /* 5. PartnerDashboard: form-row vira 1 coluna em telas pequenas */
-@media (max-width: 480px) {
+@media (max-width: 599px) {
   .form-row { grid-template-columns: 1fr; }
   .form-actions { flex-direction: column; }
   .form-actions button { width: 100%; }
@@ -4557,6 +4561,32 @@ body::before {
 @media (max-width: 375px) {
   .profile-avatar { width: 46px; height: 46px; font-size: 20px; }
   .profile-name { font-size: 16px; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TABLET (600px–899px) — layout improvements
+   ════════════════════════════════════════════════════════════════════════ */
+@media (min-width: 600px) and (max-width: 899px) {
+  .main-content {
+    max-width: 100%;
+    padding: 20px 24px calc(var(--bottom-nav-h) + 24px);
+  }
+
+  /* Events list: 2-column grid on tablet */
+  .events-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  /* Hero card spans both columns */
+  .events-list .event-card.hero {
+    grid-column: span 2;
+  }
+
+  /* Stats row: 3 columns on tablet */
+  .stats-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -4606,21 +4636,29 @@ body::before {
 .feed-sidebar-label {
   display: none; /* hidden on mobile — labels redundant with visual context */
 }
-.feed-main { /* no extra styles on mobile */ }
+.feed-main { min-width: 0; }
 
 /* Sidebar sort chips: hidden on mobile (uses inline sort-chips-inline instead) */
 .sort-chips-sidebar { display: none; }
 .sort-chips-inline { display: flex; }
 
 /* ── Feed layout: desktop sidebar ── */
-@media (min-width: 1200px) {
+@media (min-width: 900px) {
   .feed-layout {
     display: grid;
-    grid-template-columns: 220px 1fr;
-    gap: 28px;
+    grid-template-columns: 200px 1fr;
+    gap: 24px;
     align-items: start;
     margin-top: 4px;
   }
+}
+@media (min-width: 1200px) {
+  .feed-layout {
+    grid-template-columns: 220px 1fr;
+    gap: 28px;
+  }
+}
+@media (min-width: 900px) {
 
   .feed-sidebar {
     position: sticky;
