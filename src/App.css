@@ -125,7 +125,8 @@ body::before {
   max-width: 480px;
   margin: 0 auto;
   width: 100%;
-  min-width: 89%;
+  box-sizing: border-box;
+  min-width: 0; /* previne overflow em flex containers */
 }
 
 /* ── Sidebar (desktop only) ── */
@@ -2240,10 +2241,15 @@ body::before {
   border: none;
   font-size: 18px;
   cursor: pointer;
-  padding: 4px 6px;
+  padding: 10px;
   border-radius: 8px;
   transition: background 0.15s;
   line-height: 1;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .topbar-search-btn:hover { background: var(--surface2); }
 
@@ -4697,3 +4703,107 @@ body::before {
 .event-page-standalone .modal-handle { display: none; }
 .event-page-standalone .modal-body { padding: 0 20px 20px; }
 .event-page-standalone .modal-cover { border-radius: var(--radius-md) var(--radius-md) 0 0; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MOBILE POLISH — correções de layout, tap targets e overflow
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Tap targets mínimos 44px para todos os botões interativos no mobile */
+@media (max-width: 899px) {
+  .topbar-bell-btn,
+  .topbar-search-btn,
+  .topbar-city,
+  .topbar-user {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bnav-item {
+    min-height: 52px;
+    flex: 1;
+    padding: 6px 4px;
+  }
+
+  /* Drawer do EventDetail: scroll com momentum no iOS */
+  .modal-sheet-inner {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Auth modal: ocupa tela toda em telas muito estreitas */
+  .auth-sheet {
+    max-height: 95dvh;
+  }
+
+  /* VenueDetail body: não deixa conteúdo sumir atrás do bottom nav */
+  .venue-detail {
+    padding-bottom: calc(var(--bottom-nav-h) + 20px);
+  }
+
+  /* Feed: seções sem overflow lateral */
+  .feed-root {
+    overflow-x: hidden;
+  }
+
+  /* Rola hoje: título não ultrapassa viewport */
+  .rola-hoje-title {
+    font-size: clamp(16px, 5vw, 22px);
+  }
+
+  /* Cards de evento: sem overflow horizontal */
+  .event-card {
+    max-width: 100%;
+    overflow: hidden;
+  }
+
+  /* Carousel: altura do scroll não colapsa em iOS */
+  .carousel-scroll {
+    padding-bottom: 4px; /* evita corte da sombra dos cards */
+  }
+
+  /* Filtros: garantir que chips não criem scroll horizontal na página */
+  .filter-chips,
+  .neighborhood-chips,
+  .category-tabs {
+    max-width: 100%;
+  }
+
+  /* Bora button no EventDetail: altura adequada */
+  .bora-btn.large {
+    min-height: 48px;
+    padding: 12px 24px;
+  }
+
+  /* Search input: sem zoom no iOS (font-size >= 16px previne zoom) */
+  .search-input,
+  .auth-form input,
+  .auth-form select,
+  .review-textarea,
+  .onboard-select {
+    font-size: 16px;
+  }
+
+  /* Topbar: garantir que não ultrapasse viewport */
+  .topbar {
+    overflow: hidden;
+  }
+  .topbar-actions {
+    gap: 2px;
+  }
+}
+
+/* Telas muito estreitas (iPhone SE — 375px) */
+@media (max-width: 375px) {
+  .main-content {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .card-body {
+    padding: 12px 12px 14px;
+  }
+  .rola-hoje {
+    padding: 16px 14px;
+  }
+}

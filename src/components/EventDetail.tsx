@@ -4,7 +4,10 @@ import { api } from '../services/api';
 import type { EventOut } from '../services/api';
 import { useSessionId } from '../hooks/useSessionId';
 import { useToast } from '../context/ToastContext';
-import { IconNavigation, IconShare2, IconBrandWhatsapp, IconMapPin, IconBrandInstagram, IconClock } from '@tabler/icons-react';
+import {
+  IconNavigation, IconShare2, IconBrandWhatsapp, IconMapPin, IconBrandInstagram, IconClock,
+  IconCoin, IconAccessible, IconEar, IconEye, IconToiletPaper, IconRocket, IconCheck,
+} from '@tabler/icons-react';
 
 const COVERS = [
   'linear-gradient(135deg, #1a0a2e 0%, #2e0a1a 100%)',
@@ -201,7 +204,7 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
           {/* Preço */}
           {event.price_info && (
             <div className="venue-info-row venue-info-row-mb">
-              <div className="venue-info-icon">💰</div>
+              <div className="venue-info-icon"><IconCoin size={16} /></div>
               <div className="venue-info-text">
                 <strong>Entrada</strong>
                 {event.price_info}
@@ -214,10 +217,10 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
             <>
               <div className="modal-section-title">Acessibilidade</div>
               <div className="modal-a11y-row">
-                {event.venue.wheelchair && <div className="modal-a11y-pill">♿ Rampa/Elevador</div>}
-                {event.venue.hearing_loop && <div className="modal-a11y-pill">🦻 Loop magnético</div>}
-                {event.venue.visual_aid && <div className="modal-a11y-pill">👁️ Auxílio visual</div>}
-                {event.venue.adapted_wc && <div className="modal-a11y-pill">🚻 WC adaptado</div>}
+                {event.venue.wheelchair && <div className="modal-a11y-pill"><IconAccessible size={14} /> Rampa/Elevador</div>}
+                {event.venue.hearing_loop && <div className="modal-a11y-pill"><IconEar size={14} /> Loop magnético</div>}
+                {event.venue.visual_aid && <div className="modal-a11y-pill"><IconEye size={14} /> Auxílio visual</div>}
+                {event.venue.adapted_wc && <div className="modal-a11y-pill"><IconToiletPaper size={14} /> WC adaptado</div>}
               </div>
             </>
           )}
@@ -276,7 +279,9 @@ export default function EventDetail({ event, onClose, boraCount = 0, boraReacted
               className={`bora-btn large${boraReacted ? ' reacted' : ''}`}
               onClick={() => onBora && onBora(event.id)}
             >
-              {boraReacted ? '✓ Tô dentro!' : '🚀 Bora lá!'}
+              {boraReacted
+                ? <><IconCheck size={16} style={{ verticalAlign: 'middle', marginRight: 4 }} />Tô dentro!</>
+                : <><IconRocket size={16} style={{ verticalAlign: 'middle', marginRight: 4 }} />Bora lá!</>}
             </button>
             {boraCount > 0 && (
               <span className="bora-count">
