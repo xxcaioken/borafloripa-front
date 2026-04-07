@@ -12,6 +12,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # Testes rodam no runner do GitHub — jsdom, sem browser real, zero custo
+      - name: Run tests
+        run: |
+          npm ci --quiet
+          npm test
+
       - name: Deploy to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
         with:
